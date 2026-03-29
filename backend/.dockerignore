@@ -1,0 +1,9 @@
+.env
+.env.local
+.env.rtf
+.env.example
+.gitignore
+.DS_Store
+__pycache__
+*.pyc
+.git

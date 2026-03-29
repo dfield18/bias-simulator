@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { cachedFetch, invalidateCache } from "@/lib/cache";
 
 function decodeHtml(text: string): string {
   return text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'");
@@ -109,39 +110,40 @@ export default function AnalyticsPage() {
   const [selectedFrame, setSelectedFrame] = useState<string>("all");
 
   useEffect(() => {
-    fetchTopics().then((topics) => {
-      const t = topics.find((t) => t.slug === topicSlug);
+    const s = topicSlug;
+    cachedFetch(`topics`, () => fetchTopics()).then((topics) => {
+      const t = topics.find((t) => t.slug === s);
       if (t) setTopic(t);
     }).catch(console.error);
-    fetchSummaries(topicSlug).then(setSummaries).catch(console.error);
-    fetchAnalytics(topicSlug).then(setAnalytics).catch(console.error);
-    fetchNarrative(topicSlug).then(setNarrative).catch(console.error);
-    fetchGapAnalysis(topicSlug).then(setGapAnalysis).catch(console.error);
-    fetchPairedStories(topicSlug).then(setPairedStories).catch(console.error);
-    fetchExposureOverlap(topicSlug).then(setExposureOverlap).catch(console.error);
-    fetchRecommendations(topicSlug).then(setRecommendations).catch(console.error);
-    fetchPulseExtras(topicSlug).then(setPulseExtras).catch(console.error);
-    fetchNarrativeStrategy(topicSlug).then(setNarrativeStrategy).catch(console.error);
-    fetchNarrativeDepth(topicSlug).then(setNarrativeDepth).catch(console.error);
-    fetchMediaBreakdown(topicSlug).then(setMediaBreakdown).catch(console.error);
-    fetchSideBySideFeed(topicSlug).then(setSideBySideFeed).catch(console.error);
-    fetchHashtags(topicSlug).then(setHashtags).catch(console.error);
-    fetchDunks(topicSlug).then(setDunksData).catch(console.error);
-    fetchLastRun(topicSlug).then(setLastRun).catch(console.error);
+    cachedFetch(`${s}:summaries`, () => fetchSummaries(s)).then(setSummaries).catch(console.error);
+    cachedFetch(`${s}:analytics`, () => fetchAnalytics(s)).then((d) => d && setAnalytics(d)).catch(console.error);
+    cachedFetch(`${s}:narrative`, () => fetchNarrative(s)).then((d) => d && setNarrative(d)).catch(console.error);
+    cachedFetch(`${s}:gapAnalysis`, () => fetchGapAnalysis(s)).then((d) => d && setGapAnalysis(d)).catch(console.error);
+    cachedFetch(`${s}:pairedStories`, () => fetchPairedStories(s)).then((d) => d && setPairedStories(d)).catch(console.error);
+    cachedFetch(`${s}:exposureOverlap`, () => fetchExposureOverlap(s)).then((d) => d && setExposureOverlap(d)).catch(console.error);
+    cachedFetch(`${s}:recommendations`, () => fetchRecommendations(s)).then((d) => d && setRecommendations(d)).catch(console.error);
+    cachedFetch(`${s}:pulseExtras`, () => fetchPulseExtras(s)).then((d) => d && setPulseExtras(d)).catch(console.error);
+    cachedFetch(`${s}:narrativeStrategy`, () => fetchNarrativeStrategy(s)).then((d) => d && setNarrativeStrategy(d)).catch(console.error);
+    cachedFetch(`${s}:narrativeDepth`, () => fetchNarrativeDepth(s)).then((d) => d && setNarrativeDepth(d)).catch(console.error);
+    cachedFetch(`${s}:mediaBreakdown`, () => fetchMediaBreakdown(s)).then((d) => d && setMediaBreakdown(d)).catch(console.error);
+    cachedFetch(`${s}:sideBySideFeed`, () => fetchSideBySideFeed(s)).then((d) => d && setSideBySideFeed(d)).catch(console.error);
+    cachedFetch(`${s}:hashtags`, () => fetchHashtags(s)).then((d) => d && setHashtags(d)).catch(console.error);
+    cachedFetch(`${s}:dunks`, () => fetchDunks(s)).then((d) => d && setDunksData(d)).catch(console.error);
+    cachedFetch(`${s}:lastRun`, () => fetchLastRun(s), 2 * 60 * 1000).then((d) => d && setLastRun(d)).catch(console.error);
     // Feed data
-    fetchAllTweets(topicSlug, 720).then(setAllTweets).catch(console.error);
-    fetchSmartFeed(topicSlug, 0, 720, 200)
+    cachedFetch(`${s}:allTweets`, () => fetchAllTweets(s, 720)).then(setAllTweets).catch(console.error);
+    cachedFetch(`${s}:smartFeed:0`, () => fetchSmartFeed(s, 0, 720, 200))
       .then(setSmartFeedItems)
       .catch(console.error)
       .finally(() => setFeedLoading(false));
-    fetchBreakdown(topicSlug, 720).then(setBreakdown).catch(console.error);
+    cachedFetch(`${s}:breakdown`, () => fetchBreakdown(s, 720)).then(setBreakdown).catch(console.error);
   }, [topicSlug]);
 
-  // Refetch smart feed when bias changes
+  // Refetch smart feed when bias changes (cached per bias value)
   useEffect(() => {
     if (!topicSlug) return;
     setFeedLoading(true);
-    fetchSmartFeed(topicSlug, bias, 720, 200)
+    cachedFetch(`${topicSlug}:smartFeed:${bias}`, () => fetchSmartFeed(topicSlug, bias, 720, 200))
       .then(setSmartFeedItems)
       .catch(console.error)
       .finally(() => setFeedLoading(false));
@@ -244,6 +246,7 @@ export default function AnalyticsPage() {
                           const prog = await fetchPipelineProgress(topicSlug);
                           if (prog) setPipelineProgress(prog);
                           if (prog && !prog.running) {
+                            invalidateCache(topicSlug);
                             const run = await fetchLastRun(topicSlug);
                             if (run) setLastRun(run);
                             setIsRunning("done");
@@ -251,6 +254,7 @@ export default function AnalyticsPage() {
                           }
                         } catch { /* keep polling */ }
                       }
+                      invalidateCache(topicSlug);
                       setIsRunning("done");
                     };
                     poll();

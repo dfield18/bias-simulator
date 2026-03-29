@@ -1,0 +1,243 @@
+"""
+Narrative frame and emotion classification for tweets.
+Frames and emotions are dynamic per topic, stored in the topic's custom_frames
+and custom_emotions JSONB columns.
+"""
+
+import os
+import json
+import time
+from dotenv import load_dotenv
+
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+# Default fallback taxonomy — used when a topic has no custom frames/emotions
+FRAME_LABELS = {
+    "security-crime": "Security / Crime",
+    "humanitarian-compassion": "Humanitarian / Compassion",
+    "economic-cost": "Economic Cost",
+    "economic-contribution": "Economic Contribution",
+    "rule-of-law": "Rule of Law / Legality",
+    "cultural-identity": "Cultural Identity / Cohesion",
+    "political-blame": "Political Blame / Institutional Failure",
+    "rights-fairness": "Rights / Fairness / Dignity",
+    "military-defense": "Military / Defense",
+    "diplomacy-peace": "Diplomacy / Peace",
+}
+
+EMOTION_LABELS = {
+    "fear-threat": "Fear / Threat",
+    "outrage-anger": "Outrage / Anger",
+    "empathy-compassion": "Empathy / Compassion",
+    "sarcasm-mockery": "Sarcasm / Mockery",
+    "urgency-alarm": "Urgency / Alarm",
+    "pragmatic-policy": "Pragmatic / Policy",
+    "moral-condemnation": "Moral Condemnation",
+    "hope-optimism": "Hope / Optimism",
+}
+
+
+def get_topic_labels(conn, topic_slug: str) -> tuple[dict[str, str], dict[str, str]]:
+    """Load frame and emotion labels from the topic's custom config.
+    Falls back to defaults if the topic has no custom frames/emotions.
+    Returns (frame_labels, emotion_labels) dicts mapping key -> display label.
+    """
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT custom_frames, custom_emotions FROM topics WHERE slug = %s",
+        (topic_slug,),
+    )
+    row = cur.fetchone()
+    if not row:
+        return dict(FRAME_LABELS), dict(EMOTION_LABELS)
+
+    custom_frames, custom_emotions = row
+
+    if custom_frames and isinstance(custom_frames, list) and len(custom_frames) > 0:
+        fl = {item["key"]: item["label"] for item in custom_frames}
+    else:
+        fl = dict(FRAME_LABELS)
+
+    if custom_emotions and isinstance(custom_emotions, list) and len(custom_emotions) > 0:
+        el = {item["key"]: item["label"] for item in custom_emotions}
+    else:
+        el = dict(EMOTION_LABELS)
+
+    return fl, el
+
+
+async def get_topic_labels_async(db, topic_slug: str) -> tuple[dict[str, str], dict[str, str]]:
+    """Async version of get_topic_labels for use in FastAPI endpoints."""
+    from sqlalchemy import text as sa_text
+    result = await db.execute(
+        sa_text("SELECT custom_frames, custom_emotions FROM topics WHERE slug = :slug"),
+        {"slug": topic_slug},
+    )
+    row = result.fetchone()
+    if not row:
+        return dict(FRAME_LABELS), dict(EMOTION_LABELS)
+
+    custom_frames, custom_emotions = row
+
+    if custom_frames and isinstance(custom_frames, list) and len(custom_frames) > 0:
+        fl = {item["key"]: item["label"] for item in custom_frames}
+    else:
+        fl = dict(FRAME_LABELS)
+
+    if custom_emotions and isinstance(custom_emotions, list) and len(custom_emotions) > 0:
+        el = {item["key"]: item["label"] for item in custom_emotions}
+    else:
+        el = dict(EMOTION_LABELS)
+
+    return fl, el
+
+
+def _call_gemini(prompt: str) -> str:
+    from google import genai
+
+    client = genai.Client(api_key=GEMINI_API_KEY)
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json",
+            "temperature": 0.1,
+        },
+    )
+    return response.text or ""
+
+
+def _build_framing_prompt(tweets_batch: list[dict], topic_name: str,
+                          frame_labels: dict[str, str], emotion_labels: dict[str, str]) -> str:
+    frames_list = "\n".join(f"  - {k}: {v}" for k, v in frame_labels.items())
+    emotions_list = "\n".join(f"  - {k}: {v}" for k, v in emotion_labels.items())
+
+    tweets_text = ""
+    for i, t in enumerate(tweets_batch):
+        tweets_text += f"""
+--- Tweet {i + 1} ---
+ID: {t['id_str']}
+Author: @{t.get('screen_name', 'unknown')}
+Text: {t.get('full_text', '')}
+"""
+
+    return f"""You are analyzing the narrative framing and emotional rhetoric of tweets about "{topic_name}".
+
+For each tweet, classify:
+
+1. **narrative_frames**: Pick 1-2 frames from this fixed list (use the exact keys):
+{frames_list}
+
+2. **emotion_mode**: Pick exactly 1 emotion from this fixed list (use the exact key):
+{emotions_list}
+
+3. **confidence**: How confident you are in the frame classification (0.0-1.0)
+
+Rules:
+- Always use the exact key strings, not the labels
+- Pick the 1-2 most dominant frames. Most tweets have 1-2 clear frames.
+- For emotion, pick the single most dominant emotional mode
+- If a tweet is purely factual news reporting, pick the most neutral/pragmatic emotion from the list
+- Consider the language, framing choices, what's emphasized, and what's omitted
+
+Tweets:
+{tweets_text}
+
+Return a JSON array where each element has:
+- id_str: the tweet ID
+- narrative_frames: array of 1-2 frame keys
+- emotion_mode: single emotion key
+- confidence: float 0.0-1.0
+"""
+
+
+def classify_frames(conn, topic_slug: str):
+    """Classify narrative frames and emotions for all on-topic tweets."""
+    cur = conn.cursor()
+
+    # Get topic name
+    cur.execute("SELECT name FROM topics WHERE slug = %s", (topic_slug,))
+    row = cur.fetchone()
+    if not row:
+        print(f"  Framing: Topic '{topic_slug}' not found")
+        return
+    topic_name = row[0]
+
+    # Load dynamic frame/emotion labels for this topic
+    frame_labels, emotion_labels = get_topic_labels(conn, topic_slug)
+
+    # Get tweets that need framing (on-topic, no frames yet)
+    cur.execute(
+        """
+        SELECT t.id_str, t.full_text, t.screen_name
+        FROM tweets t
+        JOIN classifications c ON t.id_str = c.id_str
+        WHERE t.topic_slug = %s AND c.about_subject = TRUE
+        AND (c.narrative_frames IS NULL OR array_length(c.narrative_frames, 1) IS NULL)
+        ORDER BY t.views DESC
+        LIMIT 500
+        """,
+        (topic_slug,),
+    )
+    tweets = [
+        {"id_str": r[0], "full_text": r[1], "screen_name": r[2]}
+        for r in cur.fetchall()
+    ]
+
+    if not tweets:
+        print("  Framing: All tweets already classified")
+        return
+
+    print(f"  Framing: Classifying {len(tweets)} tweets...")
+
+    batch_size = 15
+    total_classified = 0
+
+    for i in range(0, len(tweets), batch_size):
+        batch = tweets[i:i + batch_size]
+        prompt = _build_framing_prompt(batch, topic_name, frame_labels, emotion_labels)
+
+        try:
+            response_text = _call_gemini(prompt)
+            text = response_text.strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            results = json.loads(text)
+            if not isinstance(results, list):
+                results = results.get("tweets", results.get("results", [results]))
+
+            results_by_id = {str(r.get("id_str", "")): r for r in results}
+
+            for tweet in batch:
+                tid = tweet["id_str"]
+                result = results_by_id.get(tid, {})
+
+                frames = result.get("narrative_frames", [])
+                # Validate frames against topic's taxonomy
+                frames = [f for f in frames if f in frame_labels][:2]
+                emotion = result.get("emotion_mode", "")
+                if emotion not in emotion_labels:
+                    # Fall back to first emotion key
+                    emotion = next(iter(emotion_labels))
+                conf = result.get("confidence", 0.5)
+
+                if frames:
+                    cur.execute(
+                        """
+                        UPDATE classifications
+                        SET narrative_frames = %s, emotion_mode = %s, frame_confidence = %s
+                        WHERE id_str = %s
+                        """,
+                        (frames, emotion, conf, tid),
+                    )
+                    total_classified += 1
+
+        except Exception as e:
+            print(f"  Framing batch error: {e}")
+
+        time.sleep(0.5)
+
+    conn.commit()
+    print(f"  Framing: Classified {total_classified} tweets")

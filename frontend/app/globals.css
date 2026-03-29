@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Prevent blinking caret on all non-editable elements */
+* { caret-color: transparent; cursor: default; }
+
+/* Editable inputs get text cursor and visible caret */
+input:not(:disabled):not(:read-only),
+textarea:not(:disabled):not(:read-only) {
+  cursor: text;
+  caret-color: auto;
+}
+
+/* Interactive elements get pointer cursor */
+a, button, [role="button"], [role="slider"], select, label { cursor: pointer; }
+
+/* Disabled/read-only inputs stay default */
+input:disabled, textarea:disabled,
+input:read-only, textarea:read-only { cursor: default; caret-color: transparent; }
+
+/* Print styles for PDF export */
+@media print {
+  body { background: white !important; color: black !important; }
+  header { position: static !important; }
+  .no-print, button, select { display: none !important; }
+  * { color-adjust: exact !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}

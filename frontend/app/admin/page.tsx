@@ -260,7 +260,12 @@ export default function AdminPage() {
     <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold">Classification Review</h1>
+        <div className="flex items-center gap-4">
+          <a href="/" className="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors text-gray-300">
+            &larr; Back to Dashboard
+          </a>
+          <h1 className="text-xl sm:text-2xl font-bold">Classification Review</h1>
+        </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
@@ -300,9 +305,6 @@ export default function AdminPage() {
           >
             Export CSV
           </button>
-          <a href="/" className="text-sm text-gray-500 hover:text-gray-300">
-            &larr; Back to feed
-          </a>
         </div>
       </div>
 

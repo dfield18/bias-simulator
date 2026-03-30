@@ -500,6 +500,21 @@ export default function AdminPage() {
                             key={opt.value}
                             onClick={async () => {
                               if (isActive) return;
+                              // Optimistic update — change local state immediately
+                              setRows((prev) => prev.map((r) =>
+                                r.tweet.id_str === row.tweet.id_str
+                                  ? {
+                                      ...r,
+                                      classification: {
+                                        ...r.classification,
+                                        effective_political_bent: opt.value,
+                                        override_political_bent: opt.value,
+                                        override_flag: true,
+                                      },
+                                    }
+                                  : r
+                              ));
+                              // Save to backend in background
                               try {
                                 await submitOverride(secret, {
                                   id_str: row.tweet.id_str,
@@ -507,7 +522,6 @@ export default function AdminPage() {
                                   override_intensity_score: null,
                                   override_notes: "Reclassified via inline toggle",
                                 });
-                                loadData();
                               } catch { /* ignore */ }
                             }}
                             className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${

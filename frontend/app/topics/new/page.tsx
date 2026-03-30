@@ -24,6 +24,7 @@ export default function NewTopicPage() {
   const [showPrompts, setShowPrompts] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [targetCountry, setTargetCountry] = useState("United States");
+  const [maxPages, setMaxPages] = useState(25);
   const [pipelineProgress, setPipelineProgress] = useState<PipelineProgress | null>(null);
 
   const handleSuggest = async () => {
@@ -57,7 +58,7 @@ export default function NewTopicPage() {
         target_country: targetCountry || undefined,
       });
       invalidateCache("topics");
-      await runTopicPipeline(suggestion.slug);
+      await runTopicPipeline(suggestion.slug, { maxPages });
       // Poll for pipeline progress
       for (let i = 0; i < 300; i++) {
         await new Promise((r) => setTimeout(r, 5000));
@@ -287,6 +288,20 @@ export default function NewTopicPage() {
                   <p className="text-[10px] text-gray-600 mt-1">Filter tweets to what someone in this country would likely see</p>
                 </div>
               </div>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Tweet Volume</label>
+              <select
+                value={maxPages}
+                onChange={(e) => setMaxPages(Number(e.target.value))}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+              >
+                <option value={10}>Small (~200 tweets)</option>
+                <option value={25}>Medium (~500 tweets)</option>
+                <option value={50}>Large (~1,000 tweets)</option>
+                <option value={100}>Extra Large (~2,000 tweets)</option>
+              </select>
+              <p className="text-[10px] text-gray-600 mt-1">More tweets = better analysis but slower pipeline</p>
             </div>
           </div>
 

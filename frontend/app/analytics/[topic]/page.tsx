@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { cachedFetch, invalidateCache } from "@/lib/cache";
@@ -296,19 +296,15 @@ export default function AnalyticsPage() {
                   }
                   setIsRunning("running");
                   setPipelineProgress(null);
-                  console.log("[Refresh] Starting pipeline for", topicSlug);
                   try {
                     await runTopicPipeline(topicSlug);
-                    console.log("[Refresh] Pipeline triggered, polling...");
                     const poll = async () => {
                       for (let i = 0; i < 300; i++) {
                         await new Promise((r) => setTimeout(r, 5000));
                         try {
                           const prog = await fetchPipelineProgress(topicSlug);
-                          console.log(`[Refresh] Poll ${i + 1}:`, prog);
                           if (prog) setPipelineProgress(prog);
                           if (prog && !prog.running) {
-                            console.log("[Refresh] Pipeline finished:", prog.label, prog.detail);
                             if (prog.label === "Error") {
                               const detail = prog.detail || "";
                               if (detail.includes("API key not valid") || detail.includes("INVALID_ARGUMENT")) {
@@ -327,9 +323,8 @@ export default function AnalyticsPage() {
                             setIsRunning("done");
                             return;
                           }
-                        } catch (e) { console.log("[Refresh] Poll error:", e); }
+                        } catch { /* keep polling */ }
                       }
-                      console.log("[Refresh] Polling timed out");
                       invalidateCache(topicSlug);
                       setIsRunning("done");
                     };

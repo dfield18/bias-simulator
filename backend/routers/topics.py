@@ -53,6 +53,7 @@ class CreateTopicRequest(BaseModel):
     custom_emotions: list[FrameItem] = []
     target_language: str = "en"
     target_country: str | None = None
+    color_scheme: str = "political"
 
 
 @router.get("/topics", response_model=list[TopicResponse])
@@ -165,6 +166,7 @@ async def create_topic(
         custom_emotions=[e.model_dump() for e in body.custom_emotions] if body.custom_emotions else None,
         target_language=body.target_language,
         target_country=body.target_country,
+        color_scheme=body.color_scheme,
         is_active=True,
     )
 
@@ -221,6 +223,7 @@ class UpdateTopicRequest(BaseModel):
     intensity_prompt: str | None = None
     target_language: str | None = None
     target_country: str | None = None
+    color_scheme: str | None = None
     is_active: bool | None = None
 
 
@@ -262,6 +265,8 @@ async def update_topic(
         topic.intensity_prompt = body.intensity_prompt
     if body.target_language is not None:
         topic.target_language = body.target_language
+    if body.color_scheme is not None:
+        topic.color_scheme = body.color_scheme
     if body.target_country is not None:
         topic.target_country = body.target_country
     if body.is_active is not None:

@@ -468,6 +468,7 @@ export default function AnalyticsPage() {
                         classification={item.classification}
                         proLabel={topic.pro_label}
                         antiLabel={topic.anti_label}
+                        colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}
                       />
                     ))}
                     {feedVisibleCount < feedScored.length && (

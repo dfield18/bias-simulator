@@ -55,6 +55,7 @@ export default function TopicManagePage() {
   const [pipelineHours, setPipelineHours] = useState(48);
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [targetCountry, setTargetCountry] = useState("");
+  const [colorScheme, setColorScheme] = useState("political");
 
   const loadData = () => {
     setLoading(true);
@@ -71,6 +72,7 @@ export default function TopicManagePage() {
         setIntensityPrompt(t.intensity_prompt || "");
         setTargetLanguage(t.target_language || "en");
         setTargetCountry(t.target_country || "");
+        setColorScheme(t.color_scheme || "political");
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -95,6 +97,7 @@ export default function TopicManagePage() {
         intensity_prompt: intensityPrompt,
         target_language: targetLanguage,
         target_country: targetCountry || null,
+        color_scheme: colorScheme,
       });
       setTopic(updated);
       setSuccess("Topic saved successfully.");
@@ -432,6 +435,19 @@ export default function TopicManagePage() {
               </select>
               <p className="text-[10px] text-gray-600 mt-1">Filter tweets to what someone in this country would likely see — excludes hyper-local foreign content</p>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Color Scheme</label>
+            <select
+              value={colorScheme}
+              onChange={(e) => setColorScheme(e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+            >
+              <option value="political">Political (Blue / Red)</option>
+              <option value="neutral">Neutral (Purple / Green)</option>
+            </select>
+            <p className="text-[10px] text-gray-600 mt-1">Use neutral for topics that don&apos;t map to left/right politics</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

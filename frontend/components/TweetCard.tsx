@@ -1,4 +1,5 @@
 import { TweetData, ClassificationData } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 import IntensityBar from "./IntensityBar";
 
 interface TweetCardProps {
@@ -6,6 +7,7 @@ interface TweetCardProps {
   classification: ClassificationData;
   proLabel: string;
   antiLabel: string;
+  colorScheme?: ColorScheme;
 }
 
 function decodeHtmlEntities(text: string): string {
@@ -49,15 +51,17 @@ export default function TweetCard({
   classification,
   proLabel,
   antiLabel,
+  colorScheme = "political",
 }: TweetCardProps) {
   const bent = classification.effective_political_bent || "unclear";
   const antiBent = antiLabel.toLowerCase().replace(/\s+/g, "-");
   const proBent = proLabel.toLowerCase().replace(/\s+/g, "-");
+  const colors = getSideColors(colorScheme as ColorScheme);
   const bentColor =
     bent === antiBent
-      ? "border-blue-500/30"
+      ? colors.anti.border
       : bent === proBent
-      ? "border-red-500/30"
+      ? colors.pro.border
       : bent === "neutral"
       ? "border-gray-500/30"
       : "border-gray-700";
@@ -88,9 +92,9 @@ export default function TweetCard({
           <span
             className={`text-xs px-2 py-0.5 rounded ${
               bent === antiBent
-                ? "bg-blue-500/20 text-blue-400"
+                ? `${colors.anti.bgLight} ${colors.anti.text}`
                 : bent === proBent
-                ? "bg-red-500/20 text-red-400"
+                ? `${colors.pro.bgLight} ${colors.pro.text}`
                 : "bg-gray-500/20 text-gray-400"
             }`}
           >

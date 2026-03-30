@@ -8,6 +8,7 @@ export interface TopicData {
   anti_label: string;
   target_language?: string;
   target_country?: string;
+  color_scheme?: string;
 }
 
 export interface MediaItem {
@@ -114,6 +115,7 @@ export interface TopicSuggestion {
   custom_emotions?: FrameItem[];
   target_language?: string;
   target_country?: string;
+  color_scheme?: string;
 }
 
 export async function suggestTopic(topicName: string): Promise<TopicSuggestion> {
@@ -946,6 +948,7 @@ export interface TopicDetail {
   intensity_prompt: string | null;
   target_language: string | null;
   target_country: string | null;
+  color_scheme: string | null;
   is_active: boolean | null;
   created_at: string | null;
 }
@@ -979,6 +982,7 @@ export async function updateTopic(
     intensity_prompt: string;
     target_language: string;
     target_country: string | null;
+    color_scheme: string;
     is_active: boolean;
   }>
 ): Promise<TopicDetail> {

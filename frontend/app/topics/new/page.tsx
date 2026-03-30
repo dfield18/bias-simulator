@@ -25,6 +25,7 @@ export default function NewTopicPage() {
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [targetCountry, setTargetCountry] = useState("United States");
   const [maxPages, setMaxPages] = useState(25);
+  const [colorScheme, setColorScheme] = useState("political");
   const [pipelineProgress, setPipelineProgress] = useState<PipelineProgress | null>(null);
 
   const handleSuggest = async () => {
@@ -56,6 +57,7 @@ export default function NewTopicPage() {
         ...suggestion,
         target_language: targetLanguage,
         target_country: targetCountry || undefined,
+        color_scheme: colorScheme,
       });
       invalidateCache("topics");
       await runTopicPipeline(suggestion.slug, { maxPages });
@@ -302,6 +304,18 @@ export default function NewTopicPage() {
                 <option value={100}>Extra Large (~2,000 tweets)</option>
               </select>
               <p className="text-[10px] text-gray-600 mt-1">More tweets = better analysis but slower pipeline</p>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Color Scheme</label>
+              <select
+                value={colorScheme}
+                onChange={(e) => setColorScheme(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+              >
+                <option value="political">Political (Blue / Red)</option>
+                <option value="neutral">Neutral (Purple / Green)</option>
+              </select>
+              <p className="text-[10px] text-gray-600 mt-1">Use neutral for topics that don&apos;t map to left/right politics</p>
             </div>
           </div>
 

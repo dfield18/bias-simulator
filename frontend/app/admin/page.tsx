@@ -31,10 +31,10 @@ function confidenceColor(c: number | null): string {
   return "text-red-400";
 }
 
-function bentBadge(bent: string | null): string {
+function bentBadge(bent: string | null, antiBent?: string, proBent?: string): string {
   const b = (bent || "").toLowerCase();
-  if (b.includes("anti")) return "bg-red-500/20 text-red-400";
-  if (b.includes("pro")) return "bg-blue-500/20 text-blue-400";
+  if (antiBent && b === antiBent) return "bg-blue-500/20 text-blue-400";
+  if (proBent && b === proBent) return "bg-red-500/20 text-red-400";
   if (b === "neutral") return "bg-gray-500/20 text-gray-400";
   return "bg-yellow-500/20 text-yellow-400";
 }
@@ -111,6 +111,11 @@ export default function AdminPage() {
 
   // Navigation between tweets in modal
   const [modalIndex, setModalIndex] = useState(-1);
+
+  // Get bent slugs for color coding
+  const currentTopic = topics.find((t) => t.slug === selectedTopic);
+  const antiBent = currentTopic?.anti_label?.toLowerCase().replace(/\s+/g, "-") || "";
+  const proBent = currentTopic?.pro_label?.toLowerCase().replace(/\s+/g, "-") || "";
 
   const handleAuth = () => {
     const expected = process.env.NEXT_PUBLIC_ADMIN_SECRET;
@@ -326,7 +331,7 @@ export default function AdminPage() {
               {Object.entries(stats.by_bent).map(([bent, data]) => (
                 <span
                   key={bent}
-                  className={`text-xs px-1.5 py-0.5 rounded ${bentBadge(bent)}`}
+                  className={`text-xs px-1.5 py-0.5 rounded ${bentBadge(bent, antiBent, proBent)}`}
                 >
                   {bent}: {data.count}
                 </span>
@@ -481,7 +486,7 @@ export default function AdminPage() {
                   <td className="px-3 py-2">
                     <span
                       className={`text-xs px-2 py-0.5 rounded ${bentBadge(
-                        row.classification.effective_political_bent
+                        row.classification.effective_political_bent, antiBent, proBent
                       )}`}
                     >
                       {row.classification.effective_political_bent}
@@ -605,7 +610,7 @@ export default function AdminPage() {
                   <span className="text-gray-500">Political bent: </span>
                   <span
                     className={`px-2 py-0.5 rounded text-xs ${bentBadge(
-                      modalRow.classification.political_bent
+                      modalRow.classification.political_bent, antiBent, proBent
                     )}`}
                   >
                     {modalRow.classification.political_bent}

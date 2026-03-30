@@ -124,9 +124,28 @@ export default function AnalyticsPage() {
       .catch(console.error)
       .finally(() => setFeedLoading(false));
     cachedFetch(`${s}:breakdown`, () => fetchBreakdown(s, 720)).then(setBreakdown).catch(console.error);
+
+    // Background prefetch — load all other data after a short delay so feed renders first
+    const bgTimer = setTimeout(() => {
+      cachedFetch(`${s}:analytics`, () => fetchAnalytics(s)).then((d) => d && setAnalytics(d)).catch(console.error);
+      cachedFetch(`${s}:narrative`, () => fetchNarrative(s)).then((d) => d && setNarrative(d)).catch(console.error);
+      cachedFetch(`${s}:summaries`, () => fetchSummaries(s)).then(setSummaries).catch(console.error);
+      cachedFetch(`${s}:narrativeStrategy`, () => fetchNarrativeStrategy(s)).then((d) => d && setNarrativeStrategy(d)).catch(console.error);
+      cachedFetch(`${s}:narrativeDepth`, () => fetchNarrativeDepth(s)).then((d) => d && setNarrativeDepth(d)).catch(console.error);
+      cachedFetch(`${s}:pulseExtras`, () => fetchPulseExtras(s)).then((d) => d && setPulseExtras(d)).catch(console.error);
+      cachedFetch(`${s}:exposureOverlap`, () => fetchExposureOverlap(s)).then((d) => d && setExposureOverlap(d)).catch(console.error);
+      cachedFetch(`${s}:gapAnalysis`, () => fetchGapAnalysis(s)).then((d) => d && setGapAnalysis(d)).catch(console.error);
+      cachedFetch(`${s}:recommendations`, () => fetchRecommendations(s)).then((d) => d && setRecommendations(d)).catch(console.error);
+      cachedFetch(`${s}:pairedStories`, () => fetchPairedStories(s)).then((d) => d && setPairedStories(d)).catch(console.error);
+      cachedFetch(`${s}:sideBySideFeed`, () => fetchSideBySideFeed(s)).then((d) => d && setSideBySideFeed(d)).catch(console.error);
+      cachedFetch(`${s}:hashtags`, () => fetchHashtags(s)).then((d) => d && setHashtags(d)).catch(console.error);
+      cachedFetch(`${s}:mediaBreakdown`, () => fetchMediaBreakdown(s)).then((d) => d && setMediaBreakdown(d)).catch(console.error);
+      cachedFetch(`${s}:dunks`, () => fetchDunks(s)).then((d) => d && setDunksData(d)).catch(console.error);
+    }, 1000);
+    return () => clearTimeout(bgTimer);
   }, [topicSlug]);
 
-  // Lazy load tab data — only fetch when tab is activated
+  // Lazy load tab data — fetch immediately if user clicks a tab before background prefetch completes
   useEffect(() => {
     const s = topicSlug;
     if (!s) return;

@@ -54,7 +54,8 @@ def load_topic(conn, topic_slug: str) -> dict | None:
     with conn.cursor() as cur:
         cur.execute(
             "SELECT slug, name, description, classification_prompt, intensity_prompt, "
-            "pro_label, anti_label, search_query FROM topics WHERE slug = %s AND is_active = TRUE",
+            "pro_label, anti_label, search_query, target_language, target_country "
+            "FROM topics WHERE slug = %s AND is_active = TRUE",
             (topic_slug,),
         )
         row = cur.fetchone()
@@ -69,6 +70,8 @@ def load_topic(conn, topic_slug: str) -> dict | None:
             "pro_label": row[5],
             "anti_label": row[6],
             "search_query": row[7],
+            "target_language": row[8] or "en",
+            "target_country": row[9],
         }
 
 
@@ -245,7 +248,8 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         print("\n[2/7] Fetching tweets...")
         # Use topic's search_query if set, otherwise derive from name
         search_query = topic.get("search_query") or topic["name"]
-        raw_tweets = fetch_tweets(topic_slug, search_query, hours=hours, max_pages=max_pages)
+        lang = topic.get("target_language") or "en"
+        raw_tweets = fetch_tweets(topic_slug, search_query, hours=hours, max_pages=max_pages, lang=lang)
         tweets_fetched = len(raw_tweets)
 
         # 3. Parse and upsert tweets
@@ -258,8 +262,22 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         # 4. Classify
         set_progress(topic_slug, 4, 7, "Classifying tweets", f"{tweets_new} new, classifying with AI...")
         print("\n[4/7] Classifying tweets...")
+
+        # Inject audience relevance into classification prompt if target_country is set
+        class_prompt = topic["classification_prompt"]
+        target_country = topic.get("target_country")
+        if target_country:
+            audience_instruction = (
+                f"\n\nAUDIENCE FILTER: The target audience is people in {target_country} who are interested in this topic. "
+                f"For about_subject, set it to FALSE if the tweet is about a hyper-local event in another country that "
+                f"someone in {target_country} following this topic would never see in their feed. "
+                f"However, set it to TRUE for international news, viral content, or anything that would plausibly "
+                f"appear in the feed of someone in {target_country} who follows this topic — even if it originates from another country."
+            )
+            class_prompt = class_prompt + audience_instruction
+
         classifications, cost_class = classify_tweets(
-            parsed_tweets, topic["classification_prompt"]
+            parsed_tweets, class_prompt
         )
 
         # Determine pro/anti bent values from labels

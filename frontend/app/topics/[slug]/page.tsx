@@ -50,6 +50,8 @@ export default function TopicManagePage() {
   const [intensityPrompt, setIntensityPrompt] = useState("");
   const [maxPages, setMaxPages] = useState(25);
   const [pipelineHours, setPipelineHours] = useState(48);
+  const [targetLanguage, setTargetLanguage] = useState("en");
+  const [targetCountry, setTargetCountry] = useState("");
 
   const loadData = () => {
     setLoading(true);
@@ -64,6 +66,8 @@ export default function TopicManagePage() {
         setSearchQuery(t.search_query || "");
         setClassificationPrompt(t.classification_prompt || "");
         setIntensityPrompt(t.intensity_prompt || "");
+        setTargetLanguage(t.target_language || "en");
+        setTargetCountry(t.target_country || "");
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -86,6 +90,8 @@ export default function TopicManagePage() {
         search_query: searchQuery,
         classification_prompt: classificationPrompt,
         intensity_prompt: intensityPrompt,
+        target_language: targetLanguage,
+        target_country: targetCountry || null,
       });
       setTopic(updated);
       setSuccess("Topic saved successfully.");
@@ -328,6 +334,55 @@ export default function TopicManagePage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Tweet Language</label>
+              <select
+                value={targetLanguage}
+                onChange={(e) => setTargetLanguage(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+              >
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+                <option value="pt">Portuguese</option>
+                <option value="ar">Arabic</option>
+                <option value="he">Hebrew</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="zh">Chinese</option>
+                <option value="hi">Hindi</option>
+                <option value="ru">Russian</option>
+                <option value="it">Italian</option>
+              </select>
+              <p className="text-[10px] text-gray-600 mt-1">Only fetch tweets in this language</p>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Target Audience Country</label>
+              <select
+                value={targetCountry}
+                onChange={(e) => setTargetCountry(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+              >
+                <option value="">No filter (global)</option>
+                <option value="United States">United States</option>
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="Canada">Canada</option>
+                <option value="Australia">Australia</option>
+                <option value="India">India</option>
+                <option value="Germany">Germany</option>
+                <option value="France">France</option>
+                <option value="Brazil">Brazil</option>
+                <option value="Japan">Japan</option>
+                <option value="Israel">Israel</option>
+                <option value="Mexico">Mexico</option>
+                <option value="Spain">Spain</option>
+              </select>
+              <p className="text-[10px] text-gray-600 mt-1">Filter tweets to what someone in this country would likely see — excludes hyper-local foreign content</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

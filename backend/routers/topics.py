@@ -215,6 +215,8 @@ class UpdateTopicRequest(BaseModel):
     search_query: str | None = None
     classification_prompt: str | None = None
     intensity_prompt: str | None = None
+    target_language: str | None = None
+    target_country: str | None = None
     is_active: bool | None = None
 
 
@@ -254,6 +256,10 @@ async def update_topic(
         topic.classification_prompt = body.classification_prompt
     if body.intensity_prompt is not None:
         topic.intensity_prompt = body.intensity_prompt
+    if body.target_language is not None:
+        topic.target_language = body.target_language
+    if body.target_country is not None:
+        topic.target_country = body.target_country
     if body.is_active is not None:
         topic.is_active = body.is_active
 

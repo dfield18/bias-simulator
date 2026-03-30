@@ -6,6 +6,8 @@ export interface TopicData {
   description: string | null;
   pro_label: string;
   anti_label: string;
+  target_language?: string;
+  target_country?: string;
 }
 
 export interface MediaItem {
@@ -940,6 +942,8 @@ export interface TopicDetail {
   search_query: string | null;
   classification_prompt: string | null;
   intensity_prompt: string | null;
+  target_language: string | null;
+  target_country: string | null;
   is_active: boolean | null;
   created_at: string | null;
 }

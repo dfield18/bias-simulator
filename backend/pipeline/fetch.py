@@ -10,7 +10,7 @@ SOCIALDATA_API_KEY = os.getenv("SOCIALDATA_API_KEY", "")
 SOCIALDATA_BASE_URL = "https://api.socialdata.tools"
 
 
-def fetch_tweets(topic_slug: str, search_query: str, hours: int = 24, max_pages: int = 25) -> list[dict]:
+def fetch_tweets(topic_slug: str, search_query: str, hours: int = 24, max_pages: int = 25, lang: str = "en") -> list[dict]:
     """
     Fetch tweets from SocialData API for a given topic.
     Returns list of raw tweet dicts sorted by views descending.
@@ -29,7 +29,7 @@ def fetch_tweets(topic_slug: str, search_query: str, hours: int = 24, max_pages:
         params = {
             "query": search_query,
             "type": "Top",
-            "lang": "en",
+            "lang": lang,
             "since_time": since_time,
         }
         if next_cursor:

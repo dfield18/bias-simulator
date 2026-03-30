@@ -26,6 +26,8 @@ class Topic(Base):
     search_query = Column(Text)
     custom_frames = Column(JSONB)   # e.g. [{"key": "deportation-policy", "label": "Deportation Policy"}, ...]
     custom_emotions = Column(JSONB)  # e.g. [{"key": "nationalist-anger", "label": "Nationalist Anger"}, ...]
+    target_language = Column(Text, default="en")  # ISO lang code for tweet fetching
+    target_country = Column(Text)  # e.g. "United States", "United Kingdom" — for audience relevance filtering
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
 
@@ -141,6 +143,8 @@ class TopicResponse(BaseModel):
     pro_label: str
     anti_label: str
     search_query: Optional[str] = None
+    target_language: Optional[str] = "en"
+    target_country: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -154,6 +158,8 @@ class TopicDetailResponse(BaseModel):
     search_query: Optional[str] = None
     classification_prompt: Optional[str] = None
     intensity_prompt: Optional[str] = None
+    target_language: Optional[str] = "en"
+    target_country: Optional[str] = None
     is_active: Optional[bool] = True
     created_at: Optional[datetime] = None
 

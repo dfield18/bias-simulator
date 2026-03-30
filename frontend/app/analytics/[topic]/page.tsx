@@ -238,28 +238,34 @@ export default function AnalyticsPage() {
                   }
                   setIsRunning("running");
                   setPipelineProgress(null);
+                  console.log("[Refresh] Starting pipeline for", topicSlug);
                   try {
                     await runTopicPipeline(topicSlug);
+                    console.log("[Refresh] Pipeline triggered, polling...");
                     const poll = async () => {
                       for (let i = 0; i < 120; i++) {
                         await new Promise((r) => setTimeout(r, 3000));
                         try {
                           const prog = await fetchPipelineProgress(topicSlug);
+                          console.log(`[Refresh] Poll ${i + 1}:`, prog);
                           if (prog) setPipelineProgress(prog);
                           if (prog && !prog.running) {
+                            console.log("[Refresh] Pipeline finished:", prog.label, prog.detail);
                             invalidateCache(topicSlug);
                             const run = await fetchLastRun(topicSlug);
                             if (run) setLastRun(run);
                             setIsRunning("done");
                             return;
                           }
-                        } catch { /* keep polling */ }
+                        } catch (e) { console.log("[Refresh] Poll error:", e); }
                       }
+                      console.log("[Refresh] Polling timed out");
                       invalidateCache(topicSlug);
                       setIsRunning("done");
                     };
                     poll();
-                  } catch {
+                  } catch (e) {
+                    console.error("[Refresh] Failed to start pipeline:", e);
                     setIsRunning(false);
                   }
                 }}

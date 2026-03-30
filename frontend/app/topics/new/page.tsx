@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import SearchPills from "@/components/SearchPills";
 import {
   TopicSuggestion,
   suggestTopic,
@@ -171,20 +172,10 @@ export default function NewTopicPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">
-                  Twitter Search Query
-                </label>
-                <input
-                  type="text"
-                  value={suggestion.search_query}
-                  onChange={(e) => updateField("search_query", e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
-                />
-                <p className="text-xs text-gray-600 mt-1">
-                  Use OR to combine terms. This is what we search Twitter for.
-                </p>
-              </div>
+              <SearchPills
+                value={suggestion.search_query}
+                onChange={(val) => updateField("search_query", val)}
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>

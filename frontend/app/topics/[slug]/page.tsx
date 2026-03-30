@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import SearchPills from "@/components/SearchPills";
 import {
   TopicDetail,
   PipelineRun,
@@ -326,15 +327,7 @@ export default function TopicManagePage() {
             />
           </div>
 
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Twitter Search Query</label>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
-            />
-          </div>
+          <SearchPills value={searchQuery} onChange={setSearchQuery} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>

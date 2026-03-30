@@ -346,7 +346,7 @@ export default function AdminPage() {
         <div className="flex flex-wrap gap-3 items-center">
           <select
             value={selectedTopic}
-            onChange={(e) => setSelectedTopic(e.target.value)}
+            onChange={(e) => { setSelectedTopic(e.target.value); setFilterBent(""); }}
             className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
           >
             {topics.map((t) => (
@@ -362,8 +362,12 @@ export default function AdminPage() {
             className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
           >
             <option value="">All classifications</option>
-            <option value="anti-war">Anti-War</option>
-            <option value="pro-war">Pro-War</option>
+            {currentTopic && (
+              <>
+                <option value={antiBent}>{currentTopic.anti_label}</option>
+                <option value={proBent}>{currentTopic.pro_label}</option>
+              </>
+            )}
             <option value="neutral">Neutral</option>
             <option value="unclear">Unclear</option>
           </select>

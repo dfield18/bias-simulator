@@ -243,8 +243,8 @@ export default function AnalyticsPage() {
                     await runTopicPipeline(topicSlug);
                     console.log("[Refresh] Pipeline triggered, polling...");
                     const poll = async () => {
-                      for (let i = 0; i < 120; i++) {
-                        await new Promise((r) => setTimeout(r, 3000));
+                      for (let i = 0; i < 300; i++) {
+                        await new Promise((r) => setTimeout(r, 5000));
                         try {
                           const prog = await fetchPipelineProgress(topicSlug);
                           console.log(`[Refresh] Poll ${i + 1}:`, prog);

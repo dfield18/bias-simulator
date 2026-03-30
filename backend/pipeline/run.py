@@ -360,7 +360,9 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         except Exception as e:
             print(f"  Summary generation failed: {e}")
 
-        # Summary
+        # Summary — invalidate backend cache for this topic
+        from cache import invalidate as invalidate_cache
+        invalidate_cache(topic_slug)
         set_progress(topic_slug, 7, 7, "Complete", f"{tweets_new} new tweets, {len(classifications)} classified")
         _pipeline_progress[topic_slug]["running"] = False
         print(f"\n{'='*60}")

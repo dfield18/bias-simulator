@@ -1,8 +1,10 @@
 import math
+import asyncio
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict, Counter
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func, and_, case, text
+from cache import get_cached, set_cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -191,6 +193,13 @@ async def get_smart_feed(
     db: AsyncSession = Depends(get_db),
 ):
     """Advanced feed algorithm with multi-signal scoring."""
+    # Round bias for cache key stability
+    bias_key = round(bias, 1)
+    cache_key = f"{topic}:smart:{bias_key}:{hours}:{limit}"
+    cached = get_cached(cache_key, ttl=120)
+    if cached is not None:
+        return cached
+
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     # Load topic
@@ -571,9 +580,12 @@ async def get_smart_feed(
                     interleaved.append(pro_items[pi]); pi += 1
                 elif oi < len(other_items):
                     interleaved.append(other_items[oi]); oi += 1
+        set_cache(cache_key, interleaved[:limit])
         return interleaved[:limit]
 
-    return final_items[:limit]
+    result = final_items[:limit]
+    set_cache(cache_key, result)
+    return result
 
 
 def _get_bias_weight_continuous(
@@ -725,6 +737,10 @@ async def get_narrative(
     db: AsyncSession = Depends(get_db),
 ):
     """Get narrative frame and emotion distributions by side."""
+    cache_key = f"{topic}:narrative:{hours}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -819,7 +835,7 @@ async def get_narrative(
             })
     emotion_gaps.sort(key=lambda x: x["delta"], reverse=True)
 
-    return {
+    result = {
         "frames": {
             "anti": anti_frames,
             "pro": pro_frames,
@@ -839,6 +855,8 @@ async def get_narrative(
             "pro": len(pro_tweets),
         },
     }
+    set_cache(cache_key, result)
+    return result
 
 
 def _ratio_label(ratio: float) -> str:
@@ -1708,6 +1726,11 @@ async def get_analytics(
     db: AsyncSession = Depends(get_db),
 ):
     """Get analytics data: engagement comparison, top voices, trending phrases."""
+    cache_key = f"{topic}:analytics:{hours}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     # Load topic to get labels
@@ -2110,7 +2133,7 @@ async def get_analytics(
         "shared_narratives": shared_frames[:8],
     }
 
-    return {
+    result = {
         "engagement": engagement,
         "voices": voices,
         "phrases": phrases,
@@ -2121,6 +2144,8 @@ async def get_analytics(
         "anti_label": topic_obj.anti_label,
         "pro_label": topic_obj.pro_label,
     }
+    set_cache(cache_key, result)
+    return result
 
 
 @router.get("/pulse-extras")
@@ -2255,6 +2280,9 @@ async def get_narrative_strategy(
     db: AsyncSession = Depends(get_db),
 ):
     """Return frame engagement, playbook structure, and narrative gaps."""
+    ck = f"{topic}:narr_strategy:{hours}"
+    cv = get_cached(ck)
+    if cv is not None: return cv
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2345,7 +2373,7 @@ async def get_narrative_strategy(
         gaps.sort(key=lambda x: -x["gap"])
         return gaps[:n]
 
-    return {
+    r = {
         "frame_performance": frame_performance[:8],
         "playbook": {
             "anti": build_playbook(anti_shares),
@@ -2358,6 +2386,8 @@ async def get_narrative_strategy(
         "anti_label": aL,
         "pro_label": pL,
     }
+    set_cache(ck, r)
+    return r
 
 
 @router.get("/narrative-depth")
@@ -2367,6 +2397,9 @@ async def get_narrative_depth(
     db: AsyncSession = Depends(get_db),
 ):
     """Return rhetoric intensity, example tweets per frame, and amplification signals."""
+    ck = f"{topic}:narr_depth:{hours}"
+    cv = get_cached(ck)
+    if cv is not None: return cv
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2543,13 +2576,15 @@ async def get_narrative_depth(
     amplified_frames.sort(key=lambda x: -x["avg_engagement"])
     amplification["amplified_frames"] = amplified_frames[:5]
 
-    return {
+    r = {
         "rhetoric": rhetoric,
         "example_tweets": example_tweets,
         "amplification": amplification,
         "anti_label": aL,
         "pro_label": pL,
     }
+    set_cache(ck, r)
+    return r
 
 
 @router.get("/media-breakdown")

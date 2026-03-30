@@ -194,8 +194,9 @@ export default function AnalyticsPage() {
 
   if (!topic) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12 text-gray-500">
-        Loading...
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="animate-spin h-10 w-10 border-2 border-blue-400 border-t-transparent rounded-full mb-4" />
+        <p className="text-sm text-gray-400">Loading dashboard...</p>
       </div>
     );
   }
@@ -372,10 +373,10 @@ export default function AnalyticsPage() {
               {/* Tweet feed */}
               <div>
                 {feedLoading && smartFeedItems.length === 0 ? (
-                  <div className="space-y-4">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4 animate-pulse h-40" />
-                    ))}
+                  <div className="flex flex-col items-center justify-center py-20">
+                    <div className="animate-spin h-8 w-8 border-2 border-blue-400 border-t-transparent rounded-full mb-4" />
+                    <p className="text-sm text-gray-400">Loading your feed...</p>
+                    <p className="text-[10px] text-gray-600 mt-1">Building your personalized timeline from {topic.name} tweets</p>
                   </div>
                 ) : feedItems.length === 0 ? (
                   <p className="text-gray-500 text-center py-12">No tweets found.</p>

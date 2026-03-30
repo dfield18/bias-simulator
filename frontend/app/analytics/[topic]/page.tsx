@@ -139,15 +139,23 @@ export default function AnalyticsPage() {
     cachedFetch(`${s}:breakdown`, () => fetchBreakdown(s, 720)).then(setBreakdown).catch(console.error);
   }, [topicSlug]);
 
-  // Refetch smart feed when bias changes (cached per bias value)
+  // Refetch smart feed when bias changes — debounced to avoid flooding API
+  const [debouncedBias, setDebouncedBias] = useState(bias);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedBias(bias), 500);
+    return () => clearTimeout(timer);
+  }, [bias]);
+
   useEffect(() => {
     if (!topicSlug) return;
     setFeedLoading(true);
-    cachedFetch(`${topicSlug}:smartFeed:${bias}`, () => fetchSmartFeed(topicSlug, bias, 720, 200))
+    // Round to 1 decimal for cache key stability
+    const biasKey = Math.round(debouncedBias * 10) / 10;
+    cachedFetch(`${topicSlug}:smartFeed:${biasKey}`, () => fetchSmartFeed(topicSlug, biasKey, 720, 200))
       .then(setSmartFeedItems)
       .catch(console.error)
       .finally(() => setFeedLoading(false));
-  }, [bias, topicSlug]);
+  }, [debouncedBias, topicSlug]);
 
   // Feed items: smart-ranked or chronological
   const feedScored = useMemo(() => {

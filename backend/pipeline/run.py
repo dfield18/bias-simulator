@@ -260,7 +260,6 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         print(f"  Saved {tweets_new} new tweets ({tweets_fetched - tweets_new} duplicates)")
 
         # 4. Classify
-        set_progress(topic_slug, 4, 7, "Analyzing tweets with AI", f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by Gemini AI, with uncertain ones double-checked by Claude and GPT for accuracy. This is the longest step.")
         print("\n[4/7] Classifying tweets...")
 
         # Inject audience relevance into classification prompt if target_country is set
@@ -302,6 +301,11 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
 
         tweets_to_classify = [t for t in parsed_tweets if t["id_str"] not in existing_ids]
         print(f"  Skipping {len(existing_ids)} already-classified tweets, classifying {len(tweets_to_classify)} new ones")
+
+        set_progress(topic_slug, 4, 7, "Analyzing tweets with AI",
+                     f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by Gemini AI, "
+                     f"with uncertain ones double-checked by Claude and GPT for accuracy. "
+                     f"This is the longest step." if tweets_to_classify else "All tweets already classified.")
 
         # Determine pro/anti bent values from labels
         pro_bent = topic["pro_label"].lower().replace(" ", "-")

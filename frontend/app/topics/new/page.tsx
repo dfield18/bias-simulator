@@ -7,9 +7,11 @@ import SearchPills from "@/components/SearchPills";
 import { invalidateCache } from "@/lib/cache";
 import {
   TopicSuggestion,
+  PipelineProgress,
   suggestTopic,
   createTopic,
   runTopicPipeline,
+  fetchPipelineProgress,
 } from "@/lib/api";
 
 export default function NewTopicPage() {
@@ -22,6 +24,7 @@ export default function NewTopicPage() {
   const [showPrompts, setShowPrompts] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [targetCountry, setTargetCountry] = useState("United States");
+  const [pipelineProgress, setPipelineProgress] = useState<PipelineProgress | null>(null);
 
   const handleSuggest = async () => {
     if (!topicInput.trim()) return;
@@ -46,22 +49,78 @@ export default function NewTopicPage() {
     if (!suggestion) return;
     setCreating(true);
     setError(null);
+    setPipelineProgress(null);
     try {
       await createTopic({
         ...suggestion,
         target_language: targetLanguage,
         target_country: targetCountry || undefined,
       });
-      // Clear cached topics list so the new topic appears immediately
       invalidateCache("topics");
-      // Trigger pipeline in background — don't await, it takes minutes
-      runTopicPipeline(suggestion.slug).catch(console.error);
+      await runTopicPipeline(suggestion.slug);
+      // Poll for pipeline progress
+      for (let i = 0; i < 300; i++) {
+        await new Promise((r) => setTimeout(r, 5000));
+        try {
+          const prog = await fetchPipelineProgress(suggestion.slug);
+          if (prog) {
+            setPipelineProgress(prog);
+            if (!prog.running) {
+              // Pipeline finished — navigate to dashboard
+              router.push(`/analytics/${suggestion.slug}`);
+              return;
+            }
+          }
+        } catch { /* keep polling */ }
+      }
+      // Timeout — navigate anyway
       router.push(`/analytics/${suggestion.slug}`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "An error occurred");
       setCreating(false);
     }
   };
+
+  // Show pipeline progress screen while creating
+  if (creating) {
+    return (
+      <main className="max-w-lg mx-auto px-4 py-20">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+          <div className="animate-spin h-10 w-10 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-6" />
+          <h2 className="text-lg font-bold text-gray-200 mb-2">
+            Setting up {suggestion?.topic_name || "your topic"}
+          </h2>
+          {pipelineProgress ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">{pipelineProgress.label}</p>
+              <div className="h-3 bg-gray-800 rounded-full overflow-hidden mb-2">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                  style={{ width: `${pipelineProgress.pct}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>{pipelineProgress.detail}</span>
+                <span>{pipelineProgress.pct}%</span>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-gray-400">
+              Creating topic and starting tweet collection...
+            </p>
+          )}
+          <p className="text-[10px] text-gray-600 mt-6">
+            This usually takes 3-10 minutes. You&apos;ll be redirected to the dashboard when it&apos;s ready.
+          </p>
+          {error && (
+            <div className="mt-4 bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-sm text-red-400">
+              {error}
+            </div>
+          )}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-3xl mx-auto px-4 py-8 sm:py-12">

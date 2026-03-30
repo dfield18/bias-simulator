@@ -2864,23 +2864,29 @@ async def get_dunks(
         views = t.views or 0
         engagement = t.engagement or 0
 
-        # Signal 1: Reply ratio (ratio'd = being dunked)
+        # Signal 1: Reply ratio + absolute volume
         reply_ratio = replies / max(likes, 1)
-        ratio_score = min(reply_ratio / 1.0, 2.0)  # cap at 2.0, 1:1 reply:like = strong ratio
+        ratio_score = min(reply_ratio / 1.0, 2.0)
+        # Volume multiplier: 10+ replies = 1.0, 50+ = 1.5, 200+ = 2.0
+        reply_volume = min(math.log10(max(replies, 1)) / 2.3, 2.0)  # log10(200) ≈ 2.3
+        ratio_score *= max(reply_volume, 0.1)  # near-zero replies = near-zero score
 
         # Signal 2: Cross-side quote/reply engagement from classified accounts
         engagers = cross_engagement.get(t.id_str, [])
         opposite_side = pro_bent if bent == anti_bent else anti_bent
         opposite_engagers = sum(1 for b in engagers if b == opposite_side)
         same_engagers = sum(1 for b in engagers if b == bent)
-        cross_score = opposite_engagers * 2.0  # each opposite-side engager = strong dunk signal
+        cross_score = opposite_engagers * 2.0
 
-        # Signal 3: High quote-to-RT ratio (people adding commentary, not just sharing)
+        # Signal 3: Quote ratio + absolute volume
         quote_ratio = quotes / max(retweets, 1)
         quote_score = min(quote_ratio * 2.0, 2.0)
+        # Volume multiplier: 5+ quotes = 1.0, 20+ = 1.5, 100+ = 2.0
+        quote_volume = min(math.log10(max(quotes, 1)) / 2.0, 2.0)
+        quote_score *= max(quote_volume, 0.1)
 
         # Signal 4: Raw engagement (needs to be visible enough to matter)
-        visibility = math.log10(max(views, 1)) / 6.0  # normalized
+        visibility = math.log10(max(views, 1)) / 6.0
 
         # Combined dunk score
         dunk_score = (ratio_score * 0.3 + cross_score * 0.35 + quote_score * 0.15 + visibility * 0.2)

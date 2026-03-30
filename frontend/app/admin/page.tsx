@@ -550,8 +550,42 @@ export default function AdminPage() {
                       ? (row.classification.confidence * 100).toFixed(0) + "%"
                       : "-"}
                   </td>
-                  <td className="px-3 py-2 text-right font-mono text-xs">
-                    {row.classification.effective_intensity_score ?? "-"}
+                  <td className="px-3 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-0.5">
+                      <button
+                        onClick={async () => {
+                          const current = row.classification.effective_intensity_score ?? 0;
+                          const newVal = Math.max(current - 1, -10);
+                          setRows((prev) => prev.map((r) =>
+                            r.tweet.id_str === row.tweet.id_str
+                              ? { ...r, classification: { ...r.classification, effective_intensity_score: newVal, override_intensity_score: newVal, override_flag: true } }
+                              : r
+                          ));
+                          try { await submitOverride(secret, { id_str: row.tweet.id_str, override_political_bent: null, override_intensity_score: newVal, override_notes: "Intensity adjusted inline" }); } catch {}
+                        }}
+                        className="w-5 h-5 rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 text-xs flex items-center justify-center"
+                      >-</button>
+                      <span className={`font-mono text-xs w-7 text-center ${
+                        (row.classification.effective_intensity_score ?? 0) > 0 ? "text-red-400" :
+                        (row.classification.effective_intensity_score ?? 0) < 0 ? "text-blue-400" :
+                        "text-gray-500"
+                      }`}>
+                        {row.classification.effective_intensity_score ?? 0}
+                      </span>
+                      <button
+                        onClick={async () => {
+                          const current = row.classification.effective_intensity_score ?? 0;
+                          const newVal = Math.min(current + 1, 10);
+                          setRows((prev) => prev.map((r) =>
+                            r.tweet.id_str === row.tweet.id_str
+                              ? { ...r, classification: { ...r.classification, effective_intensity_score: newVal, override_intensity_score: newVal, override_flag: true } }
+                              : r
+                          ));
+                          try { await submitOverride(secret, { id_str: row.tweet.id_str, override_political_bent: null, override_intensity_score: newVal, override_notes: "Intensity adjusted inline" }); } catch {}
+                        }}
+                        className="w-5 h-5 rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 text-xs flex items-center justify-center"
+                      >+</button>
+                    </div>
                   </td>
                   <td className="px-3 py-2 text-right text-xs text-gray-500">
                     {formatNumber(row.tweet.views)}

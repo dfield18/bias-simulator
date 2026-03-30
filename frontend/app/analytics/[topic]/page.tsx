@@ -398,6 +398,34 @@ export default function AnalyticsPage() {
 
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
 
+        {/* Pipeline progress banner */}
+        {isRunning === "running" && pipelineProgress && (
+          <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full shrink-0" />
+                <span className="text-sm font-medium text-gray-300">{pipelineProgress.label}</span>
+              </div>
+              <span className="text-xs text-gray-500">Step {pipelineProgress.step} of {pipelineProgress.total_steps} &middot; {pipelineProgress.pct}%</span>
+            </div>
+            <div className="h-2.5 bg-gray-800 rounded-full overflow-hidden mb-2">
+              <div
+                className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                style={{ width: `${pipelineProgress.pct}%` }}
+              />
+            </div>
+            {pipelineProgress.detail && (
+              <p className="text-xs text-gray-500 leading-relaxed">{pipelineProgress.detail}</p>
+            )}
+          </div>
+        )}
+        {isRunning === "running" && !pipelineProgress && (
+          <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-5 flex items-center gap-3">
+            <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full shrink-0" />
+            <span className="text-sm text-gray-400">Starting pipeline...</span>
+          </div>
+        )}
+
         {/* ============ TAB 1: Executive Pulse ============ */}
         {/* ============ TAB: Feed ============ */}
         {activeTab === "feed" && (

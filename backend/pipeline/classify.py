@@ -95,7 +95,7 @@ def classify_tweets(tweets: list[dict], topic_classification_prompt: str) -> tup
     import concurrent.futures
 
     batch_size = 20  # Larger batches — Gemini handles 20 tweets well
-    max_parallel = 5  # Process 5 batches simultaneously
+    max_parallel = 10  # Process 10 batches simultaneously
     all_classifications = []
     total_cost = 0.0
 
@@ -139,7 +139,7 @@ def classify_tweets(tweets: list[dict], topic_classification_prompt: str) -> tup
             bent = classification.get("political_bent", "")
 
             # Escalate if low confidence or unclear/error
-            if conf < 0.70 or bent in ("unclear", "error"):
+            if conf < 0.60 or bent in ("unclear", "error"):
                 try:
                     escalated, esc_cost = _escalate_classification(tweet, topic_classification_prompt)
                     batch_cost += esc_cost

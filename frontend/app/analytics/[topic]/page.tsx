@@ -111,7 +111,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     const s = topicSlug;
-    cachedFetch(`topics`, () => fetchTopics()).then((topics) => {
+    cachedFetch(`topics`, () => fetchTopics(), 60 * 1000).then((topics) => {
       const t = topics.find((t) => t.slug === s);
       if (t) setTopic(t);
     }).catch(console.error);

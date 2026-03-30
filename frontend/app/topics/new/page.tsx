@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SearchPills from "@/components/SearchPills";
+import { invalidateCache } from "@/lib/cache";
 import {
   TopicSuggestion,
   suggestTopic,
@@ -51,6 +52,8 @@ export default function NewTopicPage() {
         target_language: targetLanguage,
         target_country: targetCountry || undefined,
       });
+      // Clear cached topics list so the new topic appears immediately
+      invalidateCache("topics");
       // Trigger pipeline in background — don't await, it takes minutes
       runTopicPipeline(suggestion.slug).catch(console.error);
       router.push(`/analytics/${suggestion.slug}`);

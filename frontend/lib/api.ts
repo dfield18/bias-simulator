@@ -975,6 +975,8 @@ export async function updateTopic(
     search_query: string;
     classification_prompt: string;
     intensity_prompt: string;
+    target_language: string;
+    target_country: string | null;
     is_active: boolean;
   }>
 ): Promise<TopicDetail> {

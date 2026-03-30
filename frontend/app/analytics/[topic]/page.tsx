@@ -387,6 +387,14 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
+            {/* Loading indicator when bias changes */}
+            {feedLoading && smartFeedItems.length > 0 && (
+              <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-2">
+                <div className="animate-spin h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full shrink-0" />
+                <span className="text-xs text-blue-300">Updating feed for new bias position...</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
               {/* Tweet feed */}
               <div>

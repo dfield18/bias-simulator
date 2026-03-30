@@ -487,14 +487,40 @@ export default function AdminPage() {
                       {row.tweet.full_text}
                     </div>
                   </td>
-                  <td className="px-3 py-2">
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded ${bentBadge(
-                        row.classification.effective_political_bent, antiBent, proBent
-                      )}`}
-                    >
-                      {row.classification.effective_political_bent}
-                    </span>
+                  <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        { value: antiBent, label: currentTopic?.anti_label || antiBent },
+                        { value: proBent, label: currentTopic?.pro_label || proBent },
+                        { value: "neutral", label: "Neutral" },
+                      ].map((opt) => {
+                        const isActive = row.classification.effective_political_bent === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={async () => {
+                              if (isActive) return;
+                              try {
+                                await submitOverride(secret, {
+                                  id_str: row.tweet.id_str,
+                                  override_political_bent: opt.value,
+                                  override_intensity_score: null,
+                                  override_notes: "Reclassified via inline toggle",
+                                });
+                                loadData();
+                              } catch { /* ignore */ }
+                            }}
+                            className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
+                              isActive
+                                ? bentBadge(opt.value, antiBent, proBent) + " font-semibold"
+                                : "bg-gray-800 text-gray-600 hover:text-gray-400"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                     {row.classification.override_flag && (
                       <span className="text-yellow-500 ml-1 text-xs" title="Overridden">
                         *

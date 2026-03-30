@@ -266,6 +266,21 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         # Inject audience relevance into classification prompt if target_country is set
         class_prompt = topic["classification_prompt"]
         target_country = topic.get("target_country")
+        target_lang = topic.get("target_language") or "en"
+
+        # Language filter: exclude tweets not primarily in the target language
+        lang_names = {"en": "English", "es": "Spanish", "fr": "French", "de": "German", "pt": "Portuguese",
+                      "ar": "Arabic", "he": "Hebrew", "ja": "Japanese", "ko": "Korean", "zh": "Chinese",
+                      "hi": "Hindi", "ru": "Russian", "it": "Italian"}
+        lang_name = lang_names.get(target_lang, "English")
+        lang_instruction = (
+            f"\n\nLANGUAGE FILTER: The target audience reads {lang_name}. "
+            f"For about_subject, set it to FALSE if the tweet is primarily written in a different language, "
+            f"even if it contains a few {lang_name} words. Bilingual tweets that are mostly in another language "
+            f"should be set to FALSE. Tweets that are fully or predominantly in {lang_name} should not be affected by this filter."
+        )
+        class_prompt = class_prompt + lang_instruction
+
         if target_country:
             audience_instruction = (
                 f"\n\nAUDIENCE FILTER: The target audience is people in {target_country} who are interested in this topic. "

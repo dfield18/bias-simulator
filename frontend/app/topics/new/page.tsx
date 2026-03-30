@@ -95,17 +95,22 @@ export default function NewTopicPage() {
           </h2>
           {pipelineProgress ? (
             <>
-              <p className="text-sm text-gray-400 mb-4">{pipelineProgress.label}</p>
-              <div className="h-3 bg-gray-800 rounded-full overflow-hidden mb-2">
+              <p className="text-sm font-medium text-gray-300 mb-2">{pipelineProgress.label}</p>
+              <div className="h-3 bg-gray-800 rounded-full overflow-hidden mb-3">
                 <div
                   className="h-full bg-blue-500 rounded-full transition-all duration-500"
                   style={{ width: `${pipelineProgress.pct}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>{pipelineProgress.detail}</span>
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                <span>Step {pipelineProgress.step} of {pipelineProgress.total_steps}</span>
                 <span>{pipelineProgress.pct}%</span>
               </div>
+              {pipelineProgress.detail && (
+                <p className="text-xs text-gray-500 leading-relaxed bg-gray-800/50 rounded-lg p-3 text-left">
+                  {pipelineProgress.detail}
+                </p>
+              )}
             </>
           ) : (
             <p className="text-sm text-gray-400">

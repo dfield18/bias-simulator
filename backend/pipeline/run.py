@@ -233,7 +233,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
 
     try:
         # 1. Load topic
-        set_progress(topic_slug, 1, 7, "Loading topic")
+        set_progress(topic_slug, 1, 7, "Setting up", "Loading topic configuration...")
         print("\n[1/7] Loading topic...")
         topic = load_topic(conn, topic_slug)
         if not topic:
@@ -244,7 +244,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         print(f"  Labels: {topic['anti_label']} / {topic['pro_label']}")
 
         # 2. Fetch tweets
-        set_progress(topic_slug, 2, 7, "Fetching tweets", "Querying Twitter API...")
+        set_progress(topic_slug, 2, 7, "Collecting tweets from Twitter", "Searching for relevant posts across Twitter...")
         print("\n[2/7] Fetching tweets...")
         # Use topic's search_query if set, otherwise derive from name
         search_query = topic.get("search_query") or topic["name"]
@@ -253,14 +253,14 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         tweets_fetched = len(raw_tweets)
 
         # 3. Parse and upsert tweets
-        set_progress(topic_slug, 3, 7, "Saving tweets", f"{tweets_fetched} tweets fetched")
+        set_progress(topic_slug, 3, 7, "Processing collected tweets", f"Found {tweets_fetched} tweets, saving to database...")
         print("\n[3/7] Saving tweets to database...")
         parsed_tweets = [parse_tweet(t, topic_slug) for t in raw_tweets]
         tweets_new = upsert_tweets(conn, parsed_tweets)
         print(f"  Saved {tweets_new} new tweets ({tweets_fetched - tweets_new} duplicates)")
 
         # 4. Classify
-        set_progress(topic_slug, 4, 7, "Classifying tweets", f"{tweets_new} new, classifying with AI...")
+        set_progress(topic_slug, 4, 7, "Analyzing tweets with AI", f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by Gemini AI, with uncertain ones double-checked by Claude and GPT for accuracy. This is the longest step.")
         print("\n[4/7] Classifying tweets...")
 
         # Inject audience relevance into classification prompt if target_country is set
@@ -316,7 +316,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         anti_bent = topic["anti_label"].lower().replace(" ", "-")
 
         # 5. Score intensity — merge tweet text into classifications
-        set_progress(topic_slug, 5, 7, "Scoring intensity", f"{len(classifications)} classified, scoring rhetoric...")
+        set_progress(topic_slug, 5, 7, "Measuring rhetoric intensity", f"Scoring how strongly each of the {len(classifications)} tweets argues its position...")
         print("\n[5/7] Scoring intensity...")
         tweet_lookup = {t["id_str"]: t for t in parsed_tweets}
         for c in classifications:
@@ -343,7 +343,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                       len(classifications), total_cost, "success")
 
         # Classify narrative frames and emotions
-        set_progress(topic_slug, 6, 7, "Classifying frames", "Assigning narrative frames and emotions...")
+        set_progress(topic_slug, 6, 7, "Identifying arguments and emotions", "Analyzing the main talking points and emotional tone of each tweet...")
         print("\n[6/7] Classifying narrative frames...")
         try:
             from pipeline.framing import classify_frames
@@ -352,7 +352,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
             print(f"  Frame classification failed: {e}")
 
         # Generate AI summaries
-        set_progress(topic_slug, 7, 7, "Generating summaries", "Writing AI narrative summaries...")
+        set_progress(topic_slug, 7, 7, "Writing AI analysis", "Generating narrative summaries and identifying what each side is saying...")
         print("\n[7/7] Generating AI summaries...")
         try:
             from pipeline.summarize import generate_summaries
@@ -363,7 +363,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         # Summary — invalidate backend cache for this topic
         from cache import invalidate as invalidate_cache
         invalidate_cache(topic_slug)
-        set_progress(topic_slug, 7, 7, "Complete", f"{tweets_new} new tweets, {len(classifications)} classified")
+        set_progress(topic_slug, 7, 7, "Your dashboard is ready", f"Analyzed {len(classifications)} tweets, {tweets_new} new")
         _pipeline_progress[topic_slug]["running"] = False
         print(f"\n{'='*60}")
         print(f"Fetched: {tweets_fetched} tweets | New: {tweets_new} | "

@@ -51,6 +51,8 @@ class CreateTopicRequest(BaseModel):
     intensity_prompt: str
     custom_frames: list[FrameItem] = []
     custom_emotions: list[FrameItem] = []
+    target_language: str = "en"
+    target_country: str | None = None
 
 
 @router.get("/topics", response_model=list[TopicResponse])
@@ -161,6 +163,8 @@ async def create_topic(
         intensity_prompt=body.intensity_prompt,
         custom_frames=[f.model_dump() for f in body.custom_frames] if body.custom_frames else None,
         custom_emotions=[e.model_dump() for e in body.custom_emotions] if body.custom_emotions else None,
+        target_language=body.target_language,
+        target_country=body.target_country,
         is_active=True,
     )
 

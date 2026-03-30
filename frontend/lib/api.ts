@@ -112,6 +112,8 @@ export interface TopicSuggestion {
   intensity_prompt: string;
   custom_frames?: FrameItem[];
   custom_emotions?: FrameItem[];
+  target_language?: string;
+  target_country?: string;
 }
 
 export async function suggestTopic(topicName: string): Promise<TopicSuggestion> {

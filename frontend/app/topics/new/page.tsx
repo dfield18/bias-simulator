@@ -18,6 +18,8 @@ export default function NewTopicPage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPrompts, setShowPrompts] = useState(false);
+  const [targetLanguage, setTargetLanguage] = useState("en");
+  const [targetCountry, setTargetCountry] = useState("United States");
 
   const handleSuggest = async () => {
     if (!topicInput.trim()) return;
@@ -43,7 +45,11 @@ export default function NewTopicPage() {
     setCreating(true);
     setError(null);
     try {
-      await createTopic(suggestion);
+      await createTopic({
+        ...suggestion,
+        target_language: targetLanguage,
+        target_country: targetCountry || undefined,
+      });
       // Trigger pipeline in background — don't await, it takes minutes
       runTopicPipeline(suggestion.slug).catch(console.error);
       router.push(`/analytics/${suggestion.slug}`);
@@ -178,6 +184,55 @@ export default function NewTopicPage() {
                 <p className="text-xs text-gray-600 mt-1">
                   Use OR to combine terms. This is what we search Twitter for.
                 </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Tweet Language</label>
+                  <select
+                    value={targetLanguage}
+                    onChange={(e) => setTargetLanguage(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+                  >
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="ar">Arabic</option>
+                    <option value="he">Hebrew</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                    <option value="zh">Chinese</option>
+                    <option value="hi">Hindi</option>
+                    <option value="ru">Russian</option>
+                    <option value="it">Italian</option>
+                  </select>
+                  <p className="text-[10px] text-gray-600 mt-1">Only fetch tweets in this language</p>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Target Audience Country</label>
+                  <select
+                    value={targetCountry}
+                    onChange={(e) => setTargetCountry(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+                  >
+                    <option value="">No filter (global)</option>
+                    <option value="United States">United States</option>
+                    <option value="United Kingdom">United Kingdom</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Australia">Australia</option>
+                    <option value="India">India</option>
+                    <option value="Germany">Germany</option>
+                    <option value="France">France</option>
+                    <option value="Brazil">Brazil</option>
+                    <option value="Japan">Japan</option>
+                    <option value="Israel">Israel</option>
+                    <option value="Mexico">Mexico</option>
+                    <option value="Spain">Spain</option>
+                  </select>
+                  <p className="text-[10px] text-gray-600 mt-1">Filter tweets to what someone in this country would likely see</p>
+                </div>
               </div>
             </div>
           </div>

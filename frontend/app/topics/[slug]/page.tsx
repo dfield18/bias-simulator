@@ -121,7 +121,16 @@ export default function TopicManagePage() {
             setPipelineProgress({ label: prog.label, pct: prog.pct, detail: prog.detail });
             if (!prog.running) {
               if (prog.label === "Error") {
-                setError(`Pipeline failed: ${prog.detail}`);
+                const detail = prog.detail || "Unknown error";
+                let userMessage = `Pipeline failed: ${detail}`;
+                if (detail.includes("API key not valid") || detail.includes("INVALID_ARGUMENT")) {
+                  userMessage = "Pipeline failed: The Gemini API key is invalid or expired. Go to Railway → Variables and update GEMINI_API_KEY with a valid key from https://aistudio.google.com/apikey";
+                } else if (detail.includes("401") || detail.includes("Unauthorized")) {
+                  userMessage = "Pipeline failed: The SocialData API key is invalid. Go to Railway → Variables and update SOCIALDATA_API_KEY.";
+                } else if (detail.includes("402") || detail.includes("Payment Required")) {
+                  userMessage = "Pipeline failed: The SocialData API account has run out of credits. Top up at socialdata.tools.";
+                }
+                setError(userMessage);
               } else {
                 setSuccess("Pipeline complete! View your updated dashboard.");
               }

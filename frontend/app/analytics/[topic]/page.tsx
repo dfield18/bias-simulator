@@ -251,6 +251,18 @@ export default function AnalyticsPage() {
                           if (prog) setPipelineProgress(prog);
                           if (prog && !prog.running) {
                             console.log("[Refresh] Pipeline finished:", prog.label, prog.detail);
+                            if (prog.label === "Error") {
+                              const detail = prog.detail || "";
+                              if (detail.includes("API key not valid") || detail.includes("INVALID_ARGUMENT")) {
+                                alert("Pipeline failed: Gemini API key is invalid or expired. Update GEMINI_API_KEY in Railway Variables.");
+                              } else if (detail.includes("401") || detail.includes("Unauthorized")) {
+                                alert("Pipeline failed: SocialData API key is invalid. Update SOCIALDATA_API_KEY in Railway Variables.");
+                              } else if (detail.includes("402") || detail.includes("Payment Required")) {
+                                alert("Pipeline failed: SocialData API credits exhausted. Top up at socialdata.tools.");
+                              } else {
+                                alert(`Pipeline failed: ${detail}`);
+                              }
+                            }
                             invalidateCache(topicSlug);
                             const run = await fetchLastRun(topicSlug);
                             if (run) setLastRun(run);

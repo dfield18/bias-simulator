@@ -89,23 +89,34 @@ def _parse_classifications(response_text: str) -> list[dict]:
 
 def classify_tweets(tweets: list[dict], topic_classification_prompt: str) -> tuple[list[dict], float]:
     """
-    Classify tweets using LLM with smart escalation.
+    Classify tweets using LLM with smart escalation and parallel batching.
     Returns (classifications, total_cost_usd).
     """
-    batch_size = 10
+    import concurrent.futures
+
+    batch_size = 20  # Larger batches — Gemini handles 20 tweets well
+    max_parallel = 5  # Process 5 batches simultaneously
     all_classifications = []
     total_cost = 0.0
 
+    # Build all batches
+    batches = []
     for i in range(0, len(tweets), batch_size):
-        batch = tweets[i:i + batch_size]
+        batches.append(tweets[i:i + batch_size])
+
+    def process_batch(batch):
+        """Process a single batch: classify + escalate low-confidence."""
+        batch_cost = 0.0
+        batch_results = []
         prompt = _build_classification_prompt(batch, topic_classification_prompt)
 
-        # First pass: Gemini Flash-Lite
-        response_text, cost = _call_gemini(prompt, model="gemini-2.0-flash")
-        total_cost += cost
-        parsed = _parse_classifications(response_text)
+        try:
+            response_text, cost = _call_gemini(prompt, model="gemini-2.0-flash")
+            batch_cost += cost
+            parsed = _parse_classifications(response_text)
+        except Exception:
+            parsed = []
 
-        # Match results back to tweets
         parsed_by_id = {str(c.get("id_str", "")): c for c in parsed}
 
         for tweet in batch:
@@ -129,17 +140,43 @@ def classify_tweets(tweets: list[dict], topic_classification_prompt: str) -> tup
 
             # Escalate if low confidence or unclear/error
             if conf < 0.70 or bent in ("unclear", "error"):
-                escalated, esc_cost = _escalate_classification(tweet, topic_classification_prompt)
-                total_cost += esc_cost
-                if escalated:
-                    classification = escalated
+                try:
+                    escalated, esc_cost = _escalate_classification(tweet, topic_classification_prompt)
+                    batch_cost += esc_cost
+                    if escalated:
+                        classification = escalated
+                except Exception:
+                    pass
 
             classification["id_str"] = tid
             classification.setdefault("classification_method", "gemini-2.0-flash")
-            all_classifications.append(classification)
+            batch_results.append(classification)
 
-        # Rate limiting between batches
-        time.sleep(1)
+        return batch_results, batch_cost
+
+    # Process batches in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_parallel) as executor:
+        futures = {executor.submit(process_batch, batch): i for i, batch in enumerate(batches)}
+        results_by_index = {}
+        for future in concurrent.futures.as_completed(futures):
+            idx = futures[future]
+            try:
+                batch_results, batch_cost = future.result()
+                results_by_index[idx] = batch_results
+                total_cost += batch_cost
+            except Exception:
+                # If a batch fails entirely, mark all as errors
+                results_by_index[idx] = [{
+                    "id_str": t["id_str"],
+                    "about_subject": False,
+                    "political_bent": "error",
+                    "confidence": 0.0,
+                    "classification_method": "error-batch-failed",
+                } for t in batches[idx]]
+
+    # Reassemble in order
+    for i in range(len(batches)):
+        all_classifications.extend(results_by_index.get(i, []))
 
     print(f"  Classified {len(all_classifications)} tweets | Cost: ${total_cost:.4f}")
     return all_classifications, total_cost

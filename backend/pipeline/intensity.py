@@ -99,18 +99,26 @@ def score_intensity(
         print("  No tweets to score for intensity")
         return [], 0.0
 
-    batch_size = 10
+    import concurrent.futures
+
+    batch_size = 20  # Larger batches
+    max_parallel = 5
     all_results = []
     total_cost = 0.0
 
+    batches = []
     for i in range(0, len(scoreable), batch_size):
-        batch = scoreable[i:i + batch_size]
+        batches.append(scoreable[i:i + batch_size])
+
+    def process_batch(batch):
+        batch_cost = 0.0
+        batch_results = []
         prompt = _build_intensity_prompt(batch, topic_intensity_prompt, pro_label, anti_label)
 
-        response_text, cost = _call_gemini(prompt)
-        total_cost += cost
-
         try:
+            response_text, cost = _call_gemini(prompt)
+            batch_cost += cost
+
             text = response_text.strip()
             if text.startswith("```"):
                 text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
@@ -127,16 +135,18 @@ def score_intensity(
                 result = results_by_id.get(tid, {})
                 score = result.get("intensity_score")
 
-                # Validate score is in range
                 if score is not None:
-                    score = max(-10, min(10, int(score)))
-                    # Validate direction matches classification
-                    if item.get("political_bent") == anti_bent and score > 0:
-                        result["direction_flag"] = "mismatch"
-                    elif item.get("political_bent") == pro_bent and score < 0:
-                        result["direction_flag"] = "mismatch"
+                    try:
+                        score = max(-10, min(10, int(float(score))))
+                    except (ValueError, TypeError):
+                        score = None
+                    if score is not None:
+                        if item.get("political_bent") == anti_bent and score > 0:
+                            result["direction_flag"] = "mismatch"
+                        elif item.get("political_bent") == pro_bent and score < 0:
+                            result["direction_flag"] = "mismatch"
 
-                all_results.append({
+                batch_results.append({
                     "id_str": tid,
                     "intensity_score": score,
                     "intensity_confidence": result.get("intensity_confidence", 0.0),
@@ -144,10 +154,9 @@ def score_intensity(
                     "intensity_flag": result.get("direction_flag", "valid"),
                 })
 
-        except (json.JSONDecodeError, KeyError, TypeError):
-            # If parsing fails, skip intensity for this batch
+        except Exception:
             for item in batch:
-                all_results.append({
+                batch_results.append({
                     "id_str": item["id_str"],
                     "intensity_score": None,
                     "intensity_confidence": 0.0,
@@ -155,7 +164,28 @@ def score_intensity(
                     "intensity_flag": "error",
                 })
 
-        time.sleep(1)
+        return batch_results, batch_cost
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_parallel) as executor:
+        futures = {executor.submit(process_batch, batch): i for i, batch in enumerate(batches)}
+        results_by_index = {}
+        for future in concurrent.futures.as_completed(futures):
+            idx = futures[future]
+            try:
+                batch_results, batch_cost = future.result()
+                results_by_index[idx] = batch_results
+                total_cost += batch_cost
+            except Exception:
+                results_by_index[idx] = [{
+                    "id_str": item["id_str"],
+                    "intensity_score": None,
+                    "intensity_confidence": 0.0,
+                    "intensity_reasoning": "error",
+                    "intensity_flag": "error",
+                } for item in batches[idx]]
+
+    for i in range(len(batches)):
+        all_results.extend(results_by_index.get(i, []))
 
     print(f"  Scored intensity for {len(all_results)} tweets | Cost: ${total_cost:.4f}")
     return all_results, total_cost

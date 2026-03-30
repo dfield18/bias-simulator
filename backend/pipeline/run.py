@@ -291,9 +291,25 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
             )
             class_prompt = class_prompt + audience_instruction
 
-        classifications, cost_class = classify_tweets(
-            parsed_tweets, class_prompt
-        )
+        # Skip already-classified tweets — only classify new ones
+        existing_ids = set()
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id_str FROM classifications WHERE id_str IN %s",
+                (tuple(t["id_str"] for t in parsed_tweets) or ("__none__",),)
+            )
+            existing_ids = {row[0] for row in cur.fetchall()}
+
+        tweets_to_classify = [t for t in parsed_tweets if t["id_str"] not in existing_ids]
+        print(f"  Skipping {len(existing_ids)} already-classified tweets, classifying {len(tweets_to_classify)} new ones")
+
+        if tweets_to_classify:
+            classifications, cost_class = classify_tweets(
+                tweets_to_classify, class_prompt
+            )
+        else:
+            classifications = []
+            cost_class = 0.0
 
         # Determine pro/anti bent values from labels
         pro_bent = topic["pro_label"].lower().replace(" ", "-")

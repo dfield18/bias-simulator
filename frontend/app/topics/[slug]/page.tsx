@@ -12,6 +12,7 @@ import {
   deleteTopic,
   fetchTopicRuns,
   runTopicPipeline,
+  fetchPipelineProgress,
 } from "@/lib/api";
 
 function timeAgo(dateStr: string | null): string {
@@ -39,6 +40,7 @@ export default function TopicManagePage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showPrompts, setShowPrompts] = useState(false);
   const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [pipelineProgress, setPipelineProgress] = useState<{ label: string; pct: number; detail: string } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Editable fields
@@ -106,18 +108,34 @@ export default function TopicManagePage() {
 
   const handleRunPipeline = async () => {
     setPipelineRunning(true);
+    setPipelineProgress(null);
     setError(null);
     try {
       await runTopicPipeline(slug, { hours: pipelineHours, maxPages });
-      setSuccess("Pipeline started. Check back in a few minutes.");
-      setTimeout(() => {
-        setSuccess(null);
-        fetchTopicRuns(slug).then(setRuns);
-      }, 5000);
+      // Poll for progress
+      for (let i = 0; i < 300; i++) {
+        await new Promise((r) => setTimeout(r, 5000));
+        try {
+          const prog = await fetchPipelineProgress(slug);
+          if (prog) {
+            setPipelineProgress({ label: prog.label, pct: prog.pct, detail: prog.detail });
+            if (!prog.running) {
+              if (prog.label === "Error") {
+                setError(`Pipeline failed: ${prog.detail}`);
+              } else {
+                setSuccess("Pipeline complete! View your updated dashboard.");
+              }
+              break;
+            }
+          }
+        } catch { /* keep polling */ }
+      }
+      fetchTopicRuns(slug).then(setRuns);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to start pipeline");
     } finally {
       setPipelineRunning(false);
+      setPipelineProgress(null);
     }
   };
 
@@ -211,9 +229,38 @@ export default function TopicManagePage() {
             disabled={pipelineRunning}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
           >
-            {pipelineRunning ? "Starting..." : "Run Pipeline Now"}
+            {pipelineRunning
+              ? pipelineProgress
+                ? `${pipelineProgress.label} (${pipelineProgress.pct}%)`
+                : "Starting..."
+              : "Run Pipeline Now"}
           </button>
         </div>
+
+        {/* Pipeline progress bar */}
+        {pipelineRunning && pipelineProgress && (
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs text-gray-300 font-medium">{pipelineProgress.label}</span>
+              <span className="text-[10px] text-gray-500">{pipelineProgress.pct}%</span>
+            </div>
+            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                style={{ width: `${pipelineProgress.pct}%` }}
+              />
+            </div>
+            {pipelineProgress.detail && (
+              <p className="text-[10px] text-gray-500 mt-1">{pipelineProgress.detail}</p>
+            )}
+          </div>
+        )}
+        {pipelineRunning && !pipelineProgress && (
+          <div className="mb-4 flex items-center gap-3">
+            <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full shrink-0" />
+            <p className="text-xs text-gray-400">Initializing pipeline...</p>
+          </div>
+        )}
 
         {runs.length === 0 ? (
           <p className="text-sm text-gray-500">No pipeline runs yet.</p>

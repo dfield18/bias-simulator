@@ -114,6 +114,7 @@ export default function AdminPage() {
   const [newRuleAccount, setNewRuleAccount] = useState("");
   const [newRuleBent, setNewRuleBent] = useState("");
   const [showRules, setShowRules] = useState(false);
+  const [ruleDropdownId, setRuleDropdownId] = useState<string | null>(null);
 
   // Navigation between tweets in modal
   const [modalIndex, setModalIndex] = useState(-1);
@@ -221,11 +222,19 @@ export default function AdminPage() {
     }
   };
 
+  // Close rule dropdown on outside click
+  useEffect(() => {
+    if (!ruleDropdownId) return;
+    const handler = () => setRuleDropdownId(null);
+    const timer = setTimeout(() => document.addEventListener("click", handler), 0);
+    return () => { clearTimeout(timer); document.removeEventListener("click", handler); };
+  }, [ruleDropdownId]);
+
   // Keyboard shortcuts in modal
   useEffect(() => {
     if (!modalRow) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setModalRow(null);
+      if (e.key === "Escape") { setModalRow(null); setRuleDropdownId(null); }
       if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
         e.preventDefault();
         navigateModal(-1);
@@ -586,8 +595,63 @@ export default function AdminPage() {
                   }`}
                 >
                   <td className="px-3 py-2 text-gray-600 text-xs">{i + 1}</td>
-                  <td className="px-3 py-2 text-gray-300 whitespace-nowrap">
-                    <div className="font-medium">@{row.tweet.screen_name}</div>
+                  <td className="px-3 py-2 text-gray-300 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <div className="font-medium flex items-center gap-1.5">
+                      <span className="cursor-pointer" onClick={() => openModal(row, i)}>@{row.tweet.screen_name}</span>
+                      {accountRules[(row.tweet.screen_name || "").toLowerCase()] ? (
+                        <span
+                          className={`text-[9px] px-1 py-0.5 rounded ${bentBadge(accountRules[(row.tweet.screen_name || "").toLowerCase()], antiBent, proBent)} cursor-pointer`}
+                          title={`Account rule: always ${accountRules[(row.tweet.screen_name || "").toLowerCase()]}\nClick to remove`}
+                          onClick={async () => {
+                            try {
+                              const result = await setAccountRule(secret, selectedTopic, row.tweet.screen_name || "", "");
+                              setAccountRules(result.rules);
+                            } catch {}
+                          }}
+                        >
+                          rule: {accountRules[(row.tweet.screen_name || "").toLowerCase()]}
+                        </span>
+                      ) : (
+                        <div className="relative">
+                          <button
+                            onClick={() => setRuleDropdownId(ruleDropdownId === row.tweet.id_str ? null : row.tweet.id_str)}
+                            className="text-[9px] px-1 py-0.5 rounded bg-gray-800 text-gray-600 hover:text-gray-400 hover:bg-gray-700 transition-colors"
+                            title="Always classify this account as..."
+                          >
+                            + rule
+                          </button>
+                          {ruleDropdownId === row.tweet.id_str && (
+                            <div className="absolute left-0 top-full mt-1 z-20 bg-gray-800 border border-gray-600 rounded-lg shadow-xl py-1 min-w-[140px]">
+                              <div className="px-3 py-1.5 text-[10px] text-gray-500 border-b border-gray-700">
+                                Always classify @{row.tweet.screen_name} as:
+                              </div>
+                              {[
+                                { value: antiBent, label: currentTopic?.anti_label || antiBent },
+                                { value: proBent, label: currentTopic?.pro_label || proBent },
+                                { value: "neutral", label: "Neutral" },
+                              ].map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  onClick={async () => {
+                                    setRuleDropdownId(null);
+                                    try {
+                                      const result = await setAccountRule(secret, selectedTopic, row.tweet.screen_name || "", opt.value);
+                                      setAccountRules(result.rules);
+                                      loadData();
+                                    } catch {}
+                                  }}
+                                  className={`block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 transition-colors ${
+                                    opt.value === antiBent ? "text-blue-400" : opt.value === proBent ? "text-red-400" : "text-gray-400"
+                                  }`}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-3 py-2 text-gray-400">
                     <div className="whitespace-pre-wrap line-clamp-4 text-sm leading-relaxed max-w-2xl">
@@ -748,7 +812,7 @@ export default function AdminPage() {
 
             {/* Tweet content */}
             <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="font-bold text-gray-100">
                   {modalRow.tweet.author_name}
                 </span>
@@ -758,6 +822,58 @@ export default function AdminPage() {
                 <span className="text-gray-600 text-xs">
                   {formatNumber(modalRow.tweet.author_followers || 0)} followers
                 </span>
+                {accountRules[(modalRow.tweet.screen_name || "").toLowerCase()] ? (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer ${bentBadge(accountRules[(modalRow.tweet.screen_name || "").toLowerCase()], antiBent, proBent)}`}
+                    title="Click to remove account rule"
+                    onClick={async () => {
+                      try {
+                        const result = await setAccountRule(secret, selectedTopic, modalRow.tweet.screen_name || "", "");
+                        setAccountRules(result.rules);
+                      } catch {}
+                    }}
+                  >
+                    Account rule: {accountRules[(modalRow.tweet.screen_name || "").toLowerCase()]}
+                  </span>
+                ) : (
+                  <div className="relative inline-block">
+                    <button
+                      onClick={() => setRuleDropdownId(ruleDropdownId === "modal" ? null : "modal")}
+                      className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700 text-gray-500 hover:text-gray-300 hover:bg-gray-600 transition-colors"
+                    >
+                      + Always classify account
+                    </button>
+                    {ruleDropdownId === "modal" && (
+                      <div className="absolute left-0 top-full mt-1 z-30 bg-gray-800 border border-gray-600 rounded-lg shadow-xl py-1 min-w-[160px]">
+                        <div className="px-3 py-1.5 text-[10px] text-gray-500 border-b border-gray-700">
+                          Always classify @{modalRow.tweet.screen_name} as:
+                        </div>
+                        {[
+                          { value: antiBent, label: currentTopic?.anti_label || antiBent },
+                          { value: proBent, label: currentTopic?.pro_label || proBent },
+                          { value: "neutral", label: "Neutral" },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={async () => {
+                              setRuleDropdownId(null);
+                              try {
+                                const result = await setAccountRule(secret, selectedTopic, modalRow.tweet.screen_name || "", opt.value);
+                                setAccountRules(result.rules);
+                                loadData();
+                              } catch {}
+                            }}
+                            className={`block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-700 transition-colors ${
+                              opt.value === antiBent ? "text-blue-400" : opt.value === proBent ? "text-red-400" : "text-gray-400"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               {modalRow.tweet.author_bio && (
                 <p className="text-xs text-gray-500 mb-2">

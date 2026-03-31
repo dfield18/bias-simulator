@@ -4,9 +4,27 @@ import AuthProvider from "@/components/AuthProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Political Feed Simulator",
-  description: "See how political bias shapes your Twitter feed",
+  title: {
+    default: "Echo — See How Political Bias Shapes Your Feed",
+    template: "%s — Echo",
+  },
+  description: "Analyze any political topic from both sides. Echo uses AI to classify thousands of tweets, map narrative frames, and reveal the echo chambers that algorithms create.",
   icons: { icon: "/favicon.svg" },
+  openGraph: {
+    title: "Echo — See How Political Bias Shapes Your Feed",
+    description: "Analyze any political topic from both sides. AI-powered tweet classification, narrative analysis, and echo chamber detection.",
+    siteName: "Echo",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Echo — See How Political Bias Shapes Your Feed",
+    description: "Analyze any political topic from both sides. AI-powered tweet classification, narrative analysis, and echo chamber detection.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

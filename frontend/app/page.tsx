@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { UserButton } from "@clerk/nextjs";
 import { TopicData, fetchTopics } from "@/lib/api";
 
 export default function Home() {
@@ -18,7 +19,10 @@ export default function Home() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
-      <h1 className="text-2xl sm:text-4xl font-bold mb-2">Political Feed Simulator</h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-2xl sm:text-4xl font-bold">Political Feed Simulator</h1>
+        <UserButton />
+      </div>
       <p className="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">
         See how political bias shapes what appears in your Twitter feed.
         Select a topic to explore.

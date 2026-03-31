@@ -146,9 +146,6 @@ export default function Home() {
         <>
           <h2 className="text-lg font-semibold text-gray-300 mb-3">My Topics</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {myTopicsList.map((topic) => (
-              <TopicCard key={topic.slug} topic={topic} />
-            ))}
             <Link
               href="/topics/new"
               className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
@@ -159,6 +156,9 @@ export default function Home() {
                 <p className="text-gray-600 text-sm mt-1">Create a custom topic with your own definitions</p>
               </div>
             </Link>
+            {myTopicsList.map((topic) => (
+              <TopicCard key={topic.slug} topic={topic} />
+            ))}
           </div>
         </>
       )}

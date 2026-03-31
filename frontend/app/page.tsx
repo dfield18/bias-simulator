@@ -139,13 +139,13 @@ export default function LandingPage() {
                 { label: "Crime", anti: 5, pro: 88 },
               ].map((f) => (
                 <div key={f.label} className="flex items-center gap-1">
-                  <div className="w-[40%] flex justify-end">
+                  <div className="w-[33%] flex justify-end">
                     <div className="h-3 bg-blue-500/40 rounded-l-sm" style={{ width: `${f.anti}%` }} />
                   </div>
-                  <div className="w-[20%] text-center">
-                    <span className="text-[9px] text-gray-500">{f.label}</span>
+                  <div className="w-[34%] text-center">
+                    <span className="text-[9px] text-gray-500 whitespace-nowrap">{f.label}</span>
                   </div>
-                  <div className="w-[40%] flex justify-start">
+                  <div className="w-[33%] flex justify-start">
                     <div className="h-3 bg-red-500/40 rounded-r-sm" style={{ width: `${f.pro}%` }} />
                   </div>
                 </div>

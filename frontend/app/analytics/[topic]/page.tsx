@@ -1652,32 +1652,32 @@ export default function AnalyticsPage() {
                   <h3 className="text-sm font-semibold text-gray-300 mb-0.5">Where both sides overlap</h3>
                   <p className="text-[10px] text-gray-600 mb-4">Topics and sources that appear on both sides of the conversation</p>
 
-                  {/* Shared Topics with balance bars */}
+                  {/* Shared Topics — tug-of-war layout */}
                   {sharedNarr.length > 0 && (
                     <div className="mb-5">
-                      <div className="text-[10px] text-gray-500 font-medium mb-3">Shared Topics</div>
-                      <div className="space-y-2.5">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-[10px] text-gray-500 font-medium">Shared Topics</div>
+                        <div className="flex items-center gap-3 text-[9px]">
+                          <span className="text-blue-400">{aL}</span>
+                          <span className="text-red-400">{pL}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
                         {sharedNarr.slice(0, 6).map(n => {
                           const total = n.anti_count + n.pro_count;
                           const antiPct = Math.round((n.anti_count / total) * 100);
                           const proPct = 100 - antiPct;
-                          const balance = Math.min(antiPct, proPct); // 0-50, higher = more balanced
                           return (
-                            <div key={n.frame}>
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs text-gray-300">{n.label}</span>
-                                <span className="text-[9px] text-gray-600">
-                                  {total} tweets &middot; {balance >= 35 ? "Balanced" : balance >= 20 ? "Leaning" : "One-sided"}
-                                </span>
+                            <div key={n.frame} className="flex items-center gap-3">
+                              <div className="w-8 text-right text-[10px] text-blue-400 font-medium shrink-0">{n.anti_count}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[10px] text-gray-400 text-center mb-1 truncate">{n.label}</div>
+                                <div className="h-1.5 rounded-full overflow-hidden flex bg-gray-800">
+                                  <div className="h-full bg-blue-500/70 rounded-l-full" style={{ width: `${antiPct}%` }} />
+                                  <div className="h-full bg-red-500/70 rounded-r-full" style={{ width: `${proPct}%` }} />
+                                </div>
                               </div>
-                              <div className="h-2 rounded-full overflow-hidden flex bg-gray-800">
-                                <div className="h-full bg-blue-500/60" style={{ width: `${antiPct}%` }} />
-                                <div className="h-full bg-red-500/60" style={{ width: `${proPct}%` }} />
-                              </div>
-                              <div className="flex justify-between mt-0.5">
-                                <span className="text-[9px] text-blue-400/70">{aL} {antiPct}%</span>
-                                <span className="text-[9px] text-red-400/70">{proPct}% {pL}</span>
-                              </div>
+                              <div className="w-8 text-left text-[10px] text-red-400 font-medium shrink-0">{n.pro_count}</div>
                             </div>
                           );
                         })}
@@ -1685,25 +1685,26 @@ export default function AnalyticsPage() {
                     </div>
                   )}
 
-                  {/* Shared Sources with counts */}
+                  {/* Shared Sources — same layout */}
                   {shared_sources?.length > 0 && (
                     <div>
                       <div className="text-[10px] text-gray-500 font-medium mb-3">Shared Sources</div>
-                      <div className="space-y-1.5">
+                      <div className="space-y-3">
                         {shared_sources.slice(0, 6).map(s => {
                           const total = s.anti_count + s.pro_count;
                           const antiPct = Math.round((s.anti_count / total) * 100);
+                          const proPct = 100 - antiPct;
                           return (
-                            <div key={s.domain} className="flex items-center gap-2 bg-gray-800/40 rounded-lg px-2.5 py-1.5">
-                              <span className="text-xs text-gray-300 flex-1 min-w-0 truncate">{s.domain}</span>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="text-[9px] text-blue-400/70">{s.anti_count}</span>
-                                <div className="w-12 h-1.5 rounded-full overflow-hidden flex bg-gray-700">
-                                  <div className="h-full bg-blue-500/60" style={{ width: `${antiPct}%` }} />
-                                  <div className="h-full bg-red-500/60" style={{ width: `${100 - antiPct}%` }} />
+                            <div key={s.domain} className="flex items-center gap-3">
+                              <div className="w-8 text-right text-[10px] text-blue-400 font-medium shrink-0">{s.anti_count}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-[10px] text-gray-400 text-center mb-1 truncate">{s.domain}</div>
+                                <div className="h-1.5 rounded-full overflow-hidden flex bg-gray-800">
+                                  <div className="h-full bg-blue-500/70 rounded-l-full" style={{ width: `${antiPct}%` }} />
+                                  <div className="h-full bg-red-500/70 rounded-r-full" style={{ width: `${proPct}%` }} />
                                 </div>
-                                <span className="text-[9px] text-red-400/70">{s.pro_count}</span>
                               </div>
+                              <div className="w-8 text-left text-[10px] text-red-400 font-medium shrink-0">{s.pro_count}</div>
                             </div>
                           );
                         })}

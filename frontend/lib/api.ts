@@ -904,7 +904,6 @@ export interface AdminStats {
 
 export async function fetchAdminTweets(
   topic: string,
-  adminSecret: string,
   filters?: AdminFilters
 ): Promise<{ tweet: TweetData; classification: ClassificationData }[]> {
   const params = new URLSearchParams({ topic });
@@ -917,7 +916,6 @@ export async function fetchAdminTweets(
 
   const res = await apiFetch(`${API_URL}/api/admin/tweets?${params}`, {
     cache: "no-store",
-    headers: { "X-Admin-Secret": adminSecret },
   });
   if (!res.ok) throw new Error("Failed to fetch admin tweets");
   return res.json();
@@ -925,19 +923,16 @@ export async function fetchAdminTweets(
 
 export async function fetchAdminStats(
   topic: string,
-  adminSecret: string
 ): Promise<AdminStats> {
   const p = new URLSearchParams({ topic });
   const res = await apiFetch(`${API_URL}/api/admin/stats?${p}`, {
     cache: "no-store",
-    headers: { "X-Admin-Secret": adminSecret },
   });
   if (!res.ok) throw new Error("Failed to fetch admin stats");
   return res.json();
 }
 
 export async function submitOverride(
-  adminSecret: string,
   data: {
     id_str: string;
     override_political_bent: string | null;
@@ -947,10 +942,7 @@ export async function submitOverride(
 ) {
   const res = await apiFetch(`${API_URL}/api/override`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Admin-Secret": adminSecret,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Failed to submit override");
@@ -959,25 +951,22 @@ export async function submitOverride(
 
 export async function fetchAccountRules(
   topic: string,
-  adminSecret: string,
 ): Promise<Record<string, string>> {
   const res = await apiFetch(`${API_URL}/api/admin/account-rules?topic=${encodeURIComponent(topic)}`, {
     cache: "no-store",
-    headers: { "X-Admin-Secret": adminSecret },
   });
   if (!res.ok) return {};
   return res.json();
 }
 
 export async function setAccountRule(
-  adminSecret: string,
   topic: string,
   screenName: string,
   politicalBent: string,
 ): Promise<{ status: string; rules: Record<string, string>; affected_tweets: number }> {
   const res = await apiFetch(`${API_URL}/api/admin/account-rules?topic=${encodeURIComponent(topic)}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Admin-Secret": adminSecret },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ screen_name: screenName, political_bent: politicalBent }),
   });
   if (!res.ok) throw new Error("Failed to set account rule");

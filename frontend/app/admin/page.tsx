@@ -42,8 +42,6 @@ function bentBadge(bent: string | null, antiBent?: string, proBent?: string): st
 }
 
 export default function AdminPage() {
-  const [secret, setSecret] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [selectedTopic, setSelectedTopic] = useState("");
   const [rows, setRows] = useState<AdminRow[]>([]);
@@ -123,26 +121,15 @@ export default function AdminPage() {
   const antiBent = currentTopic?.anti_label?.toLowerCase().replace(/\s+/g, "-") || "";
   const proBent = currentTopic?.pro_label?.toLowerCase().replace(/\s+/g, "-") || "";
 
-  const handleAuth = () => {
-    const expected = process.env.NEXT_PUBLIC_ADMIN_SECRET;
-    if (secret === expected) {
-      setAuthenticated(true);
-    } else {
-      setError("Invalid secret");
-    }
-  };
-
   useEffect(() => {
-    if (authenticated) {
-      fetchTopics().then((t) => {
-        setTopics(t);
-        if (t.length > 0) setSelectedTopic(t[0].slug);
-      });
-    }
-  }, [authenticated]);
+    fetchTopics().then((t) => {
+      setTopics(t);
+      if (t.length > 0) setSelectedTopic(t[0].slug);
+    });
+  }, []);
 
   const loadData = useCallback(() => {
-    if (!authenticated || !selectedTopic) return;
+    if (!selectedTopic) return;
     setLoading(true);
 
     const filters = {
@@ -155,9 +142,9 @@ export default function AdminPage() {
     };
 
     Promise.all([
-      fetchAdminTweets(selectedTopic, secret, filters),
-      fetchAdminStats(selectedTopic, secret),
-      fetchAccountRules(selectedTopic, secret),
+      fetchAdminTweets(selectedTopic, filters),
+      fetchAdminStats(selectedTopic),
+      fetchAccountRules(selectedTopic),
     ])
       .then(([tweets, s, rules]) => {
         setRows(tweets);
@@ -166,7 +153,7 @@ export default function AdminPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [authenticated, selectedTopic, filterBent, filterOverride, filterLowConf, search, sortBy, secret]);
+  }, [selectedTopic, filterBent, filterOverride, filterLowConf, search, sortBy]);
 
   useEffect(() => {
     loadData();
@@ -199,7 +186,7 @@ export default function AdminPage() {
     if (!modalRow) return;
     setSaving(true);
     try {
-      await submitOverride(secret, {
+      await submitOverride({
         id_str: modalRow.tweet.id_str,
         override_political_bent: overrideBent || null,
         override_intensity_score: overrideIntensity
@@ -238,31 +225,6 @@ export default function AdminPage() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [modalRow, modalIndex, sortedRows]);
-
-  if (!authenticated) {
-    return (
-      <main className="max-w-md mx-auto px-4 py-20">
-        <h1 className="text-2xl font-bold mb-6">Admin Access</h1>
-        <input
-          type="password"
-          value={secret}
-          onChange={(e) => setSecret(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAuth()}
-          placeholder="Enter admin secret"
-          className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-gray-100 focus:border-blue-500 focus:outline-none"
-        />
-        {error && (
-          <p className="mt-3 text-sm text-red-400">{error}</p>
-        )}
-        <button
-          onClick={handleAuth}
-          className="mt-4 w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition-colors"
-        >
-          Authenticate
-        </button>
-      </main>
-    );
-  }
 
   return (
     <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
@@ -391,7 +353,7 @@ export default function AdminPage() {
                     <button
                       onClick={async () => {
                         try {
-                          const result = await setAccountRule(secret, selectedTopic, account, "");
+                          const result = await setAccountRule(selectedTopic, account, "");
                           setAccountRules(result.rules);
                         } catch { /* ignore */ }
                       }}
@@ -431,7 +393,7 @@ export default function AdminPage() {
                 onClick={async () => {
                   if (!newRuleAccount.trim() || !newRuleBent) return;
                   try {
-                    const result = await setAccountRule(secret, selectedTopic, newRuleAccount, newRuleBent);
+                    const result = await setAccountRule(selectedTopic, newRuleAccount, newRuleBent);
                     setAccountRules(result.rules);
                     setNewRuleAccount("");
                     setNewRuleBent("");
@@ -624,7 +586,7 @@ export default function AdminPage() {
                               ));
                               // Save to backend in background
                               try {
-                                await submitOverride(secret, {
+                                await submitOverride({
                                   id_str: row.tweet.id_str,
                                   override_political_bent: opt.value,
                                   override_intensity_score: null,
@@ -678,7 +640,7 @@ export default function AdminPage() {
                                     return next;
                                   });
                                   try {
-                                    const result = await setAccountRule(secret, selectedTopic, row.tweet.screen_name || "", newValue);
+                                    const result = await setAccountRule(selectedTopic, row.tweet.screen_name || "", newValue);
                                     setAccountRules(result.rules);
                                   } catch {}
                                 }}
@@ -716,7 +678,7 @@ export default function AdminPage() {
                               ? { ...r, classification: { ...r.classification, effective_intensity_score: newVal, override_intensity_score: newVal, override_flag: true } }
                               : r
                           ));
-                          try { await submitOverride(secret, { id_str: row.tweet.id_str, override_political_bent: null, override_intensity_score: newVal, override_notes: "Intensity adjusted inline" }); } catch {}
+                          try { await submitOverride({ id_str: row.tweet.id_str, override_political_bent: null, override_intensity_score: newVal, override_notes: "Intensity adjusted inline" }); } catch {}
                         }}
                         className="w-5 h-5 rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 text-xs flex items-center justify-center"
                       >-</button>
@@ -736,7 +698,7 @@ export default function AdminPage() {
                               ? { ...r, classification: { ...r.classification, effective_intensity_score: newVal, override_intensity_score: newVal, override_flag: true } }
                               : r
                           ));
-                          try { await submitOverride(secret, { id_str: row.tweet.id_str, override_political_bent: null, override_intensity_score: newVal, override_notes: "Intensity adjusted inline" }); } catch {}
+                          try { await submitOverride({ id_str: row.tweet.id_str, override_political_bent: null, override_intensity_score: newVal, override_notes: "Intensity adjusted inline" }); } catch {}
                         }}
                         className="w-5 h-5 rounded bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 text-xs flex items-center justify-center"
                       >+</button>
@@ -829,7 +791,7 @@ export default function AdminPage() {
                                 return next;
                               });
                               try {
-                                const result = await setAccountRule(secret, selectedTopic, modalRow.tweet.screen_name || "", newValue);
+                                const result = await setAccountRule(selectedTopic, modalRow.tweet.screen_name || "", newValue);
                                 setAccountRules(result.rules);
                               } catch {}
                             }}

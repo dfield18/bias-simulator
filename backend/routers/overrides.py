@@ -1,10 +1,10 @@
-import os
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
+from auth import get_current_user
 from pydantic import BaseModel as PydanticBaseModel
 from models import (
     Classification, Tweet, Topic,
@@ -20,19 +20,12 @@ def tweet_response_with_media(tweet: Tweet) -> TweetResponse:
 
 router = APIRouter()
 
-ADMIN_SECRET = os.getenv("ADMIN_SECRET", "")
-
-
-def _check_admin(x_admin_secret: str = Header(...)):
-    if not ADMIN_SECRET or x_admin_secret != ADMIN_SECRET:
-        raise HTTPException(status_code=403, detail="Invalid admin secret")
-
 
 @router.post("/override", response_model=OverrideResponse)
 async def create_override(
     body: OverrideRequest,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(_check_admin),
+    _: dict = Depends(get_current_user),
 ):
     """Manually override a classification."""
     # Check classification exists
@@ -60,7 +53,7 @@ async def create_override(
 async def get_overrides(
     topic: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(_check_admin),
+    _: dict = Depends(get_current_user),
 ):
     """Get all overridden classifications."""
     stmt = (
@@ -94,7 +87,7 @@ async def get_admin_tweets(
     sort_by: str = Query(default="views"),
     limit: int = Query(default=200, le=5000),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(_check_admin),
+    _: dict = Depends(get_current_user),
 ):
     """Get all on-topic tweets for admin review."""
     stmt = (
@@ -146,7 +139,7 @@ async def get_admin_tweets(
 async def get_admin_stats(
     topic: str,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(_check_admin),
+    _: dict = Depends(get_current_user),
 ):
     """Get classification stats for admin dashboard."""
     from sqlalchemy import func
@@ -215,7 +208,7 @@ class AccountRuleRequest(PydanticBaseModel):
 async def get_account_rules(
     topic: str,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(_check_admin),
+    _: dict = Depends(get_current_user),
 ):
     """Get account bias rules for a topic."""
     result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -230,7 +223,7 @@ async def set_account_rule(
     topic: str,
     body: AccountRuleRequest,
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(_check_admin),
+    _: dict = Depends(get_current_user),
 ):
     """Set or remove an account bias rule. Also applies overrides to all existing tweets from this account."""
     result = await db.execute(select(Topic).where(Topic.slug == topic))

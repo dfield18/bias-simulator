@@ -26,156 +26,187 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* Nav */}
-      <nav className="border-b border-gray-800/50 bg-gray-950/80 backdrop-blur sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="text-lg font-bold text-gray-100">Echo</div>
-          <div className="flex items-center gap-3">
+      <nav className="bg-gray-950/80 backdrop-blur sticky top-0 z-20">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-5 flex items-center justify-between">
+          <div className="text-base font-semibold tracking-tight text-gray-100">echo</div>
+          <div className="flex items-center gap-4">
             <Link
               href="/sign-in"
-              className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
+              className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
             >
               Log in
             </Link>
             <Link
               href="/sign-up"
-              className="text-sm px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
+              className="text-sm px-4 py-1.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors"
             >
-              Get Started
+              Get started
             </Link>
           </div>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16">
-        <div className="max-w-3xl">
-          <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-6">
-            See how political bias shapes
-            <span className="text-blue-400"> what you see</span> on Twitter
+      <section className="max-w-5xl mx-auto px-5 sm:px-8 pt-20 sm:pt-32 pb-20 sm:pb-28">
+        <div className="max-w-2xl">
+          <p className="text-sm text-gray-500 mb-4 tracking-wide">Political media analysis</p>
+          <h1 className="text-4xl sm:text-[3.5rem] font-bold leading-[1.1] mb-6 tracking-tight">
+            The same story.<br />
+            Two different realities.
           </h1>
-          <p className="text-lg sm:text-xl text-gray-400 mb-8 leading-relaxed">
-            Analyze any political topic from both sides. Our AI classifies thousands of tweets,
-            maps narrative frames, and reveals the echo chambers that algorithms create.
+          <p className="text-base sm:text-lg text-gray-400 mb-10 leading-relaxed max-w-lg">
+            Echo analyzes thousands of tweets on any political topic and shows you
+            how each side frames, argues, and ignores the same events.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/sign-up"
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium text-center transition-colors"
-            >
-              Start Analyzing Free
-            </Link>
-            <a
-              href="#how-it-works"
-              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg font-medium text-center transition-colors"
-            >
-              See How It Works
-            </a>
+          <Link
+            href="/sign-up"
+            className="inline-block px-6 py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
+          >
+            Try it free
+          </Link>
+        </div>
+
+        {/* Visual — stylized blue/red split */}
+        <div className="mt-16 sm:mt-20 relative">
+          <div className="grid grid-cols-2 gap-px rounded-xl overflow-hidden border border-gray-800/60">
+            {/* Left side (blue) */}
+            <div className="bg-gray-900/80 p-5 sm:p-8">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <span className="text-[11px] text-blue-400 font-medium tracking-wide uppercase">Side A</span>
+              </div>
+              <div className="space-y-3">
+                <div className="h-2.5 bg-blue-500/20 rounded-full w-full" />
+                <div className="h-2.5 bg-blue-500/15 rounded-full w-4/5" />
+                <div className="h-2.5 bg-blue-500/10 rounded-full w-3/5" />
+                <div className="h-2.5 bg-blue-500/8 rounded-full w-2/5" />
+              </div>
+              <div className="mt-6 flex gap-2">
+                <span className="text-[10px] bg-blue-500/10 text-blue-400/70 px-2 py-0.5 rounded">security</span>
+                <span className="text-[10px] bg-blue-500/10 text-blue-400/70 px-2 py-0.5 rounded">economy</span>
+                <span className="text-[10px] bg-blue-500/10 text-blue-400/70 px-2 py-0.5 rounded">law</span>
+              </div>
+            </div>
+            {/* Right side (red) */}
+            <div className="bg-gray-900/80 p-5 sm:p-8">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <span className="text-[11px] text-red-400 font-medium tracking-wide uppercase">Side B</span>
+              </div>
+              <div className="space-y-3">
+                <div className="h-2.5 bg-red-500/20 rounded-full w-full" />
+                <div className="h-2.5 bg-red-500/15 rounded-full w-3/4" />
+                <div className="h-2.5 bg-red-500/10 rounded-full w-1/2" />
+                <div className="h-2.5 bg-red-500/8 rounded-full w-1/3" />
+              </div>
+              <div className="mt-6 flex gap-2">
+                <span className="text-[10px] bg-red-500/10 text-red-400/70 px-2 py-0.5 rounded">rights</span>
+                <span className="text-[10px] bg-red-500/10 text-red-400/70 px-2 py-0.5 rounded">justice</span>
+                <span className="text-[10px] bg-red-500/10 text-red-400/70 px-2 py-0.5 rounded">equity</span>
+              </div>
+            </div>
+          </div>
+          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-gray-600 bg-gray-950 px-3">
+            same topic, different framing
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section id="how-it-works" className="border-t border-gray-800/50 bg-gray-900/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-12 text-center">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                step: "1",
-                title: "Pick a topic",
-                desc: "Enter any political issue — immigration, AI regulation, gun control — and our AI generates the classification framework automatically.",
-              },
-              {
-                step: "2",
-                title: "AI analyzes tweets",
-                desc: "We pull thousands of real tweets, classify each one's political stance, intensity, narrative frame, and emotional tone using a multi-model AI pipeline.",
-              },
-              {
-                step: "3",
-                title: "Explore both sides",
-                desc: "See a simulated feed with a bias slider, analytics dashboards, echo chamber analysis, and side-by-side story comparisons.",
-              },
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="w-10 h-10 rounded-full bg-blue-600/20 text-blue-400 text-lg font-bold flex items-center justify-center mx-auto mb-4">
-                  {item.step}
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
+      {/* What Echo shows you — staggered, not a grid */}
+      <section className="border-t border-gray-800/30">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
+          <p className="text-sm text-gray-500 mb-10 tracking-wide">What you get</p>
+
+          <div className="space-y-12 sm:space-y-16">
+            {/* Feature 1 */}
+            <div className="max-w-lg">
+              <h3 className="text-lg font-semibold text-gray-100 mb-2">Simulated feed with bias control</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Drag a slider from left to right and watch the feed transform. See exactly what
+                someone in each echo chamber would see on any given day.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="max-w-lg sm:ml-auto">
+              <h3 className="text-lg font-semibold text-gray-100 mb-2">Narrative breakdown</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                Which arguments does each side reach for? Which do they ignore?
+                Radar charts, emotional tone analysis, and rhetoric intensity scoring
+                show the full picture.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="max-w-lg">
+              <h3 className="text-lg font-semibold text-gray-100 mb-2">Same story, different lens</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                When both sides cover the same event, Echo pairs their tweets side by side
+                so you can see how framing changes the story.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="max-w-lg sm:ml-auto">
+              <h3 className="text-lg font-semibold text-gray-100 mb-2">Echo chamber detection</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                A single score measuring how separated the two sides are — based on shared sources,
+                overlapping arguments, and cross-side engagement.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="border-t border-gray-800/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-12 text-center">What You Get</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                title: "Simulated Feed",
-                desc: "Drag a bias slider from left to right and watch how your feed changes in real time.",
-              },
-              {
-                title: "Narrative Analysis",
-                desc: "Radar charts showing which arguments each side uses — and which they ignore.",
-              },
-              {
-                title: "Echo Chamber Score",
-                desc: "Quantifies how much overlap exists between the two sides' information sources.",
-              },
-              {
-                title: "Key Voices",
-                desc: "Who's shaping the conversation on each side, ranked by engagement and reach.",
-              },
-              {
-                title: "Flashpoints",
-                desc: "Tweets that triggered the other side — the posts that sparked cross-aisle outrage.",
-              },
-              {
-                title: "Same Story, Different Lens",
-                desc: "See how both sides cover the same event with completely different framing.",
-              },
-            ].map((f) => (
-              <div
-                key={f.title}
-                className="bg-gray-900 border border-gray-800 rounded-xl p-5"
-              >
-                <h3 className="text-sm font-semibold text-gray-200 mb-2">{f.title}</h3>
-                <p className="text-xs text-gray-400 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
+      {/* How it works — minimal, not numbered */}
+      <section className="border-t border-gray-800/30 bg-gray-900/20">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
+          <p className="text-sm text-gray-500 mb-10 tracking-wide">How it works</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-200 mb-1.5">Enter a topic</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Type any political issue. Echo generates the classification framework for you.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-200 mb-1.5">AI classifies tweets</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Thousands of real tweets are pulled and analyzed for stance, intensity, and framing.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-200 mb-1.5">Explore the results</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Interactive dashboards, side-by-side comparisons, and the full narrative map.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="border-t border-gray-800/50 bg-gray-900/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to see behind the algorithm?</h2>
-          <p className="text-gray-400 mb-8 max-w-lg mx-auto">
-            Create your first topic in under a minute. No credit card required.
-          </p>
+      <section className="border-t border-gray-800/30">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">See what both sides are saying.</h2>
+          <p className="text-gray-500 mb-8 text-sm">Free to start. No credit card required.</p>
           <Link
             href="/sign-up"
-            className="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
+            className="inline-block px-6 py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
           >
-            Get Started Free
+            Get started
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800/50 py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-600">
-          <div>Echo</div>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-gray-400">Privacy</Link>
-            <Link href="/terms" className="hover:text-gray-400">Terms</Link>
-            <Link href="/sign-in" className="hover:text-gray-400">Log in</Link>
-            <Link href="/sign-up" className="hover:text-gray-400">Sign up</Link>
+      <footer className="border-t border-gray-800/30 py-8">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-600">
+          <div>echo</div>
+          <div className="flex gap-5">
+            <Link href="/privacy" className="hover:text-gray-400 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-gray-400 transition-colors">Terms</Link>
+            <Link href="/sign-in" className="hover:text-gray-400 transition-colors">Log in</Link>
           </div>
         </div>
       </footer>

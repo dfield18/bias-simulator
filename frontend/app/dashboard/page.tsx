@@ -149,6 +149,16 @@ export default function Home() {
             {myTopicsList.map((topic) => (
               <TopicCard key={topic.slug} topic={topic} />
             ))}
+            <Link
+              href="/topics/new"
+              className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
+            >
+              <div className="text-center">
+                <div className="text-3xl text-gray-600 mb-2">+</div>
+                <h2 className="text-lg font-semibold text-gray-400">Add New Topic</h2>
+                <p className="text-gray-600 text-sm mt-1">Create a custom topic with your own definitions</p>
+              </div>
+            </Link>
           </div>
         </>
       )}

@@ -197,9 +197,14 @@ function VoiceList({
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">
-              <span className="text-xs font-medium text-gray-200 truncate block">
+              <a
+                href={`https://x.com/${v.screen_name}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-gray-200 hover:text-blue-400 truncate block transition-colors"
+              >
                 @{v.screen_name}
-              </span>
+              </a>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <span className="text-[10px] text-gray-500">

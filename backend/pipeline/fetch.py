@@ -56,7 +56,7 @@ def fetch_tweets(topic_slug: str, search_query: str, hours: int = 24, max_pages:
             break
 
         # Rate limiting
-        time.sleep(0.5)
+        time.sleep(0.2)
 
     # Sort by views descending
     all_tweets.sort(key=lambda t: (t.get("views", 0) or 0), reverse=True)

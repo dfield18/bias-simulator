@@ -357,8 +357,8 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
             queue_lock = threading.Lock()
             classification_done = threading.Event()
 
-            batch_size = 20
-            max_parallel = 10
+            batch_size = 40
+            max_parallel = 15
             batches = [tweets_to_classify[i:i + batch_size] for i in range(0, len(tweets_to_classify), batch_size)]
 
             def classify_batch(batch):
@@ -391,7 +391,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                         conf = 0.0
                     bent = classification.get("political_bent", "")
 
-                    if conf < 0.60 or bent in ("unclear", "error"):
+                    if conf < 0.45 or bent == "error":
                         try:
                             escalated, esc_cost = _escalate_classification(tweet, class_prompt)
                             batch_cost += esc_cost

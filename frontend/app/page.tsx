@@ -69,22 +69,29 @@ export default function LandingPage() {
         {/* Product preview — three panels */}
         <div className="mt-16 sm:mt-20 grid grid-cols-1 lg:grid-cols-3 gap-3">
 
-          {/* Panel 1: Mini feed */}
-          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 lg:col-span-1">
+          {/* Panel 1: Mini feed — scrollable */}
+          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 lg:col-span-1 flex flex-col">
             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-3 font-medium">Simulated Feed</div>
-            <div className="space-y-2.5">
+            <div className="space-y-2.5 overflow-y-auto max-h-72 pr-1 scrollbar-thin">
               {[
-                { name: "Reuters", handle: "@Reuters", text: "Border patrol reports record crossings as asylum policy debate intensifies in Congress...", bent: "neutral", color: "bg-gray-500/20 text-gray-400" },
+                { name: "Reuters", handle: "@Reuters", text: "Border patrol reports record crossings as asylum policy debate intensifies in Congress ahead of midterms.", bent: "neutral", color: "bg-gray-500/20 text-gray-400" },
                 { name: "Rep. Garcia", handle: "@RepGarcia", text: "These families are fleeing violence. We need a humane path, not more walls and cages.", bent: "pro-immigration", color: "bg-blue-500/20 text-blue-400" },
-                { name: "Daily Wire", handle: "@DailyWire", text: "EXPOSED: Sanctuary cities quietly release hundreds of criminal migrants back into communities", bent: "border-security", color: "bg-red-500/20 text-red-400" },
-              ].map((t) => (
-                <div key={t.handle} className="border border-gray-800/40 rounded-lg p-2.5">
+                { name: "Daily Wire", handle: "@DailyWire", text: "EXPOSED: Sanctuary cities quietly release hundreds of criminal migrants back into communities.", bent: "border-security", color: "bg-red-500/20 text-red-400" },
+                { name: "ACLU", handle: "@ACLU", text: "Reminder: seeking asylum is legal. Criminalizing refugees doesn't make anyone safer — it just makes us crueler.", bent: "pro-immigration", color: "bg-blue-500/20 text-blue-400" },
+                { name: "Fox News", handle: "@FoxNews", text: "Texas Governor deploys additional National Guard troops to southern border amid record surge.", bent: "border-security", color: "bg-red-500/20 text-red-400" },
+                { name: "AP News", handle: "@AP", text: "New DHS data shows migrant encounters down 40% from peak but remain above historical averages.", bent: "neutral", color: "bg-gray-500/20 text-gray-400" },
+                { name: "Sen. Warren", handle: "@SenWarren", text: "Children don't belong in detention centers. Period. We must end family separation once and for all.", bent: "pro-immigration", color: "bg-blue-500/20 text-blue-400" },
+                { name: "Breitbart", handle: "@BreitbartNews", text: "Illegal immigrant crime wave: three more arrests this week in cities that refused to cooperate with ICE.", bent: "border-security", color: "bg-red-500/20 text-red-400" },
+                { name: "The Economist", handle: "@TheEconomist", text: "Immigration's economic impact is more nuanced than either side admits — new data shows mixed effects on wages.", bent: "neutral", color: "bg-gray-500/20 text-gray-400" },
+                { name: "Rep. Ocasio-Cortez", handle: "@AOC", text: "No human being is illegal. Our immigration system is broken, and cruelty is not the fix.", bent: "pro-immigration", color: "bg-blue-500/20 text-blue-400" },
+              ].map((t, i) => (
+                <div key={i} className="border border-gray-800/40 rounded-lg p-2.5 shrink-0">
                   <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-medium text-gray-200">{t.name}</span>
-                      <span className="text-[10px] text-gray-600">{t.handle}</span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-[11px] font-medium text-gray-200 truncate">{t.name}</span>
+                      <span className="text-[10px] text-gray-600 truncate">{t.handle}</span>
                     </div>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded ${t.color}`}>{t.bent}</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded shrink-0 ml-2 ${t.color}`}>{t.bent}</span>
                   </div>
                   <p className="text-[11px] text-gray-400 leading-relaxed">{t.text}</p>
                 </div>

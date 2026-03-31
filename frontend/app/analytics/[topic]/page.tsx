@@ -1666,65 +1666,84 @@ export default function AnalyticsPage() {
                   <h3 className="text-sm font-semibold text-gray-300 mb-0.5">Where both sides overlap</h3>
                   <p className="text-[10px] text-gray-600 mb-4">Topics and sources that appear on both sides of the conversation</p>
 
-                  {/* Shared Topics — tug-of-war layout */}
-                  {sharedNarr.length > 0 && (
-                    <div className="mb-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="text-[10px] text-gray-500 font-medium">Shared Topics</div>
-                        <div className="flex items-center gap-3 text-[9px]">
-                          <span className="text-blue-400">{aL}</span>
-                          <span className="text-red-400">{pL}</span>
+                  {/* Shared Topics — butterfly chart */}
+                  {sharedNarr.length > 0 && (() => {
+                    const maxCount = Math.max(...sharedNarr.slice(0, 6).flatMap(n => [n.anti_count, n.pro_count]));
+                    return (
+                      <div className="mb-6">
+                        <div className="text-[10px] text-gray-500 font-medium mb-3">Shared Topics</div>
+                        {/* Header */}
+                        <div className="flex items-center mb-2">
+                          <div className="w-[45%] text-right text-[9px] text-blue-400 pr-2">{aL}</div>
+                          <div className="w-[10%]" />
+                          <div className="w-[45%] text-left text-[9px] text-red-400 pl-2">{pL}</div>
+                        </div>
+                        <div className="space-y-2">
+                          {sharedNarr.slice(0, 6).map(n => {
+                            const antiW = maxCount > 0 ? (n.anti_count / maxCount) * 100 : 0;
+                            const proW = maxCount > 0 ? (n.pro_count / maxCount) * 100 : 0;
+                            return (
+                              <div key={n.frame} className="flex items-center">
+                                {/* Left bar (blue, grows right-to-left) */}
+                                <div className="w-[45%] flex items-center justify-end gap-1.5">
+                                  <span className="text-[9px] text-blue-400/70 shrink-0">{n.anti_count}</span>
+                                  <div className="h-4 flex-1 flex justify-end">
+                                    <div className="h-full bg-blue-500/50 rounded-l-sm" style={{ width: `${antiW}%` }} />
+                                  </div>
+                                </div>
+                                {/* Center label */}
+                                <div className="w-[10%] text-center">
+                                  <span className="text-[9px] text-gray-500 leading-none">{n.label.length > 12 ? n.label.slice(0, 11) + "..." : n.label}</span>
+                                </div>
+                                {/* Right bar (red, grows left-to-right) */}
+                                <div className="w-[45%] flex items-center gap-1.5">
+                                  <div className="h-4 flex-1 flex justify-start">
+                                    <div className="h-full bg-red-500/50 rounded-r-sm" style={{ width: `${proW}%` }} />
+                                  </div>
+                                  <span className="text-[9px] text-red-400/70 shrink-0">{n.pro_count}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                      <div className="space-y-3">
-                        {sharedNarr.slice(0, 6).map(n => {
-                          const total = n.anti_count + n.pro_count;
-                          const antiPct = Math.round((n.anti_count / total) * 100);
-                          const proPct = 100 - antiPct;
-                          return (
-                            <div key={n.frame} className="flex items-center gap-3">
-                              <div className="w-8 text-right text-[10px] text-blue-400 font-medium shrink-0">{n.anti_count}</div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-[10px] text-gray-400 text-center mb-1 truncate">{n.label}</div>
-                                <div className="h-1.5 rounded-full overflow-hidden flex bg-gray-800">
-                                  <div className="h-full bg-blue-500/70 rounded-l-full" style={{ width: `${antiPct}%` }} />
-                                  <div className="h-full bg-red-500/70 rounded-r-full" style={{ width: `${proPct}%` }} />
-                                </div>
-                              </div>
-                              <div className="w-8 text-left text-[10px] text-red-400 font-medium shrink-0">{n.pro_count}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
-                  {/* Shared Sources — same layout */}
-                  {shared_sources?.length > 0 && (
-                    <div>
-                      <div className="text-[10px] text-gray-500 font-medium mb-3">Shared Sources</div>
-                      <div className="space-y-3">
-                        {shared_sources.slice(0, 6).map(s => {
-                          const total = s.anti_count + s.pro_count;
-                          const antiPct = Math.round((s.anti_count / total) * 100);
-                          const proPct = 100 - antiPct;
-                          return (
-                            <div key={s.domain} className="flex items-center gap-3">
-                              <div className="w-8 text-right text-[10px] text-blue-400 font-medium shrink-0">{s.anti_count}</div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-[10px] text-gray-400 text-center mb-1 truncate">{s.domain}</div>
-                                <div className="h-1.5 rounded-full overflow-hidden flex bg-gray-800">
-                                  <div className="h-full bg-blue-500/70 rounded-l-full" style={{ width: `${antiPct}%` }} />
-                                  <div className="h-full bg-red-500/70 rounded-r-full" style={{ width: `${proPct}%` }} />
+                  {/* Shared Sources — butterfly chart */}
+                  {shared_sources?.length > 0 && (() => {
+                    const maxSrc = Math.max(...shared_sources.slice(0, 6).flatMap(s => [s.anti_count, s.pro_count]));
+                    return (
+                      <div>
+                        <div className="text-[10px] text-gray-500 font-medium mb-3">Shared Sources</div>
+                        <div className="space-y-2">
+                          {shared_sources.slice(0, 6).map(s => {
+                            const antiW = maxSrc > 0 ? (s.anti_count / maxSrc) * 100 : 0;
+                            const proW = maxSrc > 0 ? (s.pro_count / maxSrc) * 100 : 0;
+                            return (
+                              <div key={s.domain} className="flex items-center">
+                                <div className="w-[45%] flex items-center justify-end gap-1.5">
+                                  <span className="text-[9px] text-blue-400/70 shrink-0">{s.anti_count}</span>
+                                  <div className="h-4 flex-1 flex justify-end">
+                                    <div className="h-full bg-blue-500/50 rounded-l-sm" style={{ width: `${antiW}%` }} />
+                                  </div>
+                                </div>
+                                <div className="w-[10%] text-center">
+                                  <span className="text-[9px] text-gray-500 leading-none truncate">{s.domain.length > 12 ? s.domain.slice(0, 11) + "..." : s.domain}</span>
+                                </div>
+                                <div className="w-[45%] flex items-center gap-1.5">
+                                  <div className="h-4 flex-1 flex justify-start">
+                                    <div className="h-full bg-red-500/50 rounded-r-sm" style={{ width: `${proW}%` }} />
+                                  </div>
+                                  <span className="text-[9px] text-red-400/70 shrink-0">{s.pro_count}</span>
                                 </div>
                               </div>
-                              <div className="w-8 text-left text-[10px] text-red-400 font-medium shrink-0">{s.pro_count}</div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               );
             })()}

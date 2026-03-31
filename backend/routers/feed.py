@@ -1395,10 +1395,19 @@ async def get_paired_stories(
             bigram_tweets[phrase].append((t, c))
 
     # Find bigrams shared by both sides with enough tweets
+    # Filter out vague/generic bigrams that don't represent specific stories
+    vague_bigrams = {
+        "united states", "people think", "this just", "make sure", "going happen",
+        "want know", "right left", "left right", "good thing", "many people",
+        "need know", "long time", "every time", "real problem", "right wrong",
+        "last year", "next year", "years ago", "much more", "even more",
+    }
     keyword_clusters: dict[str, list] = {}
     for phrase, tweet_list in bigram_tweets.items():
+        if phrase in vague_bigrams:
+            continue
         sides = set(c.effective_political_bent for _, c in tweet_list)
-        if anti_bent in sides and pro_bent in sides and len(tweet_list) >= 3:
+        if anti_bent in sides and pro_bent in sides and len(tweet_list) >= 4:
             keyword_clusters[phrase] = tweet_list
 
     # --- Merge clusters and find paired stories ---
@@ -1522,16 +1531,22 @@ async def get_paired_stories(
 
             prompt_parts = []
             for i, s in enumerate(stories):
-                prompt_parts.append(f"""Story {i+1}: "{s['story_label']}"
+                prompt_parts.append(f"""Story {i+1} (cluster: "{s['story_label']}")
 Side A ({topic_obj.anti_label}): {s['anti']['full_text'][:300]}
 Side A frame: {s['anti']['frame']}
 Side B ({topic_obj.pro_label}): {s['pro']['full_text'][:300]}
 Side B frame: {s['pro']['frame']}""")
 
             prompt = f"""For each story below, generate:
-1. A short framing headline for Side A (6-14 words, captures their interpretation)
-2. A short framing headline for Side B (6-14 words, captures their interpretation)
-3. A one-line comparison takeaway (neutral, explains the contrast)
+1. A story_title: a short, specific title for the shared event or issue (3-8 words). This must describe a SPECIFIC event, policy, incident, or development — NOT a vague stance like "Against X" or "Support for Y". If the cluster label is vague, infer the actual story from the tweet text.
+2. A headline_a: framing headline for Side A (6-14 words, captures their interpretation)
+3. A headline_b: framing headline for Side B (6-14 words, captures their interpretation)
+4. A takeaway: one-line comparison (neutral, explains the contrast)
+
+Rules for story_title:
+- Must be a SPECIFIC event, decision, incident, or policy — e.g. "ICC Arrest Warrant Debate", "Gaza Aid Blockade", "Campus Protest Crackdowns"
+- NEVER use generic stance labels like "Against Israel", "Pro-Immigration", "Support for X"
+- If you can't identify a specific event, describe the specific sub-debate, e.g. "Civilian Casualty Reporting" rather than "The Conflict"
 
 Rules for headlines:
 - Capture how that side frames/interprets the event
@@ -1539,17 +1554,15 @@ Rules for headlines:
 - No hashtags, no @mentions, no URLs
 - No leading emojis or "BREAKING:"
 - Sound like a newspaper sub-headline, not a tweet
-- Preserve the side's viewpoint without editorializing
 
 Rules for takeaway:
 - One sentence, neutral tone
 - Reference the shared event and how framing differs
-- Use plain language
 
 {chr(10).join(prompt_parts)}
 
 Return a JSON array with one object per story:
-[{{"headline_a": "...", "headline_b": "...", "takeaway": "..."}}]"""
+[{{"story_title": "...", "headline_a": "...", "headline_b": "...", "takeaway": "..."}}]"""
 
             resp = client.models.generate_content(
                 model="gemini-2.0-flash",
@@ -1564,6 +1577,8 @@ Return a JSON array with one object per story:
             for i, s in enumerate(stories):
                 if i < len(headlines):
                     h = headlines[i]
+                    if h.get("story_title"):
+                        s["story_label"] = h["story_title"]
                     s["anti"]["headline"] = h.get("headline_a", s["anti"]["full_text"][:80])
                     s["pro"]["headline"] = h.get("headline_b", s["pro"]["full_text"][:80])
                     s["interpretation"] = h.get("takeaway", "")

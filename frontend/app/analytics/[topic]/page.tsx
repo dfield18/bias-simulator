@@ -1883,7 +1883,7 @@ export default function AnalyticsPage() {
                 <div>
                   <div className="text-xs font-semibold text-gray-300 mb-1">Classification</div>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    Each tweet is classified using Gemini Flash for political stance (pro/anti/neutral), with low-confidence classifications escalated to a 3-model ensemble (Gemini + Claude Haiku + GPT-4o Mini) for majority vote. Intensity scoring (-10 to +10) measures rhetorical aggression. Narrative framing and emotional tone are classified separately.
+                    Each tweet is classified by AI for political stance (pro/anti/neutral), with low-confidence classifications escalated to a multi-model ensemble for majority vote. Intensity scoring (-10 to +10) measures rhetorical aggression. Narrative framing and emotional tone are classified separately.
                   </p>
                 </div>
                 <div>

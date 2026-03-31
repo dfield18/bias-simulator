@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   TopicData,
   TweetData,
@@ -13,6 +14,7 @@ import {
   fetchAccountRules,
   setAccountRule,
   fetchMe,
+  setAuthToken,
 } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
 
@@ -43,6 +45,7 @@ function bentBadge(bent: string | null, antiBent?: string, proBent?: string): st
 }
 
 export default function AdminPage() {
+  const { isLoaded, getToken } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // null = loading
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [selectedTopic, setSelectedTopic] = useState("");
@@ -124,20 +127,27 @@ export default function AdminPage() {
   const proBent = currentTopic?.pro_label?.toLowerCase().replace(/\s+/g, "-") || "";
 
   useEffect(() => {
-    fetchMe()
-      .then((user) => {
+    if (!isLoaded) return;
+    async function init() {
+      // Ensure the Clerk token is set before making API calls
+      const token = await getToken();
+      setAuthToken(token);
+      try {
+        const user = await fetchMe();
         if (user.tier === "admin") {
           setIsAdmin(true);
-          fetchTopics().then((t) => {
-            setTopics(t);
-            if (t.length > 0) setSelectedTopic(t[0].slug);
-          });
+          const t = await fetchTopics();
+          setTopics(t);
+          if (t.length > 0) setSelectedTopic(t[0].slug);
         } else {
           setIsAdmin(false);
         }
-      })
-      .catch(() => setIsAdmin(false));
-  }, []);
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+    init();
+  }, [isLoaded, getToken]);
 
   const loadData = useCallback(() => {
     if (!selectedTopic) return;

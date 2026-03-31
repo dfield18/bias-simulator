@@ -1640,30 +1640,73 @@ export default function AnalyticsPage() {
             {/* Common Ground — inline overlap */}
             {analytics?.overlap && (() => {
               const { shared_sources, shared_narratives } = analytics.overlap;
-              const hasShared = (shared_sources?.length > 0) || (shared_narratives?.filter(n => n.anti_count > 0 && n.pro_count > 0).length > 0);
+              const sharedNarr = shared_narratives?.filter(n => n.anti_count > 0 && n.pro_count > 0) || [];
+              const hasShared = (shared_sources?.length > 0) || (sharedNarr.length > 0);
               if (!hasShared) return null;
+              const aL = analytics.anti_label;
+              const pL = analytics.pro_label;
+              const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
               return (
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
                   <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Common Ground</div>
                   <h3 className="text-sm font-semibold text-gray-300 mb-0.5">Where both sides overlap</h3>
-                  <p className="text-[10px] text-gray-600 mb-4">Sources and topics that appear on both sides of the conversation</p>
-                  {shared_narratives?.filter(n => n.anti_count > 0 && n.pro_count > 0).length > 0 && (
-                    <div className="mb-3">
-                      <div className="text-[10px] text-gray-500 font-medium mb-2">Shared Topics</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {shared_narratives.filter(n => n.anti_count > 0 && n.pro_count > 0).slice(0, 8).map(n => (
-                          <span key={n.frame} className="text-[11px] bg-gray-700/60 text-gray-300 px-2 py-1 rounded">{n.label}</span>
-                        ))}
+                  <p className="text-[10px] text-gray-600 mb-4">Topics and sources that appear on both sides of the conversation</p>
+
+                  {/* Shared Topics with balance bars */}
+                  {sharedNarr.length > 0 && (
+                    <div className="mb-5">
+                      <div className="text-[10px] text-gray-500 font-medium mb-3">Shared Topics</div>
+                      <div className="space-y-2.5">
+                        {sharedNarr.slice(0, 6).map(n => {
+                          const total = n.anti_count + n.pro_count;
+                          const antiPct = Math.round((n.anti_count / total) * 100);
+                          const proPct = 100 - antiPct;
+                          const balance = Math.min(antiPct, proPct); // 0-50, higher = more balanced
+                          return (
+                            <div key={n.frame}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-gray-300">{n.label}</span>
+                                <span className="text-[9px] text-gray-600">
+                                  {total} tweets &middot; {balance >= 35 ? "Balanced" : balance >= 20 ? "Leaning" : "One-sided"}
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full overflow-hidden flex bg-gray-800">
+                                <div className="h-full bg-blue-500/60" style={{ width: `${antiPct}%` }} />
+                                <div className="h-full bg-red-500/60" style={{ width: `${proPct}%` }} />
+                              </div>
+                              <div className="flex justify-between mt-0.5">
+                                <span className="text-[9px] text-blue-400/70">{aL} {antiPct}%</span>
+                                <span className="text-[9px] text-red-400/70">{proPct}% {pL}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
+
+                  {/* Shared Sources with counts */}
                   {shared_sources?.length > 0 && (
                     <div>
-                      <div className="text-[10px] text-gray-500 font-medium mb-2">Shared Sources</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {shared_sources.slice(0, 8).map(s => (
-                          <span key={s.domain} className="text-[11px] bg-gray-700/60 text-gray-300 px-2 py-1 rounded">{s.domain}</span>
-                        ))}
+                      <div className="text-[10px] text-gray-500 font-medium mb-3">Shared Sources</div>
+                      <div className="space-y-1.5">
+                        {shared_sources.slice(0, 6).map(s => {
+                          const total = s.anti_count + s.pro_count;
+                          const antiPct = Math.round((s.anti_count / total) * 100);
+                          return (
+                            <div key={s.domain} className="flex items-center gap-2 bg-gray-800/40 rounded-lg px-2.5 py-1.5">
+                              <span className="text-xs text-gray-300 flex-1 min-w-0 truncate">{s.domain}</span>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[9px] text-blue-400/70">{s.anti_count}</span>
+                                <div className="w-12 h-1.5 rounded-full overflow-hidden flex bg-gray-700">
+                                  <div className="h-full bg-blue-500/60" style={{ width: `${antiPct}%` }} />
+                                  <div className="h-full bg-red-500/60" style={{ width: `${100 - antiPct}%` }} />
+                                </div>
+                                <span className="text-[9px] text-red-400/70">{s.pro_count}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

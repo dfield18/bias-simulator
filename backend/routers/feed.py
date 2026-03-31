@@ -8,6 +8,7 @@ from cache import get_cached, set_cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
+from auth import get_current_user
 from pydantic import BaseModel
 from models import (
     Tweet, Classification, FetchRun, Topic, TopicSummary,
@@ -22,7 +23,7 @@ def tweet_response_with_media(tweet: Tweet) -> TweetResponse:
     resp.media = extract_media(tweet.raw_json)
     return resp
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.get("/feed", response_model=list[FeedItemResponse])

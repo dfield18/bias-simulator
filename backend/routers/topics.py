@@ -83,7 +83,7 @@ async def get_topics(
 
 
 @router.post("/topics/suggest", response_model=TopicSuggestion)
-async def suggest_topic(body: SuggestRequest):
+async def suggest_topic(body: SuggestRequest, _: dict = Depends(get_current_user)):
     """Use LLM to suggest pro/anti definitions and prompts for a topic."""
     from google import genai
 
@@ -220,7 +220,7 @@ async def get_my_topics(
 
 
 @router.post("/topics/{slug}/run")
-async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25)):
+async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), _: dict = Depends(get_current_user)):
     """Trigger the pipeline for a topic in a background thread."""
     import threading
     from pipeline.run import run_pipeline
@@ -246,7 +246,7 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
 
 
 @router.get("/topics/{slug}/progress")
-async def get_pipeline_progress(slug: str):
+async def get_pipeline_progress(slug: str, _: dict = Depends(get_current_user)):
     """Get current pipeline progress for a topic."""
     from pipeline.run import get_progress
     progress = get_progress(slug)
@@ -270,7 +270,7 @@ class UpdateTopicRequest(BaseModel):
 
 
 @router.get("/topics/{slug}", response_model=TopicDetailResponse)
-async def get_topic_detail(slug: str, db: AsyncSession = Depends(get_db)):
+async def get_topic_detail(slug: str, db: AsyncSession = Depends(get_db), _: dict = Depends(get_current_user)):
     """Get full topic details including prompts."""
     result = await db.execute(select(Topic).where(Topic.slug == slug))
     topic = result.scalar_one_or_none()
@@ -390,7 +390,7 @@ async def unsubscribe_from_topic(
 
 
 @router.get("/topics/{slug}/runs")
-async def get_topic_runs(slug: str, db: AsyncSession = Depends(get_db)):
+async def get_topic_runs(slug: str, db: AsyncSession = Depends(get_db), _: dict = Depends(get_current_user)):
     """Get recent pipeline runs for a topic."""
     from models import FetchRun
     stmt = (

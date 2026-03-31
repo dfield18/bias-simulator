@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { setAuthToken } from "@/lib/api";
+import { setAuthToken, setGetTokenFn } from "@/lib/api";
 
 /**
  * Syncs the Clerk session token into our API module so all
@@ -19,9 +19,13 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     // If not signed in, no token to sync — just render
     if (!isSignedIn) {
       setAuthToken(null);
+      setGetTokenFn(null);
       setReady(true);
       return;
     }
+
+    // Store getToken so apiFetch can get fresh tokens on each call
+    setGetTokenFn(getToken);
 
     let cancelled = false;
 

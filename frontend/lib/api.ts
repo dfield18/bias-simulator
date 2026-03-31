@@ -2,9 +2,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // Auth token management — set by AuthProvider, used by all API calls
 let _authToken: string | null = null;
+let _getTokenFn: (() => Promise<string | null>) | null = null;
 
 export function setAuthToken(token: string | null) {
   _authToken = token;
+}
+
+export function setGetTokenFn(fn: (() => Promise<string | null>) | null) {
+  _getTokenFn = fn;
 }
 
 export function authHeaders(): Record<string, string> {
@@ -14,8 +19,21 @@ export function authHeaders(): Record<string, string> {
 /** Fetch wrapper that auto-injects the Clerk auth token. */
 async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   const headers = new Headers(init?.headers);
-  if (_authToken && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${_authToken}`);
+  if (!headers.has("Authorization")) {
+    // Get a fresh token if possible, fall back to cached
+    if (_getTokenFn) {
+      try {
+        const token = await _getTokenFn();
+        if (token) {
+          _authToken = token;
+          headers.set("Authorization", `Bearer ${token}`);
+        }
+      } catch {
+        if (_authToken) headers.set("Authorization", `Bearer ${_authToken}`);
+      }
+    } else if (_authToken) {
+      headers.set("Authorization", `Bearer ${_authToken}`);
+    }
   }
   return fetch(url, { ...init, headers });
 }

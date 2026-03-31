@@ -10,6 +10,8 @@ import {
   fetchAdminTweets,
   fetchAdminStats,
   submitOverride,
+  fetchAccountRules,
+  setAccountRule,
 } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
 
@@ -108,6 +110,10 @@ export default function AdminPage() {
   const [overrideIntensity, setOverrideIntensity] = useState("");
   const [overrideNotes, setOverrideNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [accountRules, setAccountRules] = useState<Record<string, string>>({});
+  const [newRuleAccount, setNewRuleAccount] = useState("");
+  const [newRuleBent, setNewRuleBent] = useState("");
+  const [showRules, setShowRules] = useState(false);
 
   // Navigation between tweets in modal
   const [modalIndex, setModalIndex] = useState(-1);
@@ -151,10 +157,12 @@ export default function AdminPage() {
     Promise.all([
       fetchAdminTweets(selectedTopic, secret, filters),
       fetchAdminStats(selectedTopic, secret),
+      fetchAccountRules(selectedTopic, secret),
     ])
-      .then(([tweets, s]) => {
+      .then(([tweets, s, rules]) => {
         setRows(tweets);
         setStats(s);
+        setAccountRules(rules);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -342,6 +350,103 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* Account Rules */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
+        <button
+          onClick={() => setShowRules(!showRules)}
+          className="flex items-center justify-between w-full text-left"
+        >
+          <div>
+            <h3 className="text-sm font-semibold text-gray-300">Account Rules</h3>
+            <p className="text-[10px] text-gray-500">
+              {Object.keys(accountRules).length} account{Object.keys(accountRules).length !== 1 ? "s" : ""} with fixed classification
+            </p>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className={`text-gray-500 transition-transform ${showRules ? "rotate-180" : ""}`}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        {showRules && (
+          <div className="mt-4">
+            <p className="text-[10px] text-gray-600 mb-3">
+              Accounts listed here will always be classified with the specified stance, regardless of what the AI determines. This applies to all existing and future tweets.
+            </p>
+
+            {/* Existing rules */}
+            {Object.keys(accountRules).length > 0 && (
+              <div className="space-y-1.5 mb-4">
+                {Object.entries(accountRules).map(([account, bent]) => (
+                  <div key={account} className="flex items-center justify-between bg-gray-800/50 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-300 font-medium">@{account}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                        bent === antiBent ? `${bentBadge(bent, antiBent, proBent)}` :
+                        bent === proBent ? `${bentBadge(bent, antiBent, proBent)}` :
+                        "bg-gray-500/20 text-gray-400"
+                      }`}>{bent}</span>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const result = await setAccountRule(secret, selectedTopic, account, "");
+                          setAccountRules(result.rules);
+                        } catch { /* ignore */ }
+                      }}
+                      className="text-[10px] text-red-400 hover:text-red-300"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new rule */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newRuleAccount}
+                onChange={(e) => setNewRuleAccount(e.target.value)}
+                placeholder="@username"
+                className="flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300"
+              />
+              <select
+                value={newRuleBent}
+                onChange={(e) => setNewRuleBent(e.target.value)}
+                className="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300"
+              >
+                <option value="">Select stance...</option>
+                {currentTopic && (
+                  <>
+                    <option value={antiBent}>{currentTopic.anti_label}</option>
+                    <option value={proBent}>{currentTopic.pro_label}</option>
+                  </>
+                )}
+                <option value="neutral">Neutral</option>
+              </select>
+              <button
+                onClick={async () => {
+                  if (!newRuleAccount.trim() || !newRuleBent) return;
+                  try {
+                    const result = await setAccountRule(secret, selectedTopic, newRuleAccount, newRuleBent);
+                    setAccountRules(result.rules);
+                    setNewRuleAccount("");
+                    setNewRuleBent("");
+                    loadData();
+                  } catch { /* ignore */ }
+                }}
+                disabled={!newRuleAccount.trim() || !newRuleBent}
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-lg text-xs font-medium"
+              >
+                Add Rule
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Filters */}
       <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-4">

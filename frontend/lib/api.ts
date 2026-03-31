@@ -937,6 +937,33 @@ export async function submitOverride(
   return res.json();
 }
 
+export async function fetchAccountRules(
+  topic: string,
+  adminSecret: string,
+): Promise<Record<string, string>> {
+  const res = await fetch(`${API_URL}/api/admin/account-rules?topic=${encodeURIComponent(topic)}`, {
+    cache: "no-store",
+    headers: { "X-Admin-Secret": adminSecret },
+  });
+  if (!res.ok) return {};
+  return res.json();
+}
+
+export async function setAccountRule(
+  adminSecret: string,
+  topic: string,
+  screenName: string,
+  politicalBent: string,
+): Promise<{ status: string; rules: Record<string, string>; affected_tweets: number }> {
+  const res = await fetch(`${API_URL}/api/admin/account-rules?topic=${encodeURIComponent(topic)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Admin-Secret": adminSecret },
+    body: JSON.stringify({ screen_name: screenName, political_bent: politicalBent }),
+  });
+  if (!res.ok) throw new Error("Failed to set account rule");
+  return res.json();
+}
+
 export interface TopicDetail {
   slug: string;
   name: string;

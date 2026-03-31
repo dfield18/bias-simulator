@@ -54,7 +54,7 @@ def load_topic(conn, topic_slug: str) -> dict | None:
     with conn.cursor() as cur:
         cur.execute(
             "SELECT slug, name, description, classification_prompt, intensity_prompt, "
-            "pro_label, anti_label, search_query, target_language, target_country "
+            "pro_label, anti_label, search_query, target_language, target_country, account_rules "
             "FROM topics WHERE slug = %s AND is_active = TRUE",
             (topic_slug,),
         )
@@ -72,6 +72,7 @@ def load_topic(conn, topic_slug: str) -> dict | None:
             "search_query": row[7],
             "target_language": row[8] or "en",
             "target_country": row[9],
+            "account_rules": row[10] or {},
         }
 
 
@@ -302,6 +303,32 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         tweets_to_classify = [t for t in parsed_tweets if t["id_str"] not in existing_ids]
         print(f"  Skipping {len(existing_ids)} already-classified tweets, classifying {len(tweets_to_classify)} new ones")
 
+        # Apply account rules: auto-classify tweets from ruled accounts
+        account_rules = {k.lower(): v for k, v in (topic.get("account_rules") or {}).items()}
+        rule_classifications = []
+        remaining_tweets = []
+        for t in tweets_to_classify:
+            screen = (t.get("screen_name") or "").lower()
+            if screen in account_rules:
+                rule_classifications.append({
+                    "id_str": t["id_str"],
+                    "about_subject": True,
+                    "political_bent": account_rules[screen],
+                    "author_lean": account_rules[screen],
+                    "classification_basis": f"Account rule: always {account_rules[screen]}",
+                    "confidence": 1.0,
+                    "agreement": "rule",
+                    "classification_method": "account-rule",
+                    "votes": "",
+                    "full_text": t.get("full_text", ""),
+                    "screen_name": screen,
+                })
+            else:
+                remaining_tweets.append(t)
+        if rule_classifications:
+            print(f"  Auto-classified {len(rule_classifications)} tweets via account rules")
+        tweets_to_classify = remaining_tweets
+
         set_progress(topic_slug, 4, 7, "Analyzing tweets with AI",
                      f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by Gemini AI, "
                      f"with uncertain ones double-checked by Claude and GPT for accuracy. "
@@ -457,6 +484,10 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
             intensity_results = []
             cost_class = 0.0
             cost_intensity = 0.0
+
+        # Merge account-rule classifications into the main list
+        if rule_classifications:
+            classifications.extend(rule_classifications)
 
         # Write classifications + intensity to DB
         set_progress(topic_slug, 5, 7, "Saving results", f"Writing {len(classifications)} classifications to database...")

@@ -29,6 +29,7 @@ class Topic(Base):
     target_language = Column(Text, default="en")  # ISO lang code for tweet fetching
     target_country = Column(Text)  # e.g. "United States", "United Kingdom" — for audience relevance filtering
     color_scheme = Column(Text, default="political")  # "political" (blue/red) or "neutral" (purple/green)
+    account_rules = Column(JSONB)  # e.g. {"foxnews": "pro-bent", "maborosi": "anti-bent"} — override classification for specific accounts
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
 
@@ -147,6 +148,7 @@ class TopicResponse(BaseModel):
     target_language: Optional[str] = "en"
     target_country: Optional[str] = None
     color_scheme: Optional[str] = "political"
+    account_rules: Optional[dict] = None
 
     model_config = {"from_attributes": True}
 
@@ -163,6 +165,7 @@ class TopicDetailResponse(BaseModel):
     target_language: Optional[str] = "en"
     target_country: Optional[str] = None
     color_scheme: Optional[str] = "political"
+    account_rules: Optional[dict] = None
     is_active: Optional[bool] = True
     created_at: Optional[datetime] = None
 

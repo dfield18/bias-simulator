@@ -5,8 +5,9 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
+from pydantic import BaseModel as PydanticBaseModel
 from models import (
-    Classification, Tweet,
+    Classification, Tweet, Topic,
     OverrideRequest, OverrideResponse, ClassificationResponse,
     TweetResponse, extract_media,
 )
@@ -203,3 +204,71 @@ async def get_admin_stats(
             for r in rows
         },
     }
+
+
+class AccountRuleRequest(PydanticBaseModel):
+    screen_name: str
+    political_bent: str  # the bent value to always assign, or "" to remove
+
+
+@router.get("/admin/account-rules")
+async def get_account_rules(
+    topic: str,
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(_check_admin),
+):
+    """Get account bias rules for a topic."""
+    result = await db.execute(select(Topic).where(Topic.slug == topic))
+    topic_obj = result.scalar_one_or_none()
+    if not topic_obj:
+        return {}
+    return topic_obj.account_rules or {}
+
+
+@router.post("/admin/account-rules")
+async def set_account_rule(
+    topic: str,
+    body: AccountRuleRequest,
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(_check_admin),
+):
+    """Set or remove an account bias rule. Also applies overrides to all existing tweets from this account."""
+    result = await db.execute(select(Topic).where(Topic.slug == topic))
+    topic_obj = result.scalar_one_or_none()
+    if not topic_obj:
+        raise HTTPException(status_code=404, detail="Topic not found")
+
+    rules = topic_obj.account_rules or {}
+    screen_name = body.screen_name.lower().strip().lstrip("@")
+
+    if body.political_bent:
+        rules[screen_name] = body.political_bent
+    else:
+        rules.pop(screen_name, None)
+
+    topic_obj.account_rules = rules
+    await db.commit()
+
+    # Apply override to all existing tweets from this account
+    if body.political_bent:
+        tweet_result = await db.execute(
+            select(Tweet.id_str).where(
+                Tweet.topic_slug == topic,
+                Tweet.screen_name.ilike(screen_name),
+            )
+        )
+        tweet_ids = [row[0] for row in tweet_result.all()]
+        if tweet_ids:
+            await db.execute(
+                update(Classification)
+                .where(Classification.id_str.in_(tweet_ids))
+                .values(
+                    override_political_bent=body.political_bent,
+                    override_flag=True,
+                    override_notes=f"Account rule: always {body.political_bent}",
+                    override_at=datetime.now(timezone.utc),
+                )
+            )
+            await db.commit()
+
+    return {"status": "ok", "rules": rules, "affected_tweets": len(tweet_ids) if body.political_bent else 0}

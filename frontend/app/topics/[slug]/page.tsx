@@ -487,21 +487,29 @@ export default function TopicManagePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Left / Liberal Label</label>
+              <label className="block text-xs text-gray-500 mb-1">Left Label</label>
               <input
                 type="text"
                 value={antiLabel}
                 onChange={(e) => setAntiLabel(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-blue-500/30 rounded-lg text-sm text-blue-400 font-semibold"
+                className={`w-full px-3 py-2 bg-gray-800 border rounded-lg text-sm font-semibold ${
+                  colorScheme === "neutral"
+                    ? "border-purple-500/30 text-purple-400"
+                    : "border-blue-500/30 text-blue-400"
+                }`}
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Right / Conservative Label</label>
+              <label className="block text-xs text-gray-500 mb-1">Right Label</label>
               <input
                 type="text"
                 value={proLabel}
                 onChange={(e) => setProLabel(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-red-500/30 rounded-lg text-sm text-red-400 font-semibold"
+                className={`w-full px-3 py-2 bg-gray-800 border rounded-lg text-sm font-semibold ${
+                  colorScheme === "neutral"
+                    ? "border-green-500/30 text-green-400"
+                    : "border-red-500/30 text-red-400"
+                }`}
               />
             </div>
           </div>

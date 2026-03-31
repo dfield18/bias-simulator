@@ -326,19 +326,23 @@ export default function NewTopicPage() {
 
           {/* Pro/Anti definitions — the key section */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            {/* Anti side — Liberal/Left = Blue */}
-            <div className="bg-gray-900 border border-blue-500/30 rounded-xl p-5">
+            {/* Anti side — Left */}
+            <div className={`bg-gray-900 border rounded-xl p-5 ${
+              colorScheme === "neutral" ? "border-purple-500/30" : "border-blue-500/30"
+            }`}>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-3 h-3 rounded-full bg-blue-500" />
+                <div className={`w-3 h-3 rounded-full ${colorScheme === "neutral" ? "bg-purple-500" : "bg-blue-500"}`} />
                 <label className="text-xs text-gray-500">
-                  Left / Liberal Position
+                  Left Position
                 </label>
               </div>
               <input
                 type="text"
                 value={suggestion.anti_label}
                 onChange={(e) => updateField("anti_label", e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm font-semibold text-blue-400 mb-3"
+                className={`w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm font-semibold mb-3 ${
+                  colorScheme === "neutral" ? "text-purple-400" : "text-blue-400"
+                }`}
               />
               <label className="block text-xs text-gray-500 mb-1">
                 Definition — what does this side believe?
@@ -351,19 +355,23 @@ export default function NewTopicPage() {
               />
             </div>
 
-            {/* Pro side — Conservative/Right = Red */}
-            <div className="bg-gray-900 border border-red-500/30 rounded-xl p-5">
+            {/* Pro side — Right */}
+            <div className={`bg-gray-900 border rounded-xl p-5 ${
+              colorScheme === "neutral" ? "border-green-500/30" : "border-red-500/30"
+            }`}>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className={`w-3 h-3 rounded-full ${colorScheme === "neutral" ? "bg-green-500" : "bg-red-500"}`} />
                 <label className="text-xs text-gray-500">
-                  Right / Conservative Position
+                  Right Position
                 </label>
               </div>
               <input
                 type="text"
                 value={suggestion.pro_label}
                 onChange={(e) => updateField("pro_label", e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm font-semibold text-red-400 mb-3"
+                className={`w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm font-semibold mb-3 ${
+                  colorScheme === "neutral" ? "text-green-400" : "text-red-400"
+                }`}
               />
               <label className="block text-xs text-gray-500 mb-1">
                 Definition — what does this side believe?

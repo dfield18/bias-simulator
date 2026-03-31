@@ -66,50 +66,94 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        {/* Visual — stylized blue/red split */}
-        <div className="mt-16 sm:mt-20 relative">
-          <div className="grid grid-cols-2 gap-px rounded-xl overflow-hidden border border-gray-800/60">
-            {/* Left side (blue) */}
-            <div className="bg-gray-900/80 p-5 sm:p-8">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                <span className="text-[11px] text-blue-400 font-medium tracking-wide uppercase">Side A</span>
-              </div>
-              <div className="space-y-3">
-                <div className="h-2.5 bg-blue-500/20 rounded-full w-full" />
-                <div className="h-2.5 bg-blue-500/15 rounded-full w-4/5" />
-                <div className="h-2.5 bg-blue-500/10 rounded-full w-3/5" />
-                <div className="h-2.5 bg-blue-500/8 rounded-full w-2/5" />
-              </div>
-              <div className="mt-6 flex gap-2">
-                <span className="text-[10px] bg-blue-500/10 text-blue-400/70 px-2 py-0.5 rounded">security</span>
-                <span className="text-[10px] bg-blue-500/10 text-blue-400/70 px-2 py-0.5 rounded">economy</span>
-                <span className="text-[10px] bg-blue-500/10 text-blue-400/70 px-2 py-0.5 rounded">law</span>
-              </div>
-            </div>
-            {/* Right side (red) */}
-            <div className="bg-gray-900/80 p-5 sm:p-8">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <span className="text-[11px] text-red-400 font-medium tracking-wide uppercase">Side B</span>
-              </div>
-              <div className="space-y-3">
-                <div className="h-2.5 bg-red-500/20 rounded-full w-full" />
-                <div className="h-2.5 bg-red-500/15 rounded-full w-3/4" />
-                <div className="h-2.5 bg-red-500/10 rounded-full w-1/2" />
-                <div className="h-2.5 bg-red-500/8 rounded-full w-1/3" />
-              </div>
-              <div className="mt-6 flex gap-2">
-                <span className="text-[10px] bg-red-500/10 text-red-400/70 px-2 py-0.5 rounded">rights</span>
-                <span className="text-[10px] bg-red-500/10 text-red-400/70 px-2 py-0.5 rounded">justice</span>
-                <span className="text-[10px] bg-red-500/10 text-red-400/70 px-2 py-0.5 rounded">equity</span>
-              </div>
+        {/* Product preview — three panels */}
+        <div className="mt-16 sm:mt-20 grid grid-cols-1 lg:grid-cols-3 gap-3">
+
+          {/* Panel 1: Mini feed */}
+          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 lg:col-span-1">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-3 font-medium">Simulated Feed</div>
+            <div className="space-y-2.5">
+              {[
+                { name: "Reuters", handle: "@Reuters", text: "Border patrol reports record crossings as asylum policy debate intensifies in Congress...", bent: "neutral", color: "bg-gray-500/20 text-gray-400" },
+                { name: "Rep. Garcia", handle: "@RepGarcia", text: "These families are fleeing violence. We need a humane path, not more walls and cages.", bent: "pro-immigration", color: "bg-blue-500/20 text-blue-400" },
+                { name: "Daily Wire", handle: "@DailyWire", text: "EXPOSED: Sanctuary cities quietly release hundreds of criminal migrants back into communities", bent: "border-security", color: "bg-red-500/20 text-red-400" },
+              ].map((t) => (
+                <div key={t.handle} className="border border-gray-800/40 rounded-lg p-2.5">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-medium text-gray-200">{t.name}</span>
+                      <span className="text-[10px] text-gray-600">{t.handle}</span>
+                    </div>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded ${t.color}`}>{t.bent}</span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 leading-relaxed">{t.text}</p>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-gray-600 bg-gray-950 px-3">
-            same topic, different framing
+
+          {/* Panel 2: Volume by sentiment */}
+          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Tweet Volume</div>
+            <div className="text-xs text-gray-400 mb-4">US Immigration — 1,247 tweets</div>
+            <div className="flex items-end gap-2 h-32 mb-3">
+              {[
+                { label: "Pro-Immigration", h: "65%", color: "bg-blue-500/60", count: 486 },
+                { label: "Border Security", h: "80%", color: "bg-red-500/60", count: 612 },
+                { label: "Neutral", h: "25%", color: "bg-gray-500/40", count: 149 },
+              ].map((b) => (
+                <div key={b.label} className="flex-1 flex flex-col items-center justify-end h-full">
+                  <span className="text-[10px] text-gray-400 mb-1">{b.count}</span>
+                  <div className={`w-full rounded-t-md ${b.color}`} style={{ height: b.h }} />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 justify-center">
+              {[
+                { label: "Pro-Immigration", color: "bg-blue-500/60" },
+                { label: "Border Security", color: "bg-red-500/60" },
+                { label: "Neutral", color: "bg-gray-500/40" },
+              ].map((l) => (
+                <div key={l.label} className="flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-sm ${l.color}`} />
+                  <span className="text-[9px] text-gray-500">{l.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Panel 3: What each side argues (butterfly) */}
+          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">What Each Side Argues</div>
+            <div className="flex items-center justify-between mb-3 mt-2">
+              <span className="text-[9px] text-blue-400">Pro-Immigration</span>
+              <span className="text-[9px] text-red-400">Border Security</span>
+            </div>
+            <div className="space-y-2.5">
+              {[
+                { label: "Human Rights", anti: 85, pro: 12 },
+                { label: "Security", anti: 15, pro: 92 },
+                { label: "Economy", anti: 45, pro: 68 },
+                { label: "Rule of Law", anti: 20, pro: 78 },
+                { label: "Family", anti: 72, pro: 8 },
+                { label: "Crime", anti: 5, pro: 88 },
+              ].map((f) => (
+                <div key={f.label} className="flex items-center gap-1">
+                  <div className="w-[40%] flex justify-end">
+                    <div className="h-3 bg-blue-500/40 rounded-l-sm" style={{ width: `${f.anti}%` }} />
+                  </div>
+                  <div className="w-[20%] text-center">
+                    <span className="text-[9px] text-gray-500">{f.label}</span>
+                  </div>
+                  <div className="w-[40%] flex justify-start">
+                    <div className="h-3 bg-red-500/40 rounded-r-sm" style={{ width: `${f.pro}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+        <p className="text-[10px] text-gray-600 text-center mt-3">Sample data from US Immigration analysis</p>
       </section>
 
       {/* What Echo shows you — staggered, not a grid */}

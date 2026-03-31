@@ -12,6 +12,26 @@ from database import Base
 
 # ─── SQLAlchemy ORM Models ───────────────────────────────────────────────────
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Text, primary_key=True)  # auth provider ID (e.g. Clerk/Auth.js user ID)
+    email = Column(Text, unique=True)
+    name = Column(Text)
+    tier = Column(Text, default="free")  # "free", "pro", "enterprise" — for Stripe tier gating
+    stripe_customer_id = Column(Text)  # populated when they subscribe
+    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+
+
+class UserTopic(Base):
+    __tablename__ = "user_topics"
+
+    user_id = Column(Text, ForeignKey("users.id"), primary_key=True)
+    topic_slug = Column(Text, ForeignKey("topics.slug"), primary_key=True)
+    role = Column(Text, nullable=False, default="subscriber")  # "creator" or "subscriber"
+    joined_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+
+
 class Topic(Base):
     __tablename__ = "topics"
 
@@ -30,6 +50,8 @@ class Topic(Base):
     target_country = Column(Text)  # e.g. "United States", "United Kingdom" — for audience relevance filtering
     color_scheme = Column(Text, default="political")  # "political" (blue/red) or "neutral" (purple/green)
     account_rules = Column(JSONB)  # e.g. {"foxnews": "pro-bent", "maborosi": "anti-bent"} — override classification for specific accounts
+    visibility = Column(Text, default="public")  # "public" or "private"
+    created_by = Column(Text, ForeignKey("users.id"))  # user who created this topic
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
 

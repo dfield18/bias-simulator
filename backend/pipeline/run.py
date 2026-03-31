@@ -44,7 +44,16 @@ def get_progress(topic_slug: str) -> dict | None:
 def get_sync_connection():
     """Get a synchronous psycopg2 connection for pipeline use."""
     database_url = os.getenv("DATABASE_URL", "")
-    conn = psycopg2.connect(database_url, keepalives=1, keepalives_idle=30, keepalives_interval=10, keepalives_count=5)
+    if not database_url:
+        raise RuntimeError("DATABASE_URL not configured")
+    conn = psycopg2.connect(
+        database_url,
+        connect_timeout=10,
+        keepalives=1,
+        keepalives_idle=30,
+        keepalives_interval=10,
+        keepalives_count=5,
+    )
     conn.autocommit = False
     return conn
 

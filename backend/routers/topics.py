@@ -291,7 +291,7 @@ async def update_topic(
     topic = result.scalar_one_or_none()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
-    if topic.created_by and topic.created_by != user["id"] and user.get("tier") != "admin":
+    if user.get("tier") != "admin" and topic.created_by != user["id"]:
         raise HTTPException(status_code=403, detail="Only the topic creator can edit settings")
 
     if body.topic_name is not None:
@@ -333,7 +333,7 @@ async def delete_topic(
     topic = result.scalar_one_or_none()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
-    if topic.created_by and topic.created_by != user["id"] and user.get("tier") != "admin":
+    if user.get("tier") != "admin" and topic.created_by != user["id"]:
         raise HTTPException(status_code=403, detail="Only the topic creator can delete")
 
     topic.is_active = False

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 from sqlalchemy import (
     Boolean, Column, Computed, DateTime, Float, Index, Integer, String, Text,
     ForeignKey, text
@@ -322,6 +322,11 @@ class OverrideRequest(BaseModel):
     override_political_bent: Optional[str] = None
     override_intensity_score: Optional[int] = None
     override_notes: str = ""
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.override_intensity_score is not None:
+            if not (-10 <= self.override_intensity_score <= 10):
+                raise ValueError("Intensity score must be between -10 and 10")
 
 
 class OverrideResponse(BaseModel):

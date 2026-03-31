@@ -31,17 +31,30 @@ export default function Home() {
   const publicTopics = topics.filter((t) => !(t.slug in myTopics));
 
   const handleSubscribe = async (slug: string) => {
-    await subscribeTopic(slug);
     setMyTopics((prev) => ({ ...prev, [slug]: "subscriber" }));
+    try {
+      await subscribeTopic(slug);
+    } catch {
+      setMyTopics((prev) => {
+        const next = { ...prev };
+        delete next[slug];
+        return next;
+      });
+    }
   };
 
   const handleUnsubscribe = async (slug: string) => {
-    await unsubscribeTopic(slug);
-    setMyTopics((prev) => {
-      const next = { ...prev };
+    const prev = myTopics[slug];
+    setMyTopics((p) => {
+      const next = { ...p };
       delete next[slug];
       return next;
     });
+    try {
+      await unsubscribeTopic(slug);
+    } catch {
+      if (prev) setMyTopics((p) => ({ ...p, [slug]: prev }));
+    }
   };
 
   function TopicCard({ topic }: { topic: TopicData }) {

@@ -253,8 +253,20 @@ export default function AnalyticsPage() {
   if (!topic) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="animate-spin h-10 w-10 border-2 border-blue-400 border-t-transparent rounded-full mb-4" />
-        <p className="text-sm text-gray-400">Loading dashboard...</p>
+        {!feedLoading ? (
+          <>
+            <div className="text-5xl font-bold text-gray-700 mb-4">404</div>
+            <p className="text-sm text-gray-400 mb-6">Topic not found</p>
+            <a href="/dashboard" className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm transition-colors">
+              Back to Dashboard
+            </a>
+          </>
+        ) : (
+          <>
+            <div className="animate-spin h-10 w-10 border-2 border-blue-400 border-t-transparent rounded-full mb-4" />
+            <p className="text-sm text-gray-400">Loading dashboard...</p>
+          </>
+        )}
       </div>
     );
   }

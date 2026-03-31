@@ -6,38 +6,48 @@ Creates or updates the user record in our database on first request.
 """
 
 import os
+import time
 import jwt
 import requests
-from functools import lru_cache
 from fastapi import Depends, Header, HTTPException
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 
 CLERK_ISSUER = os.getenv("CLERK_ISSUER", "")  # e.g. https://your-app.clerk.accounts.dev
 _jwks_cache: dict | None = None
+_jwks_fetched_at: float = 0
 
 
 def _get_jwks() -> dict:
-    """Fetch and cache Clerk's JWKS (JSON Web Key Set)."""
-    global _jwks_cache
-    if _jwks_cache:
+    """Fetch and cache Clerk's JWKS with 1-hour TTL."""
+    global _jwks_cache, _jwks_fetched_at
+    if _jwks_cache and (time.time() - _jwks_fetched_at) < 3600:
         return _jwks_cache
     if not CLERK_ISSUER:
         raise HTTPException(status_code=500, detail="CLERK_ISSUER not configured")
     url = f"{CLERK_ISSUER}/.well-known/jwks.json"
-    resp = requests.get(url, timeout=10)
-    resp.raise_for_status()
-    _jwks_cache = resp.json()
+    try:
+        resp = requests.get(url, timeout=10)
+        resp.raise_for_status()
+        _jwks_cache = resp.json()
+        _jwks_fetched_at = time.time()
+    except Exception:
+        if _jwks_cache:
+            return _jwks_cache  # use stale cache if fetch fails
+        raise HTTPException(status_code=503, detail="Authentication service unavailable")
     return _jwks_cache
 
 
 def _decode_token(token: str) -> dict:
     """Decode and verify a Clerk JWT."""
-    jwks = _get_jwks()
-    # Get the signing key from JWKS
-    unverified_header = jwt.get_unverified_header(token)
+    try:
+        jwks = _get_jwks()
+        unverified_header = jwt.get_unverified_header(token)
+    except jwt.exceptions.DecodeError:
+        raise HTTPException(status_code=401, detail="Malformed token")
+
     kid = unverified_header.get("kid")
 
     key_data = None
@@ -47,7 +57,16 @@ def _decode_token(token: str) -> dict:
             break
 
     if not key_data:
-        raise HTTPException(status_code=401, detail="Token signing key not found")
+        # Key might have rotated — clear cache and retry once
+        global _jwks_fetched_at
+        _jwks_fetched_at = 0
+        jwks = _get_jwks()
+        for key in jwks.get("keys", []):
+            if key.get("kid") == kid:
+                key_data = key
+                break
+        if not key_data:
+            raise HTTPException(status_code=401, detail="Token signing key not found")
 
     public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key_data)
 
@@ -57,7 +76,7 @@ def _decode_token(token: str) -> dict:
             public_key,
             algorithms=["RS256"],
             issuer=CLERK_ISSUER,
-            options={"verify_aud": False},  # Clerk doesn't always set aud
+            options={"verify_aud": False},
         )
         return payload
     except jwt.ExpiredSignatureError:

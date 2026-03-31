@@ -99,44 +99,48 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Panel 2: Volume by sentiment */}
-          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4">
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Tweet Volume</div>
-            <div className="text-xs text-gray-400 mb-4">US Immigration — 1,247 tweets</div>
-            <div className="flex items-end justify-center gap-6 h-32 px-4">
-              {[
-                { label: "Pro-Immigration", h: "60%", color: "bg-blue-500/60", count: 486 },
-                { label: "Border Security", h: "75%", color: "bg-red-500/60", count: 612 },
-                { label: "Neutral", h: "22%", color: "bg-gray-500/40", count: 149 },
-              ].map((b) => (
-                <div key={b.label} className="flex flex-col items-center justify-end h-full" style={{ width: "28%" }}>
-                  <span className="text-[10px] text-gray-400 mb-1.5">{b.count}</span>
-                  <div className={`w-full rounded-t ${b.color}`} style={{ height: b.h }} />
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-center gap-6 px-4 mt-3 mb-1">
-              {[
-                { label: "Pro-Immigration", color: "bg-blue-500/60" },
-                { label: "Border Security", color: "bg-red-500/60" },
-                { label: "Neutral", color: "bg-gray-500/40" },
-              ].map((b) => (
-                <div key={b.label} className="flex items-center gap-1.5" style={{ width: "28%" }}>
-                  <div className={`w-2 h-2 rounded-sm shrink-0 ${b.color}`} />
-                  <span className="text-[9px] text-gray-500 whitespace-nowrap">{b.label}</span>
-                </div>
-              ))}
+          {/* Panel 2: Echo Chamber Score + key stats */}
+          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 flex flex-col">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber Score</div>
+            <div className="text-xs text-gray-400 mb-5">US Immigration — 1,247 tweets analyzed</div>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="text-5xl font-bold text-orange-400 mb-1">23%</div>
+              <div className="text-xs text-gray-500 mb-4">overlap between sides</div>
+              {/* Gauge bar */}
+              <div className="w-full max-w-[200px] h-2 rounded-full bg-gray-800 mb-1.5">
+                <div className="h-full rounded-full bg-gradient-to-r from-red-500 via-orange-400 to-green-500" style={{ width: "23%" }} />
+              </div>
+              <div className="flex justify-between w-full max-w-[200px] text-[9px] text-gray-600 mb-6">
+                <span>Echo chamber</span>
+                <span>Shared conversation</span>
+              </div>
+              {/* Key metrics */}
+              <div className="w-full space-y-2.5">
+                {[
+                  { label: "Shared sources", value: "3 of 24", sub: "publishers" },
+                  { label: "Shared arguments", value: "4 of 8", sub: "narrative frames" },
+                  { label: "Cross-side engagement", value: "7%", sub: "of replies" },
+                ].map((m) => (
+                  <div key={m.label} className="flex items-center justify-between">
+                    <span className="text-[11px] text-gray-400">{m.label}</span>
+                    <div className="text-right">
+                      <span className="text-[11px] text-gray-200 font-medium">{m.value}</span>
+                      <span className="text-[9px] text-gray-600 ml-1">{m.sub}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Panel 3: What each side argues (butterfly) */}
-          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4">
+          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 flex flex-col">
             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">What Each Side Argues</div>
-            <div className="flex items-center justify-between mb-3 mt-2">
+            <div className="flex items-center justify-between mb-2 mt-1">
               <span className="text-[9px] text-blue-400">Pro-Immigration</span>
               <span className="text-[9px] text-red-400">Border Security</span>
             </div>
-            <div className="space-y-2.5">
+            <div className="flex-1 flex flex-col justify-center space-y-3">
               {[
                 { label: "Human Rights", anti: 85, pro: 12 },
                 { label: "Security", anti: 15, pro: 92 },
@@ -144,16 +148,18 @@ export default function LandingPage() {
                 { label: "Rule of Law", anti: 20, pro: 78 },
                 { label: "Family", anti: 72, pro: 8 },
                 { label: "Crime", anti: 5, pro: 88 },
+                { label: "Culture", anti: 60, pro: 30 },
+                { label: "Public Health", anti: 10, pro: 55 },
               ].map((f) => (
                 <div key={f.label} className="flex items-center gap-1">
                   <div className="w-[33%] flex justify-end">
-                    <div className="h-3 bg-blue-500/40 rounded-l-sm" style={{ width: `${f.anti}%` }} />
+                    <div className="h-4 bg-blue-500/40 rounded-l-sm" style={{ width: `${f.anti}%` }} />
                   </div>
                   <div className="w-[34%] text-center">
-                    <span className="text-[9px] text-gray-500 whitespace-nowrap">{f.label}</span>
+                    <span className="text-[10px] text-gray-500 whitespace-nowrap">{f.label}</span>
                   </div>
                   <div className="w-[33%] flex justify-start">
-                    <div className="h-3 bg-red-500/40 rounded-r-sm" style={{ width: `${f.pro}%` }} />
+                    <div className="h-4 bg-red-500/40 rounded-r-sm" style={{ width: `${f.pro}%` }} />
                   </div>
                 </div>
               ))}

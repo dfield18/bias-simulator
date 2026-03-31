@@ -142,7 +142,7 @@ export default function Home() {
       {error && <p className="text-red-400">Error: {error}</p>}
 
       {/* My Topics */}
-      {myTopicsList.length > 0 && (
+      {!loading && (
         <>
           <h2 className="text-lg font-semibold text-gray-300 mb-3">My Topics</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -177,12 +177,6 @@ export default function Home() {
         </>
       )}
 
-      {/* Empty state */}
-      {!loading && myTopicsList.length === 0 && publicTopics.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No topics yet. Create your first one to get started.</p>
-        </div>
-      )}
     </main>
   );
 }

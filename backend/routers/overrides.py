@@ -243,6 +243,7 @@ async def set_account_rule(
     await db.commit()
 
     # Apply override to all existing tweets from this account
+    affected = 0
     if body.political_bent:
         tweet_result = await db.execute(
             select(Tweet.id_str).where(
@@ -251,6 +252,7 @@ async def set_account_rule(
             )
         )
         tweet_ids = [row[0] for row in tweet_result.all()]
+        affected = len(tweet_ids)
         if tweet_ids:
             await db.execute(
                 update(Classification)
@@ -264,4 +266,4 @@ async def set_account_rule(
             )
             await db.commit()
 
-    return {"status": "ok", "rules": rules, "affected_tweets": len(tweet_ids) if body.political_bent else 0}
+    return {"status": "ok", "rules": rules, "affected_tweets": affected}

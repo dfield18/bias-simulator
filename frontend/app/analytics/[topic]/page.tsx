@@ -112,10 +112,13 @@ export default function AnalyticsPage() {
   // Essential data — loaded once on mount
   useEffect(() => {
     const s = topicSlug;
+    // Safety timeout: if topic doesn't load in 10s, stop showing spinner
+    const timeout = setTimeout(() => setFeedLoading(false), 10000);
     cachedFetch(`topics`, () => fetchTopics(), 60 * 1000).then((topics) => {
       const t = topics.find((t) => t.slug === s);
       if (t) setTopic(t);
-    }).catch(console.error);
+      else { clearTimeout(timeout); setFeedLoading(false); }
+    }).catch(() => { clearTimeout(timeout); setFeedLoading(false); });
     cachedFetch(`${s}:lastRun`, () => fetchLastRun(s), 2 * 60 * 1000).then((d) => d && setLastRun(d)).catch(console.error);
     // Feed data — needed for default tab
     cachedFetch(`${s}:allTweets`, () => fetchAllTweets(s, 720)).then(setAllTweets).catch(console.error);

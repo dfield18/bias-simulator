@@ -7,7 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from models import Topic, TopicResponse, TopicDetailResponse
+from auth import get_current_user, optional_user
+from models import Topic, UserTopic, TopicResponse, TopicDetailResponse
 
 router = APIRouter()
 
@@ -54,12 +55,28 @@ class CreateTopicRequest(BaseModel):
     target_language: str = "en"
     target_country: str | None = None
     color_scheme: str = "political"
+    visibility: str = "public"
 
 
 @router.get("/topics", response_model=list[TopicResponse])
-async def get_topics(db: AsyncSession = Depends(get_db)):
-    """Return all active topics."""
-    stmt = select(Topic).where(Topic.is_active == True).order_by(Topic.name)
+async def get_topics(
+    db: AsyncSession = Depends(get_db),
+    user: dict | None = Depends(optional_user),
+):
+    """Return public active topics + user's own private topics."""
+    from sqlalchemy import or_
+    stmt = select(Topic).where(Topic.is_active == True)
+    if user:
+        stmt = stmt.where(
+            or_(
+                Topic.visibility == "public",
+                Topic.visibility.is_(None),  # legacy topics without visibility set
+                Topic.created_by == user["id"],
+            )
+        )
+    else:
+        stmt = stmt.where(or_(Topic.visibility == "public", Topic.visibility.is_(None)))
+    stmt = stmt.order_by(Topic.name)
     result = await db.execute(stmt)
     topics = result.scalars().all()
     return [TopicResponse.model_validate(t) for t in topics]
@@ -145,6 +162,7 @@ Make the classification_prompt and intensity_prompt detailed and specific to thi
 async def create_topic(
     body: CreateTopicRequest,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Create a new topic from user-adjusted definitions."""
     # Check if slug already exists
@@ -152,7 +170,6 @@ async def create_topic(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail=f"Topic '{body.slug}' already exists")
 
-    # Rebuild classification prompt with user's definitions baked in
     topic = Topic(
         slug=body.slug,
         name=body.topic_name,
@@ -167,14 +184,39 @@ async def create_topic(
         target_language=body.target_language,
         target_country=body.target_country,
         color_scheme=body.color_scheme,
+        visibility=body.visibility,
+        created_by=user["id"],
         is_active=True,
     )
 
     db.add(topic)
+    await db.flush()
+
+    user_topic = UserTopic(
+        user_id=user["id"],
+        topic_slug=body.slug,
+        role="creator",
+    )
+    db.add(user_topic)
     await db.commit()
     await db.refresh(topic)
 
     return TopicResponse.model_validate(topic)
+
+
+@router.get("/topics/my")
+async def get_my_topics(
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    """Return topics the current user is subscribed to or created, with their role."""
+    stmt = (
+        select(UserTopic.topic_slug, UserTopic.role)
+        .where(UserTopic.user_id == user["id"])
+    )
+    result = await db.execute(stmt)
+    rows = result.all()
+    return {row.topic_slug: row.role for row in rows}
 
 
 @router.post("/topics/{slug}/run")
@@ -242,12 +284,15 @@ async def update_topic(
     slug: str,
     body: UpdateTopicRequest,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
-    """Update a topic's settings."""
+    """Update a topic's settings. Only the creator can edit."""
     result = await db.execute(select(Topic).where(Topic.slug == slug))
     topic = result.scalar_one_or_none()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
+    if topic.created_by and topic.created_by != user["id"] and user.get("tier") != "admin":
+        raise HTTPException(status_code=403, detail="Only the topic creator can edit settings")
 
     if body.topic_name is not None:
         topic.name = body.topic_name
@@ -278,16 +323,70 @@ async def update_topic(
 
 
 @router.delete("/topics/{slug}")
-async def delete_topic(slug: str, db: AsyncSession = Depends(get_db)):
-    """Deactivate a topic (soft delete)."""
+async def delete_topic(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    """Deactivate a topic (soft delete). Only the creator or admin can delete."""
     result = await db.execute(select(Topic).where(Topic.slug == slug))
     topic = result.scalar_one_or_none()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
+    if topic.created_by and topic.created_by != user["id"] and user.get("tier") != "admin":
+        raise HTTPException(status_code=403, detail="Only the topic creator can delete")
 
     topic.is_active = False
     await db.commit()
     return {"status": "deactivated", "topic": slug}
+
+
+@router.post("/topics/{slug}/subscribe")
+async def subscribe_to_topic(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    """Subscribe the current user to a public topic."""
+    result = await db.execute(select(Topic).where(Topic.slug == slug, Topic.is_active == True))
+    topic = result.scalar_one_or_none()
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    if topic.visibility == "private" and topic.created_by != user["id"]:
+        raise HTTPException(status_code=403, detail="This topic is private")
+
+    # Check if already subscribed
+    existing = await db.execute(
+        select(UserTopic).where(UserTopic.user_id == user["id"], UserTopic.topic_slug == slug)
+    )
+    if existing.scalar_one_or_none():
+        return {"status": "already_subscribed"}
+
+    user_topic = UserTopic(user_id=user["id"], topic_slug=slug, role="subscriber")
+    db.add(user_topic)
+    await db.commit()
+    return {"status": "subscribed"}
+
+
+@router.delete("/topics/{slug}/subscribe")
+async def unsubscribe_from_topic(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    """Unsubscribe from a topic. Creators cannot unsubscribe."""
+    result = await db.execute(
+        select(UserTopic).where(UserTopic.user_id == user["id"], UserTopic.topic_slug == slug)
+    )
+    user_topic = result.scalar_one_or_none()
+    if not user_topic:
+        return {"status": "not_subscribed"}
+    if user_topic.role == "creator":
+        raise HTTPException(status_code=400, detail="Creators cannot unsubscribe from their own topic")
+
+    await db.delete(user_topic)
+    await db.commit()
+    return {"status": "unsubscribed"}
 
 
 @router.get("/topics/{slug}/runs")

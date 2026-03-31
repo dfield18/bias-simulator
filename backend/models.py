@@ -171,6 +171,8 @@ class TopicResponse(BaseModel):
     target_country: Optional[str] = None
     color_scheme: Optional[str] = "political"
     account_rules: Optional[dict] = None
+    visibility: Optional[str] = "public"
+    created_by: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

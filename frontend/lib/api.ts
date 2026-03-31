@@ -29,6 +29,8 @@ export interface TopicData {
   target_language?: string;
   target_country?: string;
   color_scheme?: string;
+  visibility?: string;
+  created_by?: string | null;
 }
 
 export interface MediaItem {
@@ -1053,4 +1055,18 @@ export async function fetchTopicRuns(slug: string): Promise<PipelineRun[]> {
   const res = await apiFetch(`${API_URL}/api/topics/${slug}/runs`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch pipeline runs");
   return res.json();
+}
+
+export async function fetchMyTopics(): Promise<Record<string, string>> {
+  const res = await apiFetch(`${API_URL}/api/topics/my`);
+  if (!res.ok) return {};
+  return res.json();
+}
+
+export async function subscribeTopic(slug: string): Promise<void> {
+  await apiFetch(`${API_URL}/api/topics/${slug}/subscribe`, { method: "POST" });
+}
+
+export async function unsubscribeTopic(slug: string): Promise<void> {
+  await apiFetch(`${API_URL}/api/topics/${slug}/subscribe`, { method: "DELETE" });
 }

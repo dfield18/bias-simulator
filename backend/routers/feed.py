@@ -1517,9 +1517,22 @@ async def get_paired_stories(
             "contrast_score": contrast_score,
         })
 
-    # Sort by contrast and take top 4
+    # Deduplicate stories that share representative tweets or overlap heavily
     stories.sort(key=lambda s: s["contrast_score"], reverse=True)
-    stories = stories[:4]
+    deduped: list = []
+    seen_tweet_ids_in_stories: set[str] = set()
+    for s in stories:
+        anti_id = s["anti"]["id_str"]
+        pro_id = s["pro"]["id_str"]
+        # Skip if either representative tweet already appears in a prior story
+        if anti_id in seen_tweet_ids_in_stories or pro_id in seen_tweet_ids_in_stories:
+            continue
+        seen_tweet_ids_in_stories.add(anti_id)
+        seen_tweet_ids_in_stories.add(pro_id)
+        deduped.append(s)
+        if len(deduped) >= 4:
+            break
+    stories = deduped
 
     # --- Generate framing headlines via LLM (single batch call) ---
     if stories:

@@ -84,27 +84,27 @@ async def get_current_user(
     if not user_id:
         raise HTTPException(status_code=401, detail="No user ID in token")
 
-    # Upsert user record
+    # Upsert user record (handle race condition from concurrent requests)
     from models import User
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+    email = payload.get("email", "")
+    if not email and isinstance(payload.get("email_addresses"), list) and payload["email_addresses"]:
+        email = payload["email_addresses"][0].get("email_address", "")
+    if not email:
+        email = payload.get("primary_email_address", "")
+
+    stmt = pg_insert(User).values(
+        id=user_id,
+        email=email or None,
+        name=payload.get("name", payload.get("first_name", "")),
+        tier="free",
+    ).on_conflict_do_nothing(index_elements=["id"])
+    await db.execute(stmt)
+    await db.commit()
+
     result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
-
-    if not user:
-        # First time seeing this user — create record
-        email = payload.get("email", payload.get("email_addresses", [{}])[0].get("email_address", "") if isinstance(payload.get("email_addresses"), list) else "")
-        # Clerk puts email in different places depending on token version
-        if not email:
-            email = payload.get("primary_email_address", "")
-
-        user = User(
-            id=user_id,
-            email=email or None,
-            name=payload.get("name", payload.get("first_name", "")),
-            tier="free",
-        )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
+    user = result.scalar_one()
 
     return {
         "id": user.id,

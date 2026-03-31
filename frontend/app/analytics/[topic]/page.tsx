@@ -1147,9 +1147,38 @@ export default function AnalyticsPage() {
                   <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
                     How each side shares content
                   </h3>
-                  <p className="text-[10px] text-gray-600 mb-5">
+                  <p className="text-[10px] text-gray-600 mb-3">
                     The mix of videos, photos, links, and text-only posts
                   </p>
+                  {(() => {
+                    const anti = mediaBreakdown.anti;
+                    const pro = mediaBreakdown.pro;
+                    const aL = mediaBreakdown.anti_label;
+                    const pL = mediaBreakdown.pro_label;
+                    // Find dominant format for each side
+                    const formats = ["video", "photo", "link", "text_only"] as const;
+                    const formatLabels: Record<string, string> = { video: "video", photo: "photos", link: "links", text_only: "text-only posts" };
+                    const antiTop = formats.reduce((a, b) => anti.pct[a] > anti.pct[b] ? a : b);
+                    const proTop = formats.reduce((a, b) => pro.pct[a] > pro.pct[b] ? a : b);
+                    const parts: string[] = [];
+                    if (antiTop === proTop) {
+                      parts.push(`Both sides rely most on ${formatLabels[antiTop]}`);
+                      // Find biggest difference
+                      const diffs = formats.map(f => ({ f, diff: Math.abs(anti.pct[f] - pro.pct[f]) })).sort((a, b) => b.diff - a.diff);
+                      if (diffs[0].diff >= 5) {
+                        const d = diffs[0];
+                        const higher = anti.pct[d.f] > pro.pct[d.f] ? aL : pL;
+                        parts.push(`but ${higher} uses ${formatLabels[d.f]} ${d.diff} points more`);
+                      }
+                    } else {
+                      parts.push(`${aL} leans toward ${formatLabels[antiTop]} (${anti.pct[antiTop]}%) while ${pL} favors ${formatLabels[proTop]} (${pro.pct[proTop]}%)`);
+                    }
+                    return (
+                      <div className="bg-gray-800/40 rounded-lg px-3 py-2 mb-5">
+                        <p className="text-xs text-gray-300">{parts.join(", ")}.</p>
+                      </div>
+                    );
+                  })()}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     {([
                       { stats: mediaBreakdown.anti, label: mediaBreakdown.anti_label, headerColor: "text-blue-400" },

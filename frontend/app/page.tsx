@@ -49,9 +49,9 @@ export default function Home() {
     const isSubscribed = !!role;
 
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-600 transition-colors">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 hover:border-gray-600 transition-colors">
         <Link href={`/analytics/${topic.slug}`}>
-          <h2 className="text-xl font-semibold mb-2">
+          <h2 className="text-lg sm:text-xl font-semibold mb-2">
             {topic.name}
             {topic.visibility === "private" && (
               <span className="ml-2 text-xs bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded align-middle">

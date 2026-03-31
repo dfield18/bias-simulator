@@ -266,11 +266,11 @@ export default function AdminPage() {
     <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <div className="flex items-center gap-4">
-          <a href="/" className="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors text-gray-300">
-            &larr; Back to Dashboard
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <a href="/" className="px-2 sm:px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors text-gray-300 shrink-0">
+            &larr;<span className="hidden sm:inline"> Back</span>
           </a>
-          <h1 className="text-xl sm:text-2xl font-bold">Classification Review</h1>
+          <h1 className="text-lg sm:text-2xl font-bold truncate">Classification Review</h1>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -549,17 +549,17 @@ export default function AdminPage() {
               <tr className="border-b border-gray-800 text-gray-400 text-left text-xs">
                 <th className="px-3 py-2 w-8">#</th>
                 {[
-                  { key: "author", label: "Author", align: "" },
-                  { key: "", label: "Tweet", align: "" },
-                  { key: "classification", label: "Classification", align: "" },
-                  { key: "", label: "Account Rule", align: "" },
-                  { key: "confidence", label: "Confidence", align: "text-right" },
-                  { key: "intensity", label: "Intensity", align: "text-right" },
-                  { key: "views", label: "Views", align: "text-right" },
+                  { key: "author", label: "Author", align: "", hide: "" },
+                  { key: "", label: "Tweet", align: "", hide: "" },
+                  { key: "classification", label: "Classification", align: "", hide: "" },
+                  { key: "", label: "Account Rule", align: "", hide: "hidden md:table-cell" },
+                  { key: "confidence", label: "Confidence", align: "text-right", hide: "hidden lg:table-cell" },
+                  { key: "intensity", label: "Intensity", align: "text-right", hide: "hidden lg:table-cell" },
+                  { key: "views", label: "Views", align: "text-right", hide: "hidden sm:table-cell" },
                 ].map((col) => (
                   <th
                     key={col.label}
-                    className={`px-3 py-2 ${col.align} ${
+                    className={`px-2 sm:px-3 py-2 ${col.align} ${col.hide} ${
                       col.key ? "cursor-pointer hover:text-gray-200 select-none" : ""
                     }`}
                     onClick={() => col.key && toggleColSort(col.key)}
@@ -570,7 +570,7 @@ export default function AdminPage() {
                     )}
                   </th>
                 ))}
-                <th className="px-3 py-2 w-8"></th>
+                <th className="px-2 sm:px-3 py-2 w-8"></th>
               </tr>
             </thead>
             <tbody>
@@ -584,12 +584,12 @@ export default function AdminPage() {
                       : ""
                   }`}
                 >
-                  <td className="px-3 py-2 text-gray-600 text-xs">{i + 1}</td>
-                  <td className="px-3 py-2 text-gray-300 whitespace-nowrap">
-                    <div className="font-medium">@{row.tweet.screen_name}</div>
+                  <td className="px-2 sm:px-3 py-2 text-gray-600 text-xs">{i + 1}</td>
+                  <td className="px-2 sm:px-3 py-2 text-gray-300 whitespace-nowrap">
+                    <div className="font-medium text-xs sm:text-sm">@{row.tweet.screen_name}</div>
                   </td>
-                  <td className="px-3 py-2 text-gray-400">
-                    <div className="whitespace-pre-wrap line-clamp-4 text-sm leading-relaxed max-w-2xl">
+                  <td className="px-2 sm:px-3 py-2 text-gray-400">
+                    <div className="whitespace-pre-wrap line-clamp-2 sm:line-clamp-4 text-xs sm:text-sm leading-relaxed max-w-2xl">
                       {row.tweet.full_text}
                     </div>
                   </td>
@@ -647,7 +647,7 @@ export default function AdminPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-2 sm:px-3 py-2 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
                     {(() => {
                       const screenLower = (row.tweet.screen_name || "").toLowerCase();
                       const currentRule = accountRules[screenLower] || null;
@@ -695,7 +695,7 @@ export default function AdminPage() {
                     })()}
                   </td>
                   <td
-                    className={`px-3 py-2 text-right font-mono text-xs ${confidenceColor(
+                    className={`px-2 sm:px-3 py-2 text-right font-mono text-xs hidden lg:table-cell ${confidenceColor(
                       row.classification.confidence
                     )}`}
                   >
@@ -703,7 +703,7 @@ export default function AdminPage() {
                       ? (row.classification.confidence * 100).toFixed(0) + "%"
                       : "-"}
                   </td>
-                  <td className="px-3 py-2 text-right" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-2 sm:px-3 py-2 text-right hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-0.5">
                       <button
                         onClick={async () => {
@@ -740,7 +740,7 @@ export default function AdminPage() {
                       >+</button>
                     </div>
                   </td>
-                  <td className="px-3 py-2 text-right text-xs text-gray-500">
+                  <td className="px-2 sm:px-3 py-2 text-right text-xs text-gray-500 hidden sm:table-cell">
                     {formatNumber(row.tweet.views)}
                   </td>
                   <td className="px-3 py-2 text-gray-600">&rsaquo;</td>

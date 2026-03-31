@@ -265,15 +265,15 @@ export default function AnalyticsPage() {
       <header className="border-b border-gray-800 bg-gray-900/50 backdrop-blur sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <Link
                 href="/"
-                className="text-gray-500 hover:text-gray-300 text-sm"
+                className="text-gray-500 hover:text-gray-300 text-sm shrink-0"
               >
-                &larr; Topics
+                &larr;<span className="hidden sm:inline"> Topics</span>
               </Link>
-              <div className="flex items-baseline gap-2">
-                <h1 className="text-lg sm:text-xl font-bold">{topic.name}</h1>
+              <div className="flex items-baseline gap-2 min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold truncate">{topic.name}</h1>
                 <span className="text-[10px] text-gray-600 hidden sm:block">
                   {tabs.find((t) => t.id === activeTab)?.subtitle || ""}
                 </span>
@@ -351,7 +351,7 @@ export default function AnalyticsPage() {
               </button>
               <Link
                 href={`/topics/${topicSlug}`}
-                className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors hidden sm:block"
               >
                 Refine Query
               </Link>
@@ -362,28 +362,26 @@ export default function AnalyticsPage() {
         {/* Tab bar */}
         <div className="border-t border-gray-800/50">
           <div className="max-w-5xl mx-auto px-4">
-            <div className="flex items-center gap-3 py-2">
-              <div className="flex gap-1 overflow-x-auto no-scrollbar">
-                {tabs.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      setActiveTab(t.id);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                      activeTab === t.id
-                        ? "bg-gray-700 text-gray-100"
-                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
+            <div className="flex items-center gap-2 sm:gap-3 py-2 overflow-x-auto scrollbar-thin">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setActiveTab(t.id);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
+                    activeTab === t.id
+                      ? "bg-gray-700 text-gray-100"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
               <button
                 onClick={() => { setActiveTab("help"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
                   activeTab === "help"
                     ? "bg-gray-700 text-gray-100"
                     : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"

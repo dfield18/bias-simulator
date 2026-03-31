@@ -12,6 +12,7 @@ import {
   submitOverride,
   fetchAccountRules,
   setAccountRule,
+  fetchMe,
 } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
 
@@ -42,6 +43,7 @@ function bentBadge(bent: string | null, antiBent?: string, proBent?: string): st
 }
 
 export default function AdminPage() {
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // null = loading
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [selectedTopic, setSelectedTopic] = useState("");
   const [rows, setRows] = useState<AdminRow[]>([]);
@@ -122,10 +124,19 @@ export default function AdminPage() {
   const proBent = currentTopic?.pro_label?.toLowerCase().replace(/\s+/g, "-") || "";
 
   useEffect(() => {
-    fetchTopics().then((t) => {
-      setTopics(t);
-      if (t.length > 0) setSelectedTopic(t[0].slug);
-    });
+    fetchMe()
+      .then((user) => {
+        if (user.tier === "admin") {
+          setIsAdmin(true);
+          fetchTopics().then((t) => {
+            setTopics(t);
+            if (t.length > 0) setSelectedTopic(t[0].slug);
+          });
+        } else {
+          setIsAdmin(false);
+        }
+      })
+      .catch(() => setIsAdmin(false));
   }, []);
 
   const loadData = useCallback(() => {
@@ -225,6 +236,31 @@ export default function AdminPage() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [modalRow, modalIndex, sortedRows]);
+
+  if (isAdmin === null) {
+    return (
+      <main className="max-w-md mx-auto px-4 py-20 text-center">
+        <p className="text-gray-500">Checking access...</p>
+      </main>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <main className="max-w-md mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+        <p className="text-gray-400 mb-6">
+          This page is restricted to admin users.
+        </p>
+        <a
+          href="/"
+          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors text-gray-300"
+        >
+          Back to Dashboard
+        </a>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">

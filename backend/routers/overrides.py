@@ -4,7 +4,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from auth import get_current_user
+from auth import admin_required
 from pydantic import BaseModel as PydanticBaseModel
 from models import (
     Classification, Tweet, Topic,
@@ -25,7 +25,7 @@ router = APIRouter()
 async def create_override(
     body: OverrideRequest,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    _: dict = Depends(admin_required),
 ):
     """Manually override a classification."""
     # Check classification exists
@@ -53,7 +53,7 @@ async def create_override(
 async def get_overrides(
     topic: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    _: dict = Depends(admin_required),
 ):
     """Get all overridden classifications."""
     stmt = (
@@ -87,7 +87,7 @@ async def get_admin_tweets(
     sort_by: str = Query(default="views"),
     limit: int = Query(default=200, le=5000),
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    _: dict = Depends(admin_required),
 ):
     """Get all on-topic tweets for admin review."""
     stmt = (
@@ -139,7 +139,7 @@ async def get_admin_tweets(
 async def get_admin_stats(
     topic: str,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    _: dict = Depends(admin_required),
 ):
     """Get classification stats for admin dashboard."""
     from sqlalchemy import func
@@ -208,7 +208,7 @@ class AccountRuleRequest(PydanticBaseModel):
 async def get_account_rules(
     topic: str,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    _: dict = Depends(admin_required),
 ):
     """Get account bias rules for a topic."""
     result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -223,7 +223,7 @@ async def set_account_rule(
     topic: str,
     body: AccountRuleRequest,
     db: AsyncSession = Depends(get_db),
-    _: dict = Depends(get_current_user),
+    _: dict = Depends(admin_required),
 ):
     """Set or remove an account bias rule. Also applies overrides to all existing tweets from this account."""
     result = await db.execute(select(Topic).where(Topic.slug == topic))

@@ -114,6 +114,15 @@ async def get_current_user(
     }
 
 
+async def admin_required(
+    user: dict = Depends(get_current_user),
+) -> dict:
+    """Require the authenticated user to have admin tier."""
+    if user.get("tier") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
 async def optional_user(
     authorization: str = Header(default=""),
     db: AsyncSession = Depends(get_db),

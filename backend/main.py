@@ -1,12 +1,13 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from database import init_db
+from auth import get_current_user
 from routers import feed, topics, overrides
 
 
@@ -42,3 +43,9 @@ app.include_router(overrides.router, prefix="/api")
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/api/me")
+async def get_me(user: dict = Depends(get_current_user)):
+    """Return the current user's profile (id, email, name, tier)."""
+    return user

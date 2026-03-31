@@ -109,6 +109,19 @@ export interface BreakdownData {
   last_updated: string | null;
 }
 
+export interface UserProfile {
+  id: string;
+  email: string | null;
+  name: string | null;
+  tier: string;
+}
+
+export async function fetchMe(): Promise<UserProfile> {
+  const res = await apiFetch(`${API_URL}/api/me`);
+  if (!res.ok) throw new Error("Failed to fetch user profile");
+  return res.json();
+}
+
 export async function fetchTopics(): Promise<TopicData[]> {
   const res = await apiFetch(`${API_URL}/api/topics`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch topics");

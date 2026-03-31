@@ -138,14 +138,18 @@ Return a JSON object with these exact fields:
 Make the classification_prompt and intensity_prompt detailed and specific to this topic — not generic.
 """
 
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt,
-        config={
-            "response_mime_type": "application/json",
-            "temperature": 0.3,
-        },
-    )
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "temperature": 0.3,
+            },
+        )
+    except Exception as e:
+        print(f"Gemini API error: {e}")
+        raise HTTPException(status_code=502, detail=f"AI service error: {str(e)[:200]}")
 
     text = response.text or ""
     try:
@@ -155,7 +159,11 @@ Make the classification_prompt and intensity_prompt detailed and specific to thi
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Failed to parse LLM response")
 
-    return TopicSuggestion(**data)
+    try:
+        return TopicSuggestion(**data)
+    except Exception as e:
+        print(f"TopicSuggestion validation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Invalid suggestion format: {str(e)[:200]}")
 
 
 @router.post("/topics/create", response_model=TopicResponse)

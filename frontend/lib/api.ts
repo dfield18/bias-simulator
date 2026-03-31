@@ -177,7 +177,10 @@ export async function suggestTopic(topicName: string): Promise<TopicSuggestion> 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ topic_name: topicName }),
   });
-  if (!res.ok) throw new Error("Failed to generate topic suggestion");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to generate topic suggestion");
+  }
   return res.json();
 }
 

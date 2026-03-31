@@ -84,27 +84,33 @@ async def get_current_user(
     if not user_id:
         raise HTTPException(status_code=401, detail="No user ID in token")
 
-    # Upsert user record (handle race condition from concurrent requests)
+    # Look up existing user first (fast path — no commit needed)
     from models import User
-    from sqlalchemy.dialects.postgresql import insert as pg_insert
-
-    email = payload.get("email", "")
-    if not email and isinstance(payload.get("email_addresses"), list) and payload["email_addresses"]:
-        email = payload["email_addresses"][0].get("email_address", "")
-    if not email:
-        email = payload.get("primary_email_address", "")
-
-    stmt = pg_insert(User).values(
-        id=user_id,
-        email=email or None,
-        name=payload.get("name", payload.get("first_name", "")),
-        tier="free",
-    ).on_conflict_do_nothing(index_elements=["id"])
-    await db.execute(stmt)
-    await db.commit()
 
     result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one()
+    user = result.scalar_one_or_none()
+
+    if not user:
+        # New user — upsert with ON CONFLICT for race condition safety
+        from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+        email = payload.get("email", "")
+        if not email and isinstance(payload.get("email_addresses"), list) and payload["email_addresses"]:
+            email = payload["email_addresses"][0].get("email_address", "")
+        if not email:
+            email = payload.get("primary_email_address", "")
+
+        stmt = pg_insert(User).values(
+            id=user_id,
+            email=email or None,
+            name=payload.get("name", payload.get("first_name", "")),
+            tier="free",
+        ).on_conflict_do_nothing(index_elements=["id"])
+        await db.execute(stmt)
+        await db.commit()
+
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one()
 
     return {
         "id": user.id,

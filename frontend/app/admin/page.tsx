@@ -253,7 +253,7 @@ export default function AdminPage() {
           This page is restricted to admin users.
         </p>
         <a
-          href="/"
+          href="/dashboard"
           className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors text-gray-300"
         >
           Back to Dashboard
@@ -267,7 +267,7 @@ export default function AdminPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <a href="/" className="px-2 sm:px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors text-gray-300 shrink-0">
+          <a href="/dashboard" className="px-2 sm:px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition-colors text-gray-300 shrink-0">
             &larr;<span className="hidden sm:inline"> Back</span>
           </a>
           <h1 className="text-lg sm:text-2xl font-bold truncate">Classification Review</h1>

@@ -1,184 +1,182 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { UserButton } from "@clerk/nextjs";
-import {
-  TopicData,
-  fetchTopics,
-  fetchMyTopics,
-  subscribeTopic,
-  unsubscribeTopic,
-} from "@/lib/api";
+import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-export default function Home() {
-  const [topics, setTopics] = useState<TopicData[]>([]);
-  const [myTopics, setMyTopics] = useState<Record<string, string>>({}); // slug → role
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function LandingPage() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    Promise.all([fetchTopics(), fetchMyTopics()])
-      .then(([t, my]) => {
-        setTopics(t);
-        setMyTopics(my);
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+    if (isLoaded && isSignedIn) {
+      router.replace("/dashboard");
+    }
+  }, [isLoaded, isSignedIn, router]);
 
-  const myTopicsList = topics.filter((t) => t.slug in myTopics);
-  const publicTopics = topics.filter((t) => !(t.slug in myTopics));
-
-  const handleSubscribe = async (slug: string) => {
-    await subscribeTopic(slug);
-    setMyTopics((prev) => ({ ...prev, [slug]: "subscriber" }));
-  };
-
-  const handleUnsubscribe = async (slug: string) => {
-    await unsubscribeTopic(slug);
-    setMyTopics((prev) => {
-      const next = { ...prev };
-      delete next[slug];
-      return next;
-    });
-  };
-
-  function TopicCard({ topic }: { topic: TopicData }) {
-    const role = myTopics[topic.slug]; // "creator", "subscriber", or undefined
-    const isSubscribed = !!role;
-
+  if (!isLoaded || isSignedIn) {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 hover:border-gray-600 transition-colors">
-        <Link href={`/analytics/${topic.slug}`}>
-          <h2 className="text-lg sm:text-xl font-semibold mb-2">
-            {topic.name}
-            {topic.visibility === "private" && (
-              <span className="ml-2 text-xs bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded align-middle">
-                Private
-              </span>
-            )}
-          </h2>
-          {topic.description && (
-            <p className="text-gray-400 text-sm mb-3">{topic.description}</p>
-          )}
-          <div className="flex gap-2 text-xs">
-            <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
-              {topic.anti_label}
-            </span>
-            <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded">
-              {topic.pro_label}
-            </span>
-          </div>
-        </Link>
-        <div className="mt-3 pt-3 border-t border-gray-800 flex gap-3 items-center">
-          <Link
-            href={`/analytics/${topic.slug}`}
-            className="text-xs text-gray-500 hover:text-gray-300"
-          >
-            View Dashboard
-          </Link>
-          {role === "creator" && (
-            <Link
-              href={`/topics/${topic.slug}`}
-              className="text-xs text-gray-500 hover:text-gray-300"
-            >
-              Manage
-            </Link>
-          )}
-          {isSubscribed && role !== "creator" && (
-            <button
-              onClick={() => handleUnsubscribe(topic.slug)}
-              className="text-xs text-gray-600 hover:text-red-400 ml-auto"
-            >
-              Unsubscribe
-            </button>
-          )}
-          {!isSubscribed && (
-            <button
-              onClick={() => handleSubscribe(topic.slug)}
-              className="text-xs text-blue-500 hover:text-blue-400 ml-auto"
-            >
-              + Subscribe
-            </button>
-          )}
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500 text-sm">Loading...</p>
       </div>
     );
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-2xl sm:text-4xl font-bold">Political Feed Simulator</h1>
-        <UserButton />
-      </div>
-      <p className="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">
-        See how political bias shapes what appears in your Twitter feed.
-      </p>
-
-      {loading && <p className="text-gray-500">Loading topics...</p>}
-      {error && <p className="text-red-400">Error: {error}</p>}
-
-      {/* My Topics */}
-      {myTopicsList.length > 0 && (
-        <>
-          <h2 className="text-lg font-semibold text-gray-300 mb-3">My Topics</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {myTopicsList.map((topic) => (
-              <TopicCard key={topic.slug} topic={topic} />
-            ))}
+    <div className="min-h-screen">
+      {/* Nav */}
+      <nav className="border-b border-gray-800/50 bg-gray-950/80 backdrop-blur sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="text-lg font-bold text-gray-100">Political Feed Simulator</div>
+          <div className="flex items-center gap-3">
             <Link
-              href="/topics/new"
-              className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
+              href="/sign-in"
+              className="text-sm text-gray-400 hover:text-gray-200 transition-colors"
             >
-              <div className="text-center">
-                <div className="text-3xl text-gray-600 mb-2">+</div>
-                <h2 className="text-lg font-semibold text-gray-400">
-                  Add New Topic
-                </h2>
-                <p className="text-gray-600 text-sm mt-1">
-                  Create a custom topic with your own definitions
-                </p>
-              </div>
+              Log in
+            </Link>
+            <Link
+              href="/sign-up"
+              className="text-sm px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
+            >
+              Get Started
             </Link>
           </div>
-        </>
-      )}
+        </div>
+      </nav>
 
-      {/* Public Topics (not yet subscribed) */}
-      {publicTopics.length > 0 && (
-        <>
-          <h2 className="text-lg font-semibold text-gray-300 mb-3">
-            {myTopicsList.length > 0 ? "Explore Topics" : "Topics"}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {publicTopics.map((topic) => (
-              <TopicCard key={topic.slug} topic={topic} />
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-16">
+        <div className="max-w-3xl">
+          <h1 className="text-3xl sm:text-5xl font-bold leading-tight mb-6">
+            See how political bias shapes
+            <span className="text-blue-400"> what you see</span> on Twitter
+          </h1>
+          <p className="text-lg sm:text-xl text-gray-400 mb-8 leading-relaxed">
+            Analyze any political topic from both sides. Our AI classifies thousands of tweets,
+            maps narrative frames, and reveals the echo chambers that algorithms create.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              href="/sign-up"
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium text-center transition-colors"
+            >
+              Start Analyzing Free
+            </Link>
+            <a
+              href="#how-it-works"
+              className="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg font-medium text-center transition-colors"
+            >
+              See How It Works
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section id="how-it-works" className="border-t border-gray-800/50 bg-gray-900/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-12 text-center">How It Works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "1",
+                title: "Pick a topic",
+                desc: "Enter any political issue — immigration, AI regulation, gun control — and our AI generates the classification framework automatically.",
+              },
+              {
+                step: "2",
+                title: "AI analyzes tweets",
+                desc: "We pull thousands of real tweets, classify each one's political stance, intensity, narrative frame, and emotional tone using a multi-model AI pipeline.",
+              },
+              {
+                step: "3",
+                title: "Explore both sides",
+                desc: "See a simulated feed with a bias slider, analytics dashboards, echo chamber analysis, and side-by-side story comparisons.",
+              },
+            ].map((item) => (
+              <div key={item.step} className="text-center">
+                <div className="w-10 h-10 rounded-full bg-blue-600/20 text-blue-400 text-lg font-bold flex items-center justify-center mx-auto mb-4">
+                  {item.step}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
+              </div>
             ))}
           </div>
-        </>
-      )}
+        </div>
+      </section>
 
-      {/* Show Add New Topic if no My Topics section */}
-      {myTopicsList.length === 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Features */}
+      <section className="border-t border-gray-800/50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-12 text-center">What You Get</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                title: "Simulated Feed",
+                desc: "Drag a bias slider from left to right and watch how your feed changes in real time.",
+              },
+              {
+                title: "Narrative Analysis",
+                desc: "Radar charts showing which arguments each side uses — and which they ignore.",
+              },
+              {
+                title: "Echo Chamber Score",
+                desc: "Quantifies how much overlap exists between the two sides' information sources.",
+              },
+              {
+                title: "Key Voices",
+                desc: "Who's shaping the conversation on each side, ranked by engagement and reach.",
+              },
+              {
+                title: "Flashpoints",
+                desc: "Tweets that triggered the other side — the posts that sparked cross-aisle outrage.",
+              },
+              {
+                title: "Same Story, Different Lens",
+                desc: "See how both sides cover the same event with completely different framing.",
+              },
+            ].map((f) => (
+              <div
+                key={f.title}
+                className="bg-gray-900 border border-gray-800 rounded-xl p-5"
+              >
+                <h3 className="text-sm font-semibold text-gray-200 mb-2">{f.title}</h3>
+                <p className="text-xs text-gray-400 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="border-t border-gray-800/50 bg-gray-900/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to see behind the algorithm?</h2>
+          <p className="text-gray-400 mb-8 max-w-lg mx-auto">
+            Create your first topic in under a minute. No credit card required.
+          </p>
           <Link
-            href="/topics/new"
-            className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
+            href="/sign-up"
+            className="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium transition-colors"
           >
-            <div className="text-center">
-              <div className="text-3xl text-gray-600 mb-2">+</div>
-              <h2 className="text-lg font-semibold text-gray-400">
-                Add New Topic
-              </h2>
-              <p className="text-gray-600 text-sm mt-1">
-                Create a custom topic with your own definitions
-              </p>
-            </div>
+            Get Started Free
           </Link>
         </div>
-      )}
-    </main>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-800/50 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-600">
+          <div>Political Feed Simulator</div>
+          <div className="flex gap-4">
+            <Link href="/sign-in" className="hover:text-gray-400">Log in</Link>
+            <Link href="/sign-up" className="hover:text-gray-400">Sign up</Link>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

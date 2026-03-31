@@ -135,7 +135,7 @@ export default function NewTopicPage() {
       <div className="flex items-center justify-between mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold">Create New Topic</h1>
         <Link
-          href="/"
+          href="/dashboard"
           className="text-sm text-gray-500 hover:text-gray-300"
         >
           &larr; Back

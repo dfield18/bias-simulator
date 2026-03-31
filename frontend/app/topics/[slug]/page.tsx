@@ -184,7 +184,7 @@ export default function TopicManagePage() {
     return (
       <main className="max-w-3xl mx-auto px-4 py-12">
         <p className="text-red-400">Topic not found.</p>
-        <Link href="/" className="text-sm text-gray-500 hover:text-gray-300 mt-4 inline-block">
+        <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-300 mt-4 inline-block">
           &larr; Back home
         </Link>
       </main>
@@ -211,7 +211,7 @@ export default function TopicManagePage() {
           >
             View Dashboard
           </Link>
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-300">
+          <Link href="/dashboard" className="text-sm text-gray-500 hover:text-gray-300">
             &larr; Home
           </Link>
         </div>

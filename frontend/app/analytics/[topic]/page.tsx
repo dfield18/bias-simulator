@@ -267,7 +267,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <Link
-                href="/"
+                href="/dashboard"
                 className="text-gray-500 hover:text-gray-300 text-sm shrink-0"
               >
                 &larr;<span className="hidden sm:inline"> Topics</span>

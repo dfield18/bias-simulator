@@ -680,7 +680,6 @@ export default function AdminPage() {
                                   try {
                                     const result = await setAccountRule(secret, selectedTopic, row.tweet.screen_name || "", newValue);
                                     setAccountRules(result.rules);
-                                    if (newValue) loadData();
                                   } catch {}
                                 }}
                                 className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
@@ -832,7 +831,6 @@ export default function AdminPage() {
                               try {
                                 const result = await setAccountRule(secret, selectedTopic, modalRow.tweet.screen_name || "", newValue);
                                 setAccountRules(result.rules);
-                                if (newValue) loadData();
                               } catch {}
                             }}
                             className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${

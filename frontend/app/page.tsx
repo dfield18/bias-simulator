@@ -96,27 +96,16 @@ export default function LandingPage() {
           <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4">
             <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Tweet Volume</div>
             <div className="text-xs text-gray-400 mb-4">US Immigration — 1,247 tweets</div>
-            <div className="flex items-end gap-2 h-32 mb-3">
+            <div className="flex items-end justify-center gap-6 h-36 mb-4 px-4">
               {[
-                { label: "Pro-Immigration", h: "65%", color: "bg-blue-500/60", count: 486 },
-                { label: "Border Security", h: "80%", color: "bg-red-500/60", count: 612 },
-                { label: "Neutral", h: "25%", color: "bg-gray-500/40", count: 149 },
+                { label: "Pro-Immigration", h: "60%", color: "bg-blue-500/60", count: 486 },
+                { label: "Border Security", h: "75%", color: "bg-red-500/60", count: 612 },
+                { label: "Neutral", h: "22%", color: "bg-gray-500/40", count: 149 },
               ].map((b) => (
-                <div key={b.label} className="flex-1 flex flex-col items-center justify-end h-full">
-                  <span className="text-[10px] text-gray-400 mb-1">{b.count}</span>
-                  <div className={`w-full rounded-t-md ${b.color}`} style={{ height: b.h }} />
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2 justify-center">
-              {[
-                { label: "Pro-Immigration", color: "bg-blue-500/60" },
-                { label: "Border Security", color: "bg-red-500/60" },
-                { label: "Neutral", color: "bg-gray-500/40" },
-              ].map((l) => (
-                <div key={l.label} className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-sm ${l.color}`} />
-                  <span className="text-[9px] text-gray-500">{l.label}</span>
+                <div key={b.label} className="flex flex-col items-center justify-end h-full" style={{ width: "28%" }}>
+                  <span className="text-[10px] text-gray-400 mb-1.5">{b.count}</span>
+                  <div className={`w-full rounded-t ${b.color}`} style={{ height: b.h }} />
+                  <span className="text-[9px] text-gray-500 mt-2 whitespace-nowrap">{b.label}</span>
                 </div>
               ))}
             </div>

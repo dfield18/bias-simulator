@@ -126,9 +126,17 @@ export default function Home() {
         <h1 className="text-2xl sm:text-4xl font-bold">Echo</h1>
         <UserButton />
       </div>
-      <p className="text-gray-400 mb-6 sm:mb-8 text-sm sm:text-base">
-        Analyze any political topic from both sides.
-      </p>
+      <div className="flex items-center justify-between mb-6 sm:mb-8">
+        <p className="text-gray-400 text-sm sm:text-base">
+          Analyze any political topic from both sides.
+        </p>
+        <Link
+          href="/topics/new"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shrink-0 ml-4"
+        >
+          + New Topic
+        </Link>
+      </div>
 
       {loading && <p className="text-gray-500">Loading topics...</p>}
       {error && <p className="text-red-400">Error: {error}</p>}
@@ -141,20 +149,6 @@ export default function Home() {
             {myTopicsList.map((topic) => (
               <TopicCard key={topic.slug} topic={topic} />
             ))}
-            <Link
-              href="/topics/new"
-              className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
-            >
-              <div className="text-center">
-                <div className="text-3xl text-gray-600 mb-2">+</div>
-                <h2 className="text-lg font-semibold text-gray-400">
-                  Add New Topic
-                </h2>
-                <p className="text-gray-600 text-sm mt-1">
-                  Create a custom topic with your own definitions
-                </p>
-              </div>
-            </Link>
           </div>
         </>
       )}
@@ -173,23 +167,10 @@ export default function Home() {
         </>
       )}
 
-      {/* Show Add New Topic if no My Topics section */}
-      {myTopicsList.length === 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link
-            href="/topics/new"
-            className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
-          >
-            <div className="text-center">
-              <div className="text-3xl text-gray-600 mb-2">+</div>
-              <h2 className="text-lg font-semibold text-gray-400">
-                Add New Topic
-              </h2>
-              <p className="text-gray-600 text-sm mt-1">
-                Create a custom topic with your own definitions
-              </p>
-            </div>
-          </Link>
+      {/* Empty state */}
+      {!loading && myTopicsList.length === 0 && publicTopics.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">No topics yet. Create your first one to get started.</p>
         </div>
       )}
     </main>

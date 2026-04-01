@@ -1561,14 +1561,14 @@ export default function AnalyticsPage() {
                                   <div className="text-[10px] text-blue-400 font-medium uppercase tracking-wider">{aL}</div>
                                   {frame.anti_tweets && frame.anti_tweets.length > 0
                                     ? frame.anti_tweets.map((t) => renderTweet(t, aL, "border-blue-500/30", "text-blue-400"))
-                                    : <div className="border border-blue-500/30 rounded-lg p-3 bg-gray-800/10 text-center"><span className="text-[10px] text-gray-600">No {aL} tweets</span></div>
+                                    : <div className="border border-gray-800/40 border-dashed rounded-lg px-3 py-2"><span className="text-[10px] text-gray-600 italic">Not used by {aL}</span></div>
                                   }
                                 </div>
                                 <div className="space-y-3">
                                   <div className="text-[10px] text-red-400 font-medium uppercase tracking-wider">{pL}</div>
                                   {frame.pro_tweets && frame.pro_tweets.length > 0
                                     ? frame.pro_tweets.map((t) => renderTweet(t, pL, "border-red-500/30", "text-red-400"))
-                                    : <div className="border border-red-500/30 rounded-lg p-3 bg-gray-800/10 text-center"><span className="text-[10px] text-gray-600">No {pL} tweets</span></div>
+                                    : <div className="border border-gray-800/40 border-dashed rounded-lg px-3 py-2"><span className="text-[10px] text-gray-600 italic">Not used by {pL}</span></div>
                                   }
                                 </div>
                               </div>
@@ -1576,13 +1576,13 @@ export default function AnalyticsPage() {
                               /* All frames view: show top 1 per side, side by side */
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {renderTweet(frame.anti, aL, "border-blue-500/30", "text-blue-400") || (
-                                  <div className="border border-blue-500/30 rounded-lg p-3 bg-gray-800/10 flex items-center justify-center">
-                                    <span className="text-[10px] text-gray-600">No {aL} tweets for this frame</span>
+                                  <div className="border border-gray-800/40 border-dashed rounded-lg px-3 py-2">
+                                    <span className="text-[10px] text-gray-600 italic">Not used by {aL}</span>
                                   </div>
                                 )}
                                 {renderTweet(frame.pro, pL, "border-red-500/30", "text-red-400") || (
-                                  <div className="border border-red-500/30 rounded-lg p-3 bg-gray-800/10 flex items-center justify-center">
-                                    <span className="text-[10px] text-gray-600">No {pL} tweets for this frame</span>
+                                  <div className="border border-gray-800/40 border-dashed rounded-lg px-3 py-2">
+                                    <span className="text-[10px] text-gray-600 italic">Not used by {pL}</span>
                                   </div>
                                 )}
                               </div>

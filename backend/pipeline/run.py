@@ -339,8 +339,8 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         tweets_to_classify = remaining_tweets
 
         set_progress(topic_slug, 4, 7, "Analyzing tweets with AI",
-                     f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by Gemini AI, "
-                     f"with uncertain ones double-checked by Claude and GPT for accuracy. "
+                     f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by AI, "
+                     f"with uncertain ones verified by multiple models for accuracy. "
                      f"This is the longest step." if tweets_to_classify else "All tweets already classified.")
 
         # Determine pro/anti bent values from labels

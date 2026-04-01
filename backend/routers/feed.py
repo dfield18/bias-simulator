@@ -143,30 +143,43 @@ class SmartFeedItem(BaseModel):
 
 
 # --- Bio keyword sets for account type detection ---
+_POLITICIAN_KEYWORDS = {
+    "senator", "representative", "congressman", "congresswoman", "rep.",
+    "sen.", "governor", "mayor", "council", "legislature", "elected",
+    "member of congress", "mp", "mep", "minister", "secretary of",
+    "official account", "government", "state rep", "state sen",
+    "assemblymember", "alderman", "commissioner", "caucus", "gop",
+    "democrat", "republican", "political party", "party leader",
+}
 _ACTIVIST_KEYWORDS = {
     "activist", "organizer", "resist", "movement", "advocate", "solidarity",
     "grassroots", "abolish", "liberation", "justice warrior", "patriot",
-    "maga", "deplorable", "trump", "conservative activist", "militia",
+    "maga", "deplorable", "conservative activist", "militia",
     "2a", "pro-life", "pro-choice", "blm", "antifa", "proud",
+    "campaigner", "nonprofit", "ngo", "charity", "foundation",
 }
 _NEWS_KEYWORDS = {
     "journalist", "reporter", "editor", "correspondent", "anchor",
     "news", "press", "media", "columnist", "bureau", "newsroom",
-    "breaking", "coverage", "investigat",
+    "breaking", "coverage", "investigat", "analyst", "commentator",
 }
 _NATIVE_SOURCES = {"twitter web app", "twitter for iphone", "twitter for android", "x"}
 
 
 def _detect_account_type(bio: str) -> str:
-    """Classify account as activist, news, or general from bio text."""
+    """Classify account as politician, news, activist, or general from bio text."""
     bio_lower = (bio or "").lower()
+    politician_hits = sum(1 for kw in _POLITICIAN_KEYWORDS if kw in bio_lower)
     activist_hits = sum(1 for kw in _ACTIVIST_KEYWORDS if kw in bio_lower)
     news_hits = sum(1 for kw in _NEWS_KEYWORDS if kw in bio_lower)
-    if activist_hits > news_hits and activist_hits >= 1:
-        return "activist"
-    if news_hits > activist_hits and news_hits >= 1:
+    best = max(politician_hits, activist_hits, news_hits)
+    if best == 0:
+        return "general"
+    if politician_hits == best:
+        return "politician"
+    if news_hits == best:
         return "news"
-    return "general"
+    return "activist"
 
 
 def _detect_media_type(raw_json: dict) -> str:

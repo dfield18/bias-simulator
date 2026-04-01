@@ -104,6 +104,7 @@ export default function AnalyticsPage() {
   const [breakdown, setBreakdown] = useState<BreakdownData | null>(null);
   const [bias, setBias] = useState(0);
   const [feedSortMode, setFeedSortMode] = useState<"smart" | "latest">("smart");
+  const [feedAccountFilter, setFeedAccountFilter] = useState<string>("all");
   const [feedLoading, setFeedLoading] = useState(true);
   const [feedVisibleCount, setFeedVisibleCount] = useState(50);
   const [activeTab, setActiveTab] = useState("feed");
@@ -210,22 +211,29 @@ export default function AnalyticsPage() {
       .finally(() => setFeedLoading(false));
   }, [debouncedBias, topicSlug]);
 
-  // Feed items: smart-ranked or chronological
+  // Feed items: smart-ranked or chronological, then filtered by account type
   const feedScored = useMemo(() => {
+    let items = smartFeedItems;
     if (feedSortMode === "latest") {
-      return [...smartFeedItems].sort((a, b) => {
+      items = [...items].sort((a, b) => {
         const da = a.tweet?.created_at || "";
         const db = b.tweet?.created_at || "";
         return db.localeCompare(da);
       });
     }
-    return smartFeedItems;
-  }, [smartFeedItems, feedSortMode]);
+    if (feedAccountFilter !== "all") {
+      items = items.filter((item) => {
+        const acctType = (item as any).score_breakdown?.account_type || "general";
+        return acctType === feedAccountFilter;
+      });
+    }
+    return items;
+  }, [smartFeedItems, feedSortMode, feedAccountFilter]);
 
   const feedItems = feedScored.slice(0, feedVisibleCount);
 
-  // Reset feed visible count on sort/bias change
-  useEffect(() => { setFeedVisibleCount(50); }, [bias, feedSortMode]);
+  // Reset feed visible count on sort/bias/filter change
+  useEffect(() => { setFeedVisibleCount(50); }, [bias, feedSortMode, feedAccountFilter]);
 
   // Feed infinite scroll
   useEffect(() => {
@@ -507,13 +515,25 @@ export default function AnalyticsPage() {
               />
             )}
 
-            {/* Feed header with sort toggle */}
-            <div className="flex items-center justify-between">
+            {/* Feed header with sort toggle + account filter */}
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="text-sm text-gray-500">
                 Showing{" "}
                 <span className="text-gray-300 font-medium">{getBiasDescription(bias)}</span>{" "}
                 feed &middot; {feedItems.length} tweets
               </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={feedAccountFilter}
+                  onChange={(e) => setFeedAccountFilter(e.target.value)}
+                  className="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-md text-xs text-gray-300"
+                >
+                  <option value="all">All accounts</option>
+                  <option value="politician">Politicians</option>
+                  <option value="news">News &amp; Media</option>
+                  <option value="activist">Activists &amp; Orgs</option>
+                  <option value="general">General</option>
+                </select>
               <div className="flex items-center gap-1 bg-gray-800 rounded-md p-0.5">
                 <button
                   onClick={() => setFeedSortMode("smart")}
@@ -531,6 +551,7 @@ export default function AnalyticsPage() {
                 >
                   Latest
                 </button>
+              </div>
               </div>
             </div>
 

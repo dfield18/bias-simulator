@@ -126,13 +126,13 @@ export default function TweetCard({
         >
           {tweet.media.slice(0, 4).map((m, i) => (
             <div key={i} className={`relative ${
-              tweet.media.length === 1 ? "max-h-80" :
+              tweet.media.length === 1 ? "" :
               tweet.media.length === 3 && i === 0 ? "row-span-2" : ""
             } overflow-hidden bg-gray-800`}>
               {m.type === "video" ? (
                 <a href={tweet.url || ""} target="_blank" rel="noopener noreferrer" className="block relative group">
                   {m.thumbnail ? (
-                    <img src={m.thumbnail} alt="" className="w-full h-full object-cover" />
+                    <img src={m.thumbnail} alt="" className="w-full object-contain max-h-96" />
                   ) : (
                     <div className="w-full h-40 bg-gray-700 flex items-center justify-center">
                       <span className="text-gray-500 text-xs">Video</span>
@@ -149,7 +149,7 @@ export default function TweetCard({
                   src={m.url}
                   alt=""
                   loading="lazy"
-                  className="w-full h-full object-cover"
+                  className={`w-full ${tweet.media.length === 1 ? "object-contain max-h-96" : "h-full object-cover"}`}
                 />
               )}
             </div>

@@ -530,7 +530,9 @@ export default function AnalyticsPage() {
                 >
                   <option value="all">All accounts</option>
                   <option value="politician">Politicians</option>
-                  <option value="news">News &amp; Media</option>
+                  <option value="mainstream_news">Mainstream News</option>
+                  <option value="independent_news">Independent Media</option>
+                  <option value="partisan_news">Partisan Media</option>
                   <option value="activist">Activists &amp; Orgs</option>
                   <option value="general">General</option>
                 </select>

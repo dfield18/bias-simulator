@@ -508,7 +508,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                 for c in classifications:
                     screen = (c.get("screen_name") or "").lower().strip()
                     atype = c.get("author_type", "")
-                    if screen and atype in ("politician", "news", "activist", "general"):
+                    if screen and atype in ("politician", "mainstream_news", "independent_news", "partisan_news", "activist", "general"):
                         cur.execute(
                             """INSERT INTO account_types (screen_name, author_type)
                                VALUES (%s, %s) ON CONFLICT (screen_name) DO NOTHING""",

@@ -142,44 +142,67 @@ class SmartFeedItem(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# --- Bio keyword sets for account type detection ---
+# --- Bio keyword sets for account type detection (heuristic fallback) ---
 _POLITICIAN_KEYWORDS = {
     "senator", "representative", "congressman", "congresswoman", "rep.",
     "sen.", "governor", "mayor", "council", "legislature", "elected",
     "member of congress", "mp", "mep", "minister", "secretary of",
     "official account", "government", "state rep", "state sen",
-    "assemblymember", "alderman", "commissioner", "caucus", "gop",
-    "democrat", "republican", "political party", "party leader",
+    "assemblymember", "alderman", "commissioner", "caucus",
 }
 _ACTIVIST_KEYWORDS = {
     "activist", "organizer", "resist", "movement", "advocate", "solidarity",
-    "grassroots", "abolish", "liberation", "justice warrior", "patriot",
-    "maga", "deplorable", "conservative activist", "militia",
-    "2a", "pro-life", "pro-choice", "blm", "antifa", "proud",
-    "campaigner", "nonprofit", "ngo", "charity", "foundation",
+    "grassroots", "abolish", "liberation", "campaigner", "nonprofit",
+    "ngo", "charity", "foundation", "pac", "think tank",
+}
+_MAINSTREAM_NEWS = {
+    "reuters", "associated press", "ap news", "nyt", "new york times",
+    "washington post", "cnn", "bbc", "fox news", "nbc", "abc news",
+    "cbs news", "npr", "wsj", "wall street journal", "politico",
+    "bloomberg", "afp", "the guardian", "usa today",
+}
+_PARTISAN_NEWS = {
+    "daily wire", "breitbart", "oann", "newsmax", "jacobin",
+    "mother jones", "the intercept", "infowars", "epoch times",
+    "common dreams", "the blaze", "washington examiner",
+    "washington free beacon", "young turks", "occupy",
 }
 _NEWS_KEYWORDS = {
     "journalist", "reporter", "editor", "correspondent", "anchor",
-    "news", "press", "media", "columnist", "bureau", "newsroom",
-    "breaking", "coverage", "investigat", "analyst", "commentator",
+    "news", "press", "columnist", "bureau", "newsroom",
+    "breaking", "coverage", "investigat",
 }
 _NATIVE_SOURCES = {"twitter web app", "twitter for iphone", "twitter for android", "x"}
 
 
 def _detect_account_type(bio: str) -> str:
-    """Classify account as politician, news, activist, or general from bio text."""
+    """Heuristic fallback for account type when AI classification is unavailable."""
     bio_lower = (bio or "").lower()
+
+    # Check politician first
     politician_hits = sum(1 for kw in _POLITICIAN_KEYWORDS if kw in bio_lower)
-    activist_hits = sum(1 for kw in _ACTIVIST_KEYWORDS if kw in bio_lower)
-    news_hits = sum(1 for kw in _NEWS_KEYWORDS if kw in bio_lower)
-    best = max(politician_hits, activist_hits, news_hits)
-    if best == 0:
-        return "general"
-    if politician_hits == best:
+    if politician_hits >= 1:
         return "politician"
-    if news_hits == best:
-        return "news"
-    return "activist"
+
+    # Check known partisan outlets
+    if any(kw in bio_lower for kw in _PARTISAN_NEWS):
+        return "partisan_news"
+
+    # Check known mainstream outlets
+    if any(kw in bio_lower for kw in _MAINSTREAM_NEWS):
+        return "mainstream_news"
+
+    # Check general news keywords
+    news_hits = sum(1 for kw in _NEWS_KEYWORDS if kw in bio_lower)
+    if news_hits >= 1:
+        return "independent_news"
+
+    # Check activist
+    activist_hits = sum(1 for kw in _ACTIVIST_KEYWORDS if kw in bio_lower)
+    if activist_hits >= 1:
+        return "activist"
+
+    return "general"
 
 
 def _detect_media_type(raw_json: dict) -> str:
@@ -373,9 +396,11 @@ async def get_smart_feed(
         # Account type detection — use AI-classified cache, fall back to heuristic
         screen_lower = (tweet.screen_name or "").lower()
         account_type = _cached_types.get(screen_lower) or _detect_account_type(bio)
+        # Migrate legacy "news" values to mainstream_news for heuristic consistency
+        if account_type == "news":
+            account_type = "mainstream_news"
         activist_boost = 1.4 if account_type == "activist" else 1.0
-        # News accounts get slight boost too
-        news_boost = 1.15 if account_type == "news" else 1.0
+        news_boost = 1.15 if account_type in ("mainstream_news", "independent_news", "partisan_news") else 1.0
 
         # Bot detection
         statuses = user_raw.get("statuses_count", 0) or 0

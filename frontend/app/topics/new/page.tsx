@@ -111,6 +111,20 @@ export default function NewTopicPage() {
                   {pipelineProgress.detail}
                 </p>
               )}
+              {(() => {
+                const tips = [
+                  "Each tweet is analyzed for political stance, intensity, and narrative framing",
+                  "Low-confidence classifications are double-checked by multiple AI models",
+                  "Echo maps which arguments each side uses — and which they ignore",
+                  "The bias slider lets you simulate what different echo chambers see",
+                  "Narrative frames reveal how the same event gets spun differently",
+                ];
+                return (
+                  <p className="text-[10px] text-gray-600 italic mt-4">
+                    {tips[Math.floor(Date.now() / 5000) % tips.length]}
+                  </p>
+                );
+              })()}
             </>
           ) : (
             <p className="text-sm text-gray-400">

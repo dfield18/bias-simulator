@@ -254,22 +254,64 @@ export default function AnalyticsPage() {
   }
 
   if (!topic) {
+    if (!feedLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="text-5xl font-bold text-gray-700 mb-4">404</div>
+          <p className="text-sm text-gray-400 mb-6">Topic not found</p>
+          <a href="/dashboard" className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm transition-colors">
+            Back to Dashboard
+          </a>
+        </div>
+      );
+    }
+    // Skeleton UI while loading
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        {!feedLoading ? (
-          <>
-            <div className="text-5xl font-bold text-gray-700 mb-4">404</div>
-            <p className="text-sm text-gray-400 mb-6">Topic not found</p>
-            <a href="/dashboard" className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm transition-colors">
-              Back to Dashboard
-            </a>
-          </>
-        ) : (
-          <>
-            <div className="animate-spin h-10 w-10 border-2 border-blue-400 border-t-transparent rounded-full mb-4" />
-            <p className="text-sm text-gray-400">Loading dashboard...</p>
-          </>
-        )}
+      <div className="min-h-screen">
+        {/* Skeleton header */}
+        <div className="border-b border-gray-800 bg-gray-900/50 sticky top-0 z-20">
+          <div className="max-w-5xl mx-auto px-4 py-3">
+            <div className="flex items-center gap-4">
+              <div className="h-4 w-16 bg-gray-800 rounded animate-pulse" />
+              <div className="h-5 w-40 bg-gray-800 rounded animate-pulse" />
+            </div>
+          </div>
+          <div className="max-w-5xl mx-auto px-4 py-2 flex gap-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-8 w-24 bg-gray-800/50 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </div>
+        {/* Skeleton content */}
+        <div className="max-w-5xl mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-3 w-24 bg-gray-800 rounded animate-pulse" />
+                    <div className="h-3 w-16 bg-gray-800 rounded animate-pulse" />
+                    <div className="h-4 w-20 bg-gray-800 rounded animate-pulse ml-auto" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-3 w-full bg-gray-800/60 rounded animate-pulse" />
+                    <div className="h-3 w-4/5 bg-gray-800/60 rounded animate-pulse" />
+                    <div className="h-3 w-3/5 bg-gray-800/40 rounded animate-pulse" />
+                  </div>
+                  <div className="flex gap-4 mt-4">
+                    <div className="h-3 w-12 bg-gray-800/40 rounded animate-pulse" />
+                    <div className="h-3 w-12 bg-gray-800/40 rounded animate-pulse" />
+                    <div className="h-3 w-12 bg-gray-800/40 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-4">
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 h-48 animate-pulse" />
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 h-32 animate-pulse" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -412,26 +454,37 @@ export default function AnalyticsPage() {
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
 
         {/* Pipeline progress banner */}
-        {isRunning === "running" && pipelineProgress && (
-          <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-5">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full shrink-0" />
-                <span className="text-sm font-medium text-gray-300">{pipelineProgress.label}</span>
+        {isRunning === "running" && pipelineProgress && (() => {
+          const tips = [
+            "Each tweet is analyzed for political stance, intensity, and narrative framing",
+            "Low-confidence classifications are double-checked by a multi-model ensemble",
+            "The bias slider lets you simulate what different echo chambers see",
+            "Echo detects which arguments each side uses — and which they ignore",
+            "Narrative frames reveal how the same event gets spun differently by each side",
+          ];
+          const tipIndex = Math.floor(Date.now() / 5000) % tips.length;
+          return (
+            <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full shrink-0" />
+                  <span className="text-sm font-medium text-gray-300">{pipelineProgress.label}</span>
+                </div>
+                <span className="text-xs text-gray-500">Step {pipelineProgress.step} of {pipelineProgress.total_steps} &middot; {pipelineProgress.pct}%</span>
               </div>
-              <span className="text-xs text-gray-500">Step {pipelineProgress.step} of {pipelineProgress.total_steps} &middot; {pipelineProgress.pct}%</span>
+              <div className="h-2.5 bg-gray-800 rounded-full overflow-hidden mb-2">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                  style={{ width: `${pipelineProgress.pct}%` }}
+                />
+              </div>
+              {pipelineProgress.detail && (
+                <p className="text-xs text-gray-500 leading-relaxed mb-2">{pipelineProgress.detail}</p>
+              )}
+              <p className="text-[10px] text-gray-600 italic">{tips[tipIndex]}</p>
             </div>
-            <div className="h-2.5 bg-gray-800 rounded-full overflow-hidden mb-2">
-              <div
-                className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                style={{ width: `${pipelineProgress.pct}%` }}
-              />
-            </div>
-            {pipelineProgress.detail && (
-              <p className="text-xs text-gray-500 leading-relaxed">{pipelineProgress.detail}</p>
-            )}
-          </div>
-        )}
+          );
+        })()}
         {isRunning === "running" && !pipelineProgress && (
           <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-5 flex items-center gap-3">
             <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full shrink-0" />
@@ -495,10 +548,26 @@ export default function AnalyticsPage() {
               {/* Tweet feed */}
               <div>
                 {feedLoading && smartFeedItems.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20">
-                    <div className="animate-spin h-8 w-8 border-2 border-blue-400 border-t-transparent rounded-full mb-4" />
-                    <p className="text-sm text-gray-400">Loading your feed...</p>
-                    <p className="text-[10px] text-gray-600 mt-1">Building your personalized timeline from {topic.name} tweets</p>
+                  <div className="space-y-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="h-3.5 w-28 bg-gray-800 rounded animate-pulse" />
+                          <div className="h-3 w-20 bg-gray-800/60 rounded animate-pulse" />
+                          <div className="h-5 w-16 bg-gray-800 rounded animate-pulse ml-auto" />
+                        </div>
+                        <div className="space-y-2 mb-3">
+                          <div className="h-3 w-full bg-gray-800/50 rounded animate-pulse" />
+                          <div className="h-3 w-11/12 bg-gray-800/50 rounded animate-pulse" />
+                          <div className="h-3 w-3/4 bg-gray-800/40 rounded animate-pulse" />
+                        </div>
+                        <div className="flex gap-5">
+                          {[...Array(4)].map((_, j) => (
+                            <div key={j} className="h-3 w-10 bg-gray-800/30 rounded animate-pulse" />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : feedItems.length === 0 ? (
                   <p className="text-gray-500 text-center py-12">No tweets found.</p>

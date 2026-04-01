@@ -518,6 +518,70 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         except Exception as e:
             print(f"  Author type cache error (non-fatal): {e}")
 
+        # Backfill author_type for uncached accounts in this topic
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """SELECT DISTINCT t.screen_name, t.author_bio
+                       FROM tweets t
+                       JOIN classifications c ON t.id_str = c.id_str
+                       LEFT JOIN account_types a ON LOWER(t.screen_name) = a.screen_name
+                       WHERE t.topic_slug = %s AND c.about_subject = TRUE
+                         AND a.screen_name IS NULL AND t.screen_name IS NOT NULL
+                       LIMIT 200""",
+                    (topic_slug,),
+                )
+                uncached = cur.fetchall()
+
+            if uncached:
+                print(f"  Backfilling author_type for {len(uncached)} uncached accounts...")
+                from pipeline.classify import _call_gemini
+                # Batch classify via a single LLM call
+                accounts_text = "\n".join(
+                    f"- @{row[0]}: {(row[1] or 'no bio')[:150]}"
+                    for row in uncached
+                )
+                prompt = f"""Classify each Twitter account into exactly one category based on their bio:
+- "politician" = elected officials, candidates, government accounts
+- "mainstream_news" = major established outlets and their journalists (NYT, CNN, BBC, Reuters, AP, Fox News, etc.)
+- "independent_news" = smaller outlets, freelance journalists, substacks, podcasts
+- "partisan_news" = explicitly ideological media (Daily Wire, Breitbart, Jacobin, Mother Jones, etc.)
+- "activist" = advocacy orgs, nonprofits, movement accounts, PACs, think tanks, political commentators
+- "general" = everyone else (ordinary users, businesses, athletes, entertainers)
+
+Accounts:
+{accounts_text}
+
+Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]"""
+
+                try:
+                    resp_text, _ = _call_gemini(prompt, model="gemini-2.0-flash")
+                    import json
+                    text = resp_text.strip()
+                    if text.startswith("```"):
+                        text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+                    results = json.loads(text)
+                    if not isinstance(results, list):
+                        results = []
+
+                    valid_types = {"politician", "mainstream_news", "independent_news", "partisan_news", "activist", "general"}
+                    with conn.cursor() as cur:
+                        for r in results:
+                            sn = (r.get("screen_name") or "").lower().strip().lstrip("@")
+                            at = r.get("author_type", "")
+                            if sn and at in valid_types:
+                                cur.execute(
+                                    """INSERT INTO account_types (screen_name, author_type)
+                                       VALUES (%s, %s) ON CONFLICT (screen_name) DO NOTHING""",
+                                    (sn, at),
+                                )
+                    conn.commit()
+                    print(f"  Backfilled {len(results)} account types")
+                except Exception as e:
+                    print(f"  Backfill LLM error (non-fatal): {e}")
+        except Exception as e:
+            print(f"  Backfill query error (non-fatal): {e}")
+
         total_cost = cost_class + cost_intensity
 
         # Log run

@@ -52,6 +52,7 @@ export default function NewTopicPage() {
     setCreating(true);
     setError(null);
     setPipelineProgress(null);
+    let topicCreated = false;
     try {
       await createTopic({
         ...suggestion,
@@ -59,6 +60,7 @@ export default function NewTopicPage() {
         target_country: targetCountry || undefined,
         color_scheme: colorScheme,
       });
+      topicCreated = true;
       invalidateCache("topics");
       await runTopicPipeline(suggestion.slug, { maxPages });
       // Poll for pipeline progress
@@ -69,7 +71,6 @@ export default function NewTopicPage() {
           if (prog) {
             setPipelineProgress(prog);
             if (!prog.running) {
-              // Pipeline finished — navigate to dashboard
               router.push(`/analytics/${suggestion.slug}`);
               return;
             }
@@ -79,8 +80,13 @@ export default function NewTopicPage() {
       // Timeout — navigate anyway
       router.push(`/analytics/${suggestion.slug}`);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "An error occurred");
-      setCreating(false);
+      if (topicCreated) {
+        // Topic exists but pipeline failed — redirect to it
+        router.push(`/analytics/${suggestion.slug}`);
+      } else {
+        setError(e instanceof Error ? e.message : "An error occurred");
+        setCreating(false);
+      }
     }
   };
 

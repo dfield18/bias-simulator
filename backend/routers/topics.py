@@ -198,14 +198,9 @@ async def create_topic(
     )
 
     db.add(topic)
-    await db.flush()
+    await db.flush()  # ensure topic exists for FK constraint
 
-    user_topic = UserTopic(
-        user_id=user["id"],
-        topic_slug=body.slug,
-        role="creator",
-    )
-    db.add(user_topic)
+    db.add(UserTopic(user_id=user["id"], topic_slug=body.slug, role="creator"))
     await db.commit()
     await db.refresh(topic)
 

@@ -420,6 +420,16 @@ export default function AnalyticsPage() {
               >
                 Refine Query
               </Link>
+              <button
+                onClick={() => { setActiveTab("help"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  activeTab === "help"
+                    ? "bg-gray-700 text-gray-100"
+                    : "text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700"
+                }`}
+              >
+                Help
+              </button>
             </div>
           </div>
         </div>
@@ -444,16 +454,6 @@ export default function AnalyticsPage() {
                   {t.label}
                 </button>
               ))}
-              <button
-                onClick={() => { setActiveTab("help"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
-                  activeTab === "help"
-                    ? "bg-gray-700 text-gray-100"
-                    : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
-                }`}
-              >
-                Help
-              </button>
             </div>
           </div>
         </div>

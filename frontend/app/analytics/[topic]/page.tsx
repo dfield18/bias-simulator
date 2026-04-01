@@ -505,6 +505,9 @@ export default function AnalyticsPage() {
         {activeTab === "feed" && (
           <>
             {/* Sentiment distribution / bias slider */}
+            <p className="text-[11px] text-gray-500 leading-relaxed">
+              This feed is built from real tweets pulled from Twitter and classified by AI. Drag the slider to simulate how a feed algorithm would prioritize content based on political leaning.
+            </p>
             {allTweets.length > 0 && (
               <SentimentDistribution
                 items={allTweets}

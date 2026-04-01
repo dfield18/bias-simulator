@@ -133,6 +133,14 @@ class Classification(Base):
     )
 
 
+class AccountType(Base):
+    __tablename__ = "account_types"
+
+    screen_name = Column(Text, primary_key=True)  # lowercase
+    author_type = Column(Text, nullable=False)  # politician, news, activist, general
+    classified_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+
+
 class FetchRun(Base):
     __tablename__ = "fetch_runs"
 

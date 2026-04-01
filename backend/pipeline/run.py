@@ -502,6 +502,22 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         set_progress(topic_slug, 5, 7, "Saving results", f"Writing {len(classifications)} classifications to database...")
         upsert_classifications(conn, classifications, intensity_results, cost_class, cost_intensity)
 
+        # Cache author_type for cross-topic reuse
+        try:
+            with conn.cursor() as cur:
+                for c in classifications:
+                    screen = (c.get("screen_name") or "").lower().strip()
+                    atype = c.get("author_type", "")
+                    if screen and atype in ("politician", "news", "activist", "general"):
+                        cur.execute(
+                            """INSERT INTO account_types (screen_name, author_type)
+                               VALUES (%s, %s) ON CONFLICT (screen_name) DO NOTHING""",
+                            (screen, atype),
+                        )
+            conn.commit()
+        except Exception as e:
+            print(f"  Author type cache error (non-fatal): {e}")
+
         total_cost = cost_class + cost_intensity
 
         # Log run

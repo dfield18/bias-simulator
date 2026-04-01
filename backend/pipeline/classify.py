@@ -63,6 +63,7 @@ Return a JSON array where each element has these fields:
 - about_subject: boolean, is this tweet about the topic?
 - political_bent: one of the valid categories from the prompt above
 - author_lean: brief description of the author's likely political leaning
+- author_type: one of "politician", "news", "activist", "general" — based on the author's bio, role, and account. Politicians = elected officials, candidates, government accounts. News = journalists, reporters, media outlets. Activist = advocacy orgs, nonprofits, movement accounts, political commentators. General = everyone else.
 - classification_basis: 1-2 sentence explanation of why you chose this classification
 - confidence: float 0.0-1.0, how confident are you in this classification
 """

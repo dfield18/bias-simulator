@@ -243,6 +243,17 @@ async def get_smart_feed(
 
     now = datetime.now(timezone.utc)
 
+    # Load cached account types for fast lookup
+    from models import AccountType
+    _screen_names = list({(t.screen_name or "").lower() for t, c in rows if t.screen_name})
+    _cached_types: dict[str, str] = {}
+    if _screen_names:
+        _type_result = await db.execute(
+            select(AccountType.screen_name, AccountType.author_type)
+            .where(AccountType.screen_name.in_(_screen_names))
+        )
+        _cached_types = {r[0]: r[1] for r in _type_result.all()}
+
     # Pre-compute normalization values
     max_views = max((t.views or 1) for t, c in rows)
     max_engagement = max((t.engagement or 1) for t, c in rows)
@@ -359,8 +370,9 @@ async def get_smart_feed(
         verified = user_raw.get("verified", False)
         verified_boost = 1.3 if verified else 1.0
 
-        # Account type detection
-        account_type = _detect_account_type(bio)
+        # Account type detection — use AI-classified cache, fall back to heuristic
+        screen_lower = (tweet.screen_name or "").lower()
+        account_type = _cached_types.get(screen_lower) or _detect_account_type(bio)
         activist_boost = 1.4 if account_type == "activist" else 1.0
         # News accounts get slight boost too
         news_boost = 1.15 if account_type == "news" else 1.0

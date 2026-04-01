@@ -531,6 +531,9 @@ export default function AdminPage() {
         {rows.length} tweets &middot; Click a row to review &middot; Use arrow
         keys to navigate in modal
       </div>
+      <p className="text-[10px] text-gray-600 mb-3">
+        Overrides update feed, charts, and analytics within a few minutes. AI-generated summaries require a &ldquo;Refresh Data&rdquo; from the dashboard to regenerate.
+      </p>
 
       {/* Table */}
       {loading ? (

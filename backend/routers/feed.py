@@ -143,34 +143,44 @@ class SmartFeedItem(BaseModel):
 
 
 # --- Bio keyword sets for account type detection (heuristic fallback) ---
-_POLITICIAN_KEYWORDS = {
-    "senator", "representative", "congressman", "congresswoman", "rep.",
-    "sen.", "governor", "mayor", "council", "legislature", "elected",
-    "member of congress", "mp", "mep", "minister", "secretary of",
-    "official account", "government", "state rep", "state sen",
-    "assemblymember", "alderman", "commissioner", "caucus",
-}
+import re as _re
+
+# Words that need word-boundary matching (short/ambiguous terms)
+_POLITICIAN_PHRASES = [
+    "senator", "representative", "congressman", "congresswoman",
+    "governor", "mayor", "legislature", "elected",
+    "member of congress", "member of parliament",
+    "secretary of", "official account", "government",
+    "state representative", "state senator",
+    "assemblymember", "alderman", "commissioner",
+]
+# Regex patterns for short terms that could match inside other words
+_POLITICIAN_PATTERNS = [
+    _re.compile(r"\brep\.\s"),    # "Rep. Smith" not "represent"
+    _re.compile(r"\bsen\.\s"),    # "Sen. Smith" not "sense"
+    _re.compile(r"\bm\.?p\.?\b"), # "MP" or "M.P." as whole word
+    _re.compile(r"\bmep\b"),      # "MEP" as whole word
+]
+
 _ACTIVIST_KEYWORDS = {
-    "activist", "organizer", "resist", "movement", "advocate", "solidarity",
+    "activist", "organizer", "advocate", "solidarity",
     "grassroots", "abolish", "liberation", "campaigner", "nonprofit",
-    "ngo", "charity", "foundation", "pac", "think tank",
+    "charity", "foundation", "think tank",
 }
 _MAINSTREAM_NEWS = {
-    "reuters", "associated press", "ap news", "nyt", "new york times",
-    "washington post", "cnn", "bbc", "fox news", "nbc", "abc news",
-    "cbs news", "npr", "wsj", "wall street journal", "politico",
-    "bloomberg", "afp", "the guardian", "usa today",
+    "reuters", "associated press", "ap news", "new york times",
+    "washington post", "fox news", "wall street journal", "politico",
+    "bloomberg", "the guardian", "usa today",
 }
 _PARTISAN_NEWS = {
     "daily wire", "breitbart", "oann", "newsmax", "jacobin",
     "mother jones", "the intercept", "infowars", "epoch times",
     "common dreams", "the blaze", "washington examiner",
-    "washington free beacon", "young turks", "occupy",
+    "washington free beacon", "young turks",
 }
 _NEWS_KEYWORDS = {
     "journalist", "reporter", "editor", "correspondent", "anchor",
-    "news", "press", "columnist", "bureau", "newsroom",
-    "breaking", "coverage", "investigat",
+    "columnist", "bureau", "newsroom", "investigat",
 }
 _NATIVE_SOURCES = {"twitter web app", "twitter for iphone", "twitter for android", "x"}
 
@@ -179,9 +189,10 @@ def _detect_account_type(bio: str) -> str:
     """Heuristic fallback for account type when AI classification is unavailable."""
     bio_lower = (bio or "").lower()
 
-    # Check politician first
-    politician_hits = sum(1 for kw in _POLITICIAN_KEYWORDS if kw in bio_lower)
-    if politician_hits >= 1:
+    # Check politician — phrases + regex patterns for short terms
+    if any(kw in bio_lower for kw in _POLITICIAN_PHRASES):
+        return "politician"
+    if any(p.search(bio_lower) for p in _POLITICIAN_PATTERNS):
         return "politician"
 
     # Check known partisan outlets
@@ -193,13 +204,11 @@ def _detect_account_type(bio: str) -> str:
         return "mainstream_news"
 
     # Check general news keywords
-    news_hits = sum(1 for kw in _NEWS_KEYWORDS if kw in bio_lower)
-    if news_hits >= 1:
+    if any(kw in bio_lower for kw in _NEWS_KEYWORDS):
         return "independent_news"
 
     # Check activist
-    activist_hits = sum(1 for kw in _ACTIVIST_KEYWORDS if kw in bio_lower)
-    if activist_hits >= 1:
+    if any(kw in bio_lower for kw in _ACTIVIST_KEYWORDS):
         return "activist"
 
     return "general"

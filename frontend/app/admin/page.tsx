@@ -12,6 +12,8 @@ import {
   submitOverride,
   fetchAccountRules,
   setAccountRule,
+  fetchAccountTypes,
+  setAccountType,
   fetchMe,
 } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
@@ -111,6 +113,7 @@ export default function AdminPage() {
   const [overrideNotes, setOverrideNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [accountRules, setAccountRules] = useState<Record<string, string>>({});
+  const [accountTypes, setAccountTypes] = useState<Record<string, string>>({});
   const [newRuleAccount, setNewRuleAccount] = useState("");
   const [newRuleBent, setNewRuleBent] = useState("");
   const [showRules, setShowRules] = useState(false);
@@ -156,11 +159,13 @@ export default function AdminPage() {
       fetchAdminTweets(selectedTopic, filters),
       fetchAdminStats(selectedTopic),
       fetchAccountRules(selectedTopic),
+      fetchAccountTypes(selectedTopic),
     ])
-      .then(([tweets, s, rules]) => {
+      .then(([tweets, s, rules, types]) => {
         setRows(tweets);
         setStats(s);
         setAccountRules(rules);
+        setAccountTypes(types);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -556,6 +561,7 @@ export default function AdminPage() {
                   { key: "", label: "Tweet", align: "", hide: "" },
                   { key: "classification", label: "Classification", align: "", hide: "" },
                   { key: "", label: "Account Rule", align: "", hide: "hidden md:table-cell" },
+                  { key: "", label: "Account Type", align: "", hide: "hidden md:table-cell" },
                   { key: "confidence", label: "Confidence", align: "text-right", hide: "hidden lg:table-cell" },
                   { key: "intensity", label: "Intensity", align: "text-right", hide: "hidden lg:table-cell" },
                   { key: "views", label: "Views", align: "text-right", hide: "hidden sm:table-cell" },
@@ -688,6 +694,47 @@ export default function AdminPage() {
                                     ? bentBadge(opt.value, antiBent, proBent) + " font-semibold ring-1 ring-yellow-500/50"
                                     : "bg-gray-800 text-gray-600 hover:text-gray-400"
                                 }`}
+                              >
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </td>
+                  <td className="px-2 sm:px-3 py-2 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
+                    {(() => {
+                      const screenLower = (row.tweet.screen_name || "").toLowerCase();
+                      const currentType = accountTypes[screenLower] || "general";
+                      const typeOpts = [
+                        { value: "politician", label: "Pol", color: "bg-purple-500/20 text-purple-400" },
+                        { value: "mainstream_news", label: "MSM", color: "bg-cyan-500/20 text-cyan-400" },
+                        { value: "independent_news", label: "Ind", color: "bg-teal-500/20 text-teal-400" },
+                        { value: "partisan_news", label: "Part", color: "bg-orange-500/20 text-orange-400" },
+                        { value: "activist", label: "Act", color: "bg-yellow-500/20 text-yellow-400" },
+                        { value: "general", label: "Gen", color: "bg-gray-500/20 text-gray-400" },
+                      ];
+                      return (
+                        <div className="flex flex-wrap gap-0.5">
+                          {typeOpts.map((opt) => {
+                            const isActive = currentType === opt.value;
+                            return (
+                              <button
+                                key={opt.value}
+                                onClick={async () => {
+                                  if (isActive) return;
+                                  setAccountTypes((prev) => ({ ...prev, [screenLower]: opt.value }));
+                                  try {
+                                    await setAccountType(row.tweet.screen_name || "", opt.value);
+                                  } catch {}
+                                }}
+                                className={`text-[9px] px-1 py-0.5 rounded transition-colors ${
+                                  isActive
+                                    ? opt.color + " font-semibold ring-1 ring-white/20"
+                                    : "bg-gray-800 text-gray-600 hover:text-gray-400"
+                                }`}
+                                title={opt.value.replace(/_/g, " ")}
                               >
                                 {opt.label}
                               </button>

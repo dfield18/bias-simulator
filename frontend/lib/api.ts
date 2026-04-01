@@ -1009,6 +1009,29 @@ export async function setAccountRule(
   return res.json();
 }
 
+export async function fetchAccountTypes(
+  topic: string,
+): Promise<Record<string, string>> {
+  const res = await apiFetch(`${API_URL}/api/admin/account-types?topic=${encodeURIComponent(topic)}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) return {};
+  return res.json();
+}
+
+export async function setAccountType(
+  screenName: string,
+  authorType: string,
+): Promise<{ status: string; screen_name: string; author_type: string }> {
+  const res = await apiFetch(`${API_URL}/api/admin/account-type`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ screen_name: screenName, author_type: authorType }),
+  });
+  if (!res.ok) throw new Error("Failed to set account type");
+  return res.json();
+}
+
 export interface TopicDetail {
   slug: string;
   name: string;

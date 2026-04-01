@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -267,3 +267,56 @@ async def set_account_rule(
             await db.commit()
 
     return {"status": "ok", "rules": rules, "affected_tweets": affected}
+
+
+class AccountTypeRequest(PydanticBaseModel):
+    screen_name: str
+    author_type: str  # politician, mainstream_news, independent_news, partisan_news, activist, general
+
+
+@router.post("/admin/account-type")
+async def set_account_type(
+    body: AccountTypeRequest,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(admin_required),
+):
+    """Set or update an account's type classification."""
+    from models import AccountType
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+    valid_types = {"politician", "mainstream_news", "independent_news", "partisan_news", "activist", "general"}
+    if body.author_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Invalid author_type. Must be one of: {', '.join(sorted(valid_types))}")
+
+    screen_name = body.screen_name.lower().strip().lstrip("@")
+
+    stmt = pg_insert(AccountType).values(
+        screen_name=screen_name,
+        author_type=body.author_type,
+    ).on_conflict_do_update(
+        index_elements=["screen_name"],
+        set_={"author_type": body.author_type},
+    )
+    await db.execute(stmt)
+    await db.commit()
+
+    return {"status": "ok", "screen_name": screen_name, "author_type": body.author_type}
+
+
+@router.get("/admin/account-types")
+async def get_account_types_for_topic(
+    topic: str,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(admin_required),
+):
+    """Get cached account types for all accounts in a topic."""
+    from models import AccountType
+
+    stmt = (
+        select(AccountType.screen_name, AccountType.author_type)
+        .join(Tweet, func.lower(Tweet.screen_name) == AccountType.screen_name)
+        .where(Tweet.topic_slug == topic)
+        .distinct()
+    )
+    result = await db.execute(stmt)
+    return {r[0]: r[1] for r in result.all()}

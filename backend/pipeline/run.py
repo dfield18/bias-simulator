@@ -508,23 +508,36 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         log_fetch_run(conn, topic_slug, tweets_fetched, tweets_new,
                       len(classifications), total_cost, "success")
 
-        # Classify narrative frames and emotions
-        set_progress(topic_slug, 6, 7, "Identifying arguments and emotions", "Analyzing the main talking points and emotional tone of each tweet...")
-        print("\n[6/7] Classifying narrative frames...")
-        try:
-            from pipeline.framing import classify_frames
-            classify_frames(conn, topic_slug)
-        except Exception as e:
-            print(f"  Frame classification failed: {e}")
+        # Classify narrative frames + generate summaries IN PARALLEL
+        set_progress(topic_slug, 6, 7, "Analyzing narratives and writing summaries",
+                     "Classifying arguments, emotions, and generating AI analysis simultaneously...")
+        print("\n[6-7/7] Framing + summaries (parallel)...")
 
-        # Generate AI summaries
-        set_progress(topic_slug, 7, 7, "Writing AI analysis", "Generating narrative summaries and identifying what each side is saying...")
-        print("\n[7/7] Generating AI summaries...")
-        try:
-            from pipeline.summarize import generate_summaries
-            generate_summaries(conn, topic_slug)
-        except Exception as e:
-            print(f"  Summary generation failed: {e}")
+        import concurrent.futures as cf
+
+        # Framing and summaries use separate DB connections since they run in threads
+        def run_framing():
+            try:
+                frame_conn = get_sync_connection()
+                from pipeline.framing import classify_frames
+                classify_frames(frame_conn, topic_slug)
+                frame_conn.close()
+            except Exception as e:
+                print(f"  Frame classification failed: {e}")
+
+        def run_summaries():
+            try:
+                sum_conn = get_sync_connection()
+                from pipeline.summarize import generate_summaries
+                generate_summaries(sum_conn, topic_slug)
+                sum_conn.close()
+            except Exception as e:
+                print(f"  Summary generation failed: {e}")
+
+        with cf.ThreadPoolExecutor(max_workers=2) as executor:
+            executor.submit(run_framing)
+            executor.submit(run_summaries)
+            executor.shutdown(wait=True)
 
         # Summary — invalidate backend cache for this topic
         from cache import invalidate as invalidate_cache

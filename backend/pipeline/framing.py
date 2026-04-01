@@ -192,13 +192,20 @@ def classify_frames(conn, topic_slug: str):
 
     print(f"  Framing: Classifying {len(tweets)} tweets...")
 
-    batch_size = 15
+    import concurrent.futures
+    import threading
+
+    batch_size = 30
+    max_parallel = 10
     total_classified = 0
+    db_lock = threading.Lock()
 
-    for i in range(0, len(tweets), batch_size):
-        batch = tweets[i:i + batch_size]
+    batches = [tweets[i:i + batch_size] for i in range(0, len(tweets), batch_size)]
+
+    def process_batch(batch):
+        """Classify framing for a batch and return (updates, count)."""
         prompt = _build_framing_prompt(batch, topic_name, frame_labels, emotion_labels)
-
+        updates = []
         try:
             response_text = _call_gemini(prompt)
             text = response_text.strip()
@@ -215,29 +222,35 @@ def classify_frames(conn, topic_slug: str):
                 result = results_by_id.get(tid, {})
 
                 frames = result.get("narrative_frames", [])
-                # Validate frames against topic's taxonomy
                 frames = [f for f in frames if f in frame_labels][:2]
                 emotion = result.get("emotion_mode", "")
                 if emotion not in emotion_labels:
-                    # Fall back to first emotion key
                     emotion = next(iter(emotion_labels))
                 conf = result.get("confidence", 0.5)
 
                 if frames:
-                    cur.execute(
-                        """
-                        UPDATE classifications
-                        SET narrative_frames = %s, emotion_mode = %s, frame_confidence = %s
-                        WHERE id_str = %s
-                        """,
-                        (frames, emotion, conf, tid),
-                    )
-                    total_classified += 1
-
+                    updates.append((frames, emotion, conf, tid))
         except Exception as e:
             print(f"  Framing batch error: {e}")
 
-        time.sleep(0.5)
+        return updates
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_parallel) as executor:
+        futures = [executor.submit(process_batch, batch) for batch in batches]
+        for future in concurrent.futures.as_completed(futures):
+            updates = future.result()
+            if updates:
+                with db_lock:
+                    for frames, emotion, conf, tid in updates:
+                        cur.execute(
+                            """
+                            UPDATE classifications
+                            SET narrative_frames = %s, emotion_mode = %s, frame_confidence = %s
+                            WHERE id_str = %s
+                            """,
+                            (frames, emotion, conf, tid),
+                        )
+                        total_classified += 1
 
     conn.commit()
     print(f"  Framing: Classified {total_classified} tweets")

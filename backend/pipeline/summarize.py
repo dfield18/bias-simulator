@@ -114,34 +114,48 @@ def generate_summaries(conn, topic_slug: str):
             for r in cur.fetchall()
         ]
 
+    import concurrent.futures
+
     sides = [
         ("overall", None, "Overall"),
         ("anti", anti_bent, anti_label),
         ("pro", pro_bent, pro_label),
     ]
 
+    # Fetch all tweet data first (cursor not thread-safe)
+    side_tweets = {}
     for side_key, bent_filter, label in sides:
         tweets = fetch_side_tweets(bent_filter)
-        if not tweets:
-            print(f"  Summary ({label}): No tweets found, skipping")
-            continue
+        if tweets:
+            side_tweets[side_key] = (tweets, label)
 
+    # Generate all 3 summaries in parallel
+    def generate_one(side_key, tweets, label):
         print(f"  Summary ({label}): Generating from {len(tweets)} tweets...")
         prompt = _build_summary_prompt(tweets, label, topic_name)
-        summary = _call_gemini(prompt)
+        return side_key, _call_gemini(prompt), len(tweets)
 
-        # Upsert summary
-        cur.execute(
-            """
-            INSERT INTO topic_summaries (topic_slug, side, summary_text, tweet_count, generated_at)
-            VALUES (%s, %s, %s, %s, NOW())
-            ON CONFLICT (topic_slug, side) DO UPDATE SET
-                summary_text = EXCLUDED.summary_text,
-                tweet_count = EXCLUDED.tweet_count,
-                generated_at = NOW()
-            """,
-            (topic_slug, side_key, summary.strip(), len(tweets)),
-        )
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        futures = [
+            executor.submit(generate_one, sk, tw, lb)
+            for sk, (tw, lb) in side_tweets.items()
+        ]
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                side_key, summary, count = future.result()
+                cur.execute(
+                    """
+                    INSERT INTO topic_summaries (topic_slug, side, summary_text, tweet_count, generated_at)
+                    VALUES (%s, %s, %s, %s, NOW())
+                    ON CONFLICT (topic_slug, side) DO UPDATE SET
+                        summary_text = EXCLUDED.summary_text,
+                        tweet_count = EXCLUDED.tweet_count,
+                        generated_at = NOW()
+                    """,
+                    (topic_slug, side_key, summary.strip(), count),
+                )
+            except Exception as e:
+                print(f"  Summary error: {e}")
 
     conn.commit()
     print("  Summaries generated successfully")

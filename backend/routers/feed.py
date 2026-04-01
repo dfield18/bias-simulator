@@ -693,10 +693,20 @@ async def get_breakdown(
     rows = result.all()
     on_topic = len(rows)
 
-    # Build breakdown
+    # Load valid bent values for this topic
+    topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
+    topic_obj = topic_result.scalar_one_or_none()
+    valid_bents = {"neutral", "unclear"}
+    if topic_obj:
+        valid_bents.add(topic_obj.anti_label.lower().replace(" ", "-"))
+        valid_bents.add(topic_obj.pro_label.lower().replace(" ", "-"))
+
+    # Build breakdown — bucket invalid values into "unclear"
     categories: dict[str, list] = defaultdict(list)
     for tweet, classification in rows:
         bent = (classification.effective_political_bent or "unclear").lower()
+        if bent not in valid_bents:
+            bent = "unclear"
         categories[bent].append((tweet, classification))
 
     breakdown = {}

@@ -359,14 +359,6 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {lastRun && lastRun.ran_at && (
-                <span className="text-[10px] text-gray-500 hidden sm:block">
-                  {lastRun.total_tweets_in_dataset} tweets
-                  {lastRun.date_range.earliest && lastRun.date_range.latest && (
-                    <> &middot; {new Date(lastRun.date_range.earliest).toLocaleDateString()} &ndash; {new Date(lastRun.date_range.latest).toLocaleDateString()}</>
-                  )}
-                </span>
-              )}
               <button
                 onClick={async () => {
                   if (isRunning === "done") {

@@ -101,8 +101,8 @@ def score_intensity(
 
     import concurrent.futures
 
-    batch_size = 40  # Larger batches
-    max_parallel = 15
+    batch_size = 60  # Larger batches
+    max_parallel = 20
     all_results = []
     total_cost = 0.0
 

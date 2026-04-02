@@ -366,8 +366,8 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
             queue_lock = threading.Lock()
             classification_done = threading.Event()
 
-            batch_size = 40
-            max_parallel = 15
+            batch_size = 60
+            max_parallel = 20
             batches = [tweets_to_classify[i:i + batch_size] for i in range(0, len(tweets_to_classify), batch_size)]
 
             def classify_batch(batch):
@@ -379,8 +379,9 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                 batch_results = []
                 prompt = _build_classification_prompt(batch, class_prompt)
 
+                # First pass: Flash Lite (faster, cheaper)
                 try:
-                    response_text, cost = _call_gemini(prompt, model="gemini-2.0-flash")
+                    response_text, cost = _call_gemini(prompt, model="gemini-2.0-flash-lite")
                     batch_cost += cost
                     parsed = _parse_classifications(response_text)
                 except Exception:
@@ -400,6 +401,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                         conf = 0.0
                     bent = classification.get("political_bent", "")
 
+                    # Escalate low-confidence to full Flash model
                     if conf < 0.45 or bent == "error":
                         try:
                             escalated, esc_cost = _escalate_classification(tweet, class_prompt)
@@ -410,7 +412,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                             pass
 
                     classification["id_str"] = tid
-                    classification.setdefault("classification_method", "gemini-2.0-flash")
+                    classification.setdefault("classification_method", "gemini-2.0-flash-lite")
                     # Merge tweet text for intensity scoring
                     t = tweet_lookup.get(tid, {})
                     classification["full_text"] = t.get("full_text", "")
@@ -587,6 +589,10 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
         # Log run
         log_fetch_run(conn, topic_slug, tweets_fetched, tweets_new,
                       len(classifications), total_cost, "success")
+
+        # Early cache invalidation — feed is viewable now even before framing/summaries finish
+        from cache import invalidate as invalidate_cache
+        invalidate_cache(topic_slug)
 
         # Classify narrative frames + generate summaries IN PARALLEL
         set_progress(topic_slug, 6, 7, "Analyzing narratives and writing summaries",

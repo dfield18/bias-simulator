@@ -10,24 +10,20 @@ SOCIALDATA_API_KEY = os.getenv("SOCIALDATA_API_KEY", "")
 SOCIALDATA_BASE_URL = "https://api.socialdata.tools"
 
 
-def fetch_tweets(topic_slug: str, search_query: str, hours: int = 24, max_pages: int = 25, lang: str = "en") -> list[dict]:
-    """
-    Fetch tweets from SocialData API for a given topic.
-    Returns list of raw tweet dicts sorted by views descending.
-    """
+def _fetch_one_query(query: str, hours: int, max_pages: int, lang: str) -> list[dict]:
+    """Fetch tweets for a single search query."""
     since_time = int((datetime.now(timezone.utc) - timedelta(hours=hours)).timestamp())
-
     headers = {
         "Authorization": f"Bearer {SOCIALDATA_API_KEY}",
         "Accept": "application/json",
     }
 
-    all_tweets = []
+    tweets = []
     next_cursor = None
 
     for page in range(max_pages):
         params = {
-            "query": search_query,
+            "query": query,
             "type": "Top",
             "lang": lang,
             "since_time": since_time,
@@ -44,24 +40,63 @@ def fetch_tweets(topic_slug: str, search_query: str, hours: int = 24, max_pages:
         response.raise_for_status()
         data = response.json()
 
-        tweets = data.get("tweets", [])
-        if not tweets:
+        batch = data.get("tweets", [])
+        if not batch:
             break
 
-        for tweet in tweets:
-            all_tweets.append(tweet)
-
+        tweets.extend(batch)
         next_cursor = data.get("next_cursor")
         if not next_cursor:
             break
 
-        # Rate limiting
-        time.sleep(0.2)
+        time.sleep(0.15)
 
-    # Sort by views descending
+    return tweets
+
+
+def fetch_tweets(topic_slug: str, search_query: str, hours: int = 24, max_pages: int = 25, lang: str = "en") -> list[dict]:
+    """
+    Fetch tweets from SocialData API for a given topic.
+    Splits OR-separated queries into parallel fetches for speed.
+    Returns list of raw tweet dicts sorted by views descending.
+    """
+    import concurrent.futures
+
+    # Split query into sub-queries on " OR " for parallel fetching
+    parts = [p.strip() for p in search_query.split(" OR ") if p.strip()]
+
+    if len(parts) >= 4:
+        # Group into 2-3 sub-queries for parallel fetch
+        chunk_size = max(len(parts) // 3, 2)
+        sub_queries = []
+        for i in range(0, len(parts), chunk_size):
+            sub_queries.append(" OR ".join(parts[i:i + chunk_size]))
+        pages_per = max(max_pages // len(sub_queries), 5)
+
+        print(f"  Parallel fetch: {len(sub_queries)} sub-queries, {pages_per} pages each")
+        all_tweets = []
+        seen_ids = set()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(sub_queries)) as executor:
+            futures = [
+                executor.submit(_fetch_one_query, sq, hours, pages_per, lang)
+                for sq in sub_queries
+            ]
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    for t in future.result():
+                        tid = str(t.get("id_str", t.get("id", "")))
+                        if tid and tid not in seen_ids:
+                            seen_ids.add(tid)
+                            all_tweets.append(t)
+                except Exception as e:
+                    print(f"  Sub-query fetch error: {e}")
+    else:
+        # Short query — fetch sequentially
+        all_tweets = _fetch_one_query(search_query, hours, max_pages, lang)
+
     all_tweets.sort(key=lambda t: (t.get("views", 0) or 0), reverse=True)
-
-    print(f"  Fetched {len(all_tweets)} tweets across {page + 1} pages")
+    print(f"  Fetched {len(all_tweets)} tweets (deduplicated)")
     return all_tweets
 
 

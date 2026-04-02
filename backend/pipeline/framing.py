@@ -168,13 +168,14 @@ def classify_frames(conn, topic_slug: str):
     # Load dynamic frame/emotion labels for this topic
     frame_labels, emotion_labels = get_topic_labels(conn, topic_slug)
 
-    # Get tweets that need framing (on-topic, no frames yet)
+    # Get tweets that need framing (on-topic, pro or anti only — skip neutral/unclear)
     cur.execute(
         """
         SELECT t.id_str, t.full_text, t.screen_name
         FROM tweets t
         JOIN classifications c ON t.id_str = c.id_str
         WHERE t.topic_slug = %s AND c.about_subject = TRUE
+        AND c.effective_political_bent NOT IN ('neutral', 'unclear')
         AND (c.narrative_frames IS NULL OR array_length(c.narrative_frames, 1) IS NULL)
         ORDER BY t.views DESC
         LIMIT 500
@@ -195,8 +196,8 @@ def classify_frames(conn, topic_slug: str):
     import concurrent.futures
     import threading
 
-    batch_size = 30
-    max_parallel = 10
+    batch_size = 50
+    max_parallel = 15
     total_classified = 0
     db_lock = threading.Lock()
 

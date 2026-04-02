@@ -10,6 +10,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 # Cost per 1M tokens (approximate)
 COSTS = {
     "gemini-2.0-flash": {"input": 0.10, "output": 0.40},
+    "gemini-2.0-flash-lite": {"input": 0.075, "output": 0.30},
 }
 
 
@@ -101,8 +102,8 @@ def classify_tweets(tweets: list[dict], topic_classification_prompt: str) -> tup
     """
     import concurrent.futures
 
-    batch_size = 40  # Larger batches — Gemini handles 40 tweets well
-    max_parallel = 15  # Process 15 batches simultaneously
+    batch_size = 60  # Larger batches — Gemini handles 60 tweets well
+    max_parallel = 20  # Process 20 batches simultaneously
     all_classifications = []
     total_cost = 0.0
 

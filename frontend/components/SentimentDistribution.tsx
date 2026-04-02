@@ -214,7 +214,7 @@ export default function SentimentDistribution({
             Tweet Volume by Sentiment
           </div>
           <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
-            Slide the scale to see what Twitter feeds look like depending on political bias
+            Height = number of tweets at each intensity level. Slide the scale to simulate political bias.
           </p>
         </div>
         <span className="text-[10px] sm:text-xs text-gray-600 shrink-0 mt-0.5">

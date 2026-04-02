@@ -153,6 +153,7 @@ class FetchRun(Base):
     total_cost_usd = Column(Float)
     status = Column(Text)
     error_message = Column(Text)
+    step_timings = Column(JSONB)  # e.g. {"fetch": 3.2, "classify": 12.5, "intensity": 0, "framing": 8.1, "summaries": 5.0, "total": 28.8}
 
 
 class TopicSummary(Base):

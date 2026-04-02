@@ -214,23 +214,27 @@ def upsert_classifications(conn, classifications: list[dict], intensity_results:
 
 def log_fetch_run(conn, topic_slug: str, tweets_fetched: int, tweets_new: int,
                   tweets_classified: int, total_cost: float, status: str,
-                  error_message: str | None = None):
+                  error_message: str | None = None, step_timings: dict | None = None):
     """Log a pipeline run to fetch_runs table."""
     with conn.cursor() as cur:
         cur.execute(
             """
             INSERT INTO fetch_runs (topic_slug, tweets_fetched, tweets_new,
-                tweets_classified, total_cost_usd, status, error_message)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                tweets_classified, total_cost_usd, status, error_message, step_timings)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (topic_slug, tweets_fetched, tweets_new, tweets_classified,
-             total_cost, status, error_message),
+             total_cost, status, error_message, Json(step_timings) if step_timings else None),
         )
     conn.commit()
 
 
 def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
     """Run the full pipeline for a topic."""
+    import time as _time
+    pipeline_start = _time.time()
+    timings: dict[str, float] = {}
+
     print(f"\n{'='*60}")
     print(f"Pipeline: {topic_slug} | Hours: {hours}")
     print(f"{'='*60}")
@@ -256,11 +260,12 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         # 2. Fetch tweets
         set_progress(topic_slug, 2, 7, "Collecting tweets from Twitter", "Searching for relevant posts across Twitter...")
         print("\n[2/7] Fetching tweets...")
-        # Use topic's search_query if set, otherwise derive from name
+        t_fetch_start = _time.time()
         search_query = topic.get("search_query") or topic["name"]
         lang = topic.get("target_language") or "en"
         raw_tweets = fetch_tweets(topic_slug, search_query, hours=hours, max_pages=max_pages, lang=lang)
         tweets_fetched = len(raw_tweets)
+        timings["fetch"] = round(_time.time() - t_fetch_start, 1)
 
         # 3. Parse and upsert tweets
         set_progress(topic_slug, 3, 7, "Processing collected tweets", f"Found {tweets_fetched} tweets, saving to database...")
@@ -344,6 +349,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                      f"This is the longest step." if tweets_to_classify else "All tweets already classified.")
 
         # Determine pro/anti bent values from labels
+        t_classify_start = _time.time()
         pro_bent = topic["pro_label"].lower().replace(" ", "-")
         anti_bent = topic["anti_label"].lower().replace(" ", "-")
         tweet_lookup = {t["id_str"]: t for t in parsed_tweets}
@@ -496,6 +502,8 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
             cost_class = 0.0
             cost_intensity = 0.0
 
+        timings["classify_and_intensity"] = round(_time.time() - t_classify_start, 1)
+
         # Merge account-rule classifications into the main list
         if rule_classifications:
             classifications.extend(rule_classifications)
@@ -586,9 +594,7 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
 
         total_cost = cost_class + cost_intensity
 
-        # Log run
-        log_fetch_run(conn, topic_slug, tweets_fetched, tweets_new,
-                      len(classifications), total_cost, "success")
+        # Log run — moved after framing/summaries so timings are complete
 
         # Early cache invalidation — feed is viewable now even before framing/summaries finish
         from cache import invalidate as invalidate_cache
@@ -598,11 +604,15 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
         set_progress(topic_slug, 6, 7, "Analyzing narratives and writing summaries",
                      "Classifying arguments, emotions, and generating AI analysis simultaneously...")
         print("\n[6-7/7] Framing + summaries (parallel)...")
+        t_framing_start = _time.time()
 
         import concurrent.futures as cf
 
-        # Framing and summaries use separate DB connections since they run in threads
+        framing_time = [0.0]
+        summary_time = [0.0]
+
         def run_framing():
+            t0 = _time.time()
             try:
                 frame_conn = get_sync_connection()
                 from pipeline.framing import classify_frames
@@ -610,8 +620,10 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
                 frame_conn.close()
             except Exception as e:
                 print(f"  Frame classification failed: {e}")
+            framing_time[0] = round(_time.time() - t0, 1)
 
         def run_summaries():
+            t0 = _time.time()
             try:
                 sum_conn = get_sync_connection()
                 from pipeline.summarize import generate_summaries
@@ -619,20 +631,31 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
                 sum_conn.close()
             except Exception as e:
                 print(f"  Summary generation failed: {e}")
+            summary_time[0] = round(_time.time() - t0, 1)
 
         with cf.ThreadPoolExecutor(max_workers=2) as executor:
             executor.submit(run_framing)
             executor.submit(run_summaries)
             executor.shutdown(wait=True)
 
+        timings["framing"] = framing_time[0]
+        timings["summaries"] = summary_time[0]
+        timings["framing_and_summaries"] = round(_time.time() - t_framing_start, 1)
+        timings["total"] = round(_time.time() - pipeline_start, 1)
+
         # Summary — invalidate backend cache for this topic
         from cache import invalidate as invalidate_cache
         invalidate_cache(topic_slug)
+        # Log run with complete timings
+        log_fetch_run(conn, topic_slug, tweets_fetched, tweets_new,
+                      len(classifications), total_cost, "success", step_timings=timings)
+
         set_progress(topic_slug, 7, 7, "Your dashboard is ready", f"Analyzed {len(classifications)} tweets, {tweets_new} new")
         _pipeline_progress[topic_slug]["running"] = False
         print(f"\n{'='*60}")
         print(f"Fetched: {tweets_fetched} tweets | New: {tweets_new} | "
-              f"Classified: {len(classifications)} | Cost: ${total_cost:.4f}")
+              f"Classified: {len(classifications)} | Cost: ${total_cost:.4f} | Time: {timings.get('total', 0)}s")
+        print(f"Timings: {timings}")
         print(f"{'='*60}\n")
 
     except Exception as e:

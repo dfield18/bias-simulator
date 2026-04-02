@@ -1032,6 +1032,30 @@ export async function setAccountType(
   return res.json();
 }
 
+export interface PipelineRunDetail {
+  id: number;
+  topic_slug: string;
+  ran_at: string | null;
+  tweets_fetched: number;
+  tweets_new: number;
+  tweets_classified: number;
+  total_cost_usd: number | null;
+  status: string;
+  error_message: string | null;
+  step_timings: Record<string, number> | null;
+}
+
+export async function fetchPipelineRuns(
+  topic?: string,
+  limit = 20,
+): Promise<PipelineRunDetail[]> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (topic) params.set("topic", topic);
+  const res = await apiFetch(`${API_URL}/api/admin/pipeline-runs?${params}`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export interface TopicDetail {
   slug: string;
   name: string;

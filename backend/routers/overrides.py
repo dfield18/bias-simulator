@@ -320,3 +320,34 @@ async def get_account_types_for_topic(
     )
     result = await db.execute(stmt)
     return {r[0]: r[1] for r in result.all()}
+
+
+@router.get("/admin/pipeline-runs")
+async def get_pipeline_runs(
+    topic: str | None = Query(default=None),
+    limit: int = Query(default=20, le=100),
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(admin_required),
+):
+    """Get recent pipeline runs with costs and step timings."""
+    from models import FetchRun
+    stmt = select(FetchRun).order_by(FetchRun.ran_at.desc()).limit(limit)
+    if topic:
+        stmt = stmt.where(FetchRun.topic_slug == topic)
+    result = await db.execute(stmt)
+    runs = result.scalars().all()
+    return [
+        {
+            "id": r.id,
+            "topic_slug": r.topic_slug,
+            "ran_at": r.ran_at.isoformat() if r.ran_at else None,
+            "tweets_fetched": r.tweets_fetched,
+            "tweets_new": r.tweets_new,
+            "tweets_classified": r.tweets_classified,
+            "total_cost_usd": r.total_cost_usd,
+            "status": r.status,
+            "error_message": r.error_message,
+            "step_timings": r.step_timings,
+        }
+        for r in runs
+    ]

@@ -15,6 +15,8 @@ import {
   fetchAccountTypes,
   setAccountType,
   fetchMe,
+  fetchPipelineRuns,
+  PipelineRunDetail,
 } from "@/lib/api";
 import { downloadCsv } from "@/lib/csv";
 
@@ -117,6 +119,8 @@ export default function AdminPage() {
   const [newRuleAccount, setNewRuleAccount] = useState("");
   const [newRuleBent, setNewRuleBent] = useState("");
   const [showRules, setShowRules] = useState(false);
+  const [pipelineRuns, setPipelineRuns] = useState<PipelineRunDetail[]>([]);
+  const [showRuns, setShowRuns] = useState(false);
 
   // Navigation between tweets in modal
   const [modalIndex, setModalIndex] = useState(-1);
@@ -160,12 +164,14 @@ export default function AdminPage() {
       fetchAdminStats(selectedTopic),
       fetchAccountRules(selectedTopic),
       fetchAccountTypes(selectedTopic),
+      fetchPipelineRuns(selectedTopic),
     ])
-      .then(([tweets, s, rules, types]) => {
+      .then(([tweets, s, rules, types, runs]) => {
         setRows(tweets);
         setStats(s);
         setAccountRules(rules);
         setAccountTypes(types);
+        setPipelineRuns(runs);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -447,6 +453,73 @@ export default function AdminPage() {
                 Add Rule
               </button>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Pipeline Runs */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
+        <button
+          onClick={() => setShowRuns(!showRuns)}
+          className="flex items-center justify-between w-full text-left"
+        >
+          <div>
+            <h3 className="text-sm font-semibold text-gray-300">Pipeline Run History</h3>
+            <p className="text-[10px] text-gray-500">
+              {pipelineRuns.length} recent runs — cost and timing breakdown
+            </p>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className={`text-gray-500 transition-transform ${showRuns ? "rotate-180" : ""}`}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        {showRuns && pipelineRuns.length > 0 && (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-gray-800 text-gray-500 text-left">
+                  <th className="px-2 py-1.5">Date</th>
+                  <th className="px-2 py-1.5 text-right">Fetched</th>
+                  <th className="px-2 py-1.5 text-right">New</th>
+                  <th className="px-2 py-1.5 text-right">Classified</th>
+                  <th className="px-2 py-1.5 text-right">Cost</th>
+                  <th className="px-2 py-1.5 text-right">Fetch</th>
+                  <th className="px-2 py-1.5 text-right">Classify</th>
+                  <th className="px-2 py-1.5 text-right">Framing</th>
+                  <th className="px-2 py-1.5 text-right">Summaries</th>
+                  <th className="px-2 py-1.5 text-right">Total</th>
+                  <th className="px-2 py-1.5">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pipelineRuns.map((run) => {
+                  const t = run.step_timings || {};
+                  return (
+                    <tr key={run.id} className="border-b border-gray-800/30 hover:bg-gray-800/30">
+                      <td className="px-2 py-1.5 text-gray-400 whitespace-nowrap">
+                        {run.ran_at ? new Date(run.ran_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—"}
+                      </td>
+                      <td className="px-2 py-1.5 text-right text-gray-300">{run.tweets_fetched || 0}</td>
+                      <td className="px-2 py-1.5 text-right text-gray-300">{run.tweets_new || 0}</td>
+                      <td className="px-2 py-1.5 text-right text-gray-300">{run.tweets_classified || 0}</td>
+                      <td className="px-2 py-1.5 text-right text-gray-300 font-mono">
+                        ${(run.total_cost_usd || 0).toFixed(4)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right text-gray-500">{t.fetch ? `${t.fetch}s` : "—"}</td>
+                      <td className="px-2 py-1.5 text-right text-gray-500">{t.classify_and_intensity ? `${t.classify_and_intensity}s` : "—"}</td>
+                      <td className="px-2 py-1.5 text-right text-gray-500">{t.framing ? `${t.framing}s` : "—"}</td>
+                      <td className="px-2 py-1.5 text-right text-gray-500">{t.summaries ? `${t.summaries}s` : "—"}</td>
+                      <td className="px-2 py-1.5 text-right text-gray-300 font-mono">{t.total ? `${t.total}s` : "—"}</td>
+                      <td className={`px-2 py-1.5 ${run.status === "success" ? "text-green-400" : "text-red-400"}`}>
+                        {run.status}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

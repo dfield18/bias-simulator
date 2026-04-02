@@ -111,9 +111,31 @@ export default function TweetCard({
       )}
 
       {/* Tweet text */}
-      <p className="text-gray-200 mb-3 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">
-        {decodeHtmlEntities((tweet.full_text || "").replace(/https?:\/\/t\.co\/\S+/g, "").trim())}
-      </p>
+      {(() => {
+        const cleanText = decodeHtmlEntities((tweet.full_text || "").replace(/https?:\/\/t\.co\/\S+/g, "").trim());
+        const isLong = cleanText.length > 280;
+        if (!isLong) {
+          return (
+            <p className="text-gray-200 mb-3 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">
+              {cleanText}
+            </p>
+          );
+        }
+        return (
+          <details className="mb-3 group">
+            <summary className="list-none cursor-pointer">
+              <p className="text-gray-200 whitespace-pre-wrap leading-relaxed text-sm sm:text-base group-open:hidden">
+                {cleanText.slice(0, 280).trimEnd()}&hellip;
+              </p>
+              <p className="text-gray-200 whitespace-pre-wrap leading-relaxed text-sm sm:text-base hidden group-open:block">
+                {cleanText}
+              </p>
+              <span className="text-xs text-blue-400 hover:text-blue-300 group-open:hidden">Show more</span>
+              <span className="text-xs text-blue-400 hover:text-blue-300 hidden group-open:inline">Show less</span>
+            </summary>
+          </details>
+        );
+      })()}
 
       {/* Media */}
       {tweet.media && tweet.media.length > 0 && (

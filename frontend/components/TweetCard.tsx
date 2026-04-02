@@ -112,7 +112,7 @@ export default function TweetCard({
 
       {/* Tweet text */}
       <p className="text-gray-200 mb-3 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">
-        {decodeHtmlEntities(tweet.full_text || "")}
+        {decodeHtmlEntities((tweet.full_text || "").replace(/https?:\/\/t\.co\/\S+/g, "").trim())}
       </p>
 
       {/* Media */}

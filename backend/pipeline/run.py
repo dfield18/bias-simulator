@@ -401,8 +401,8 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                         conf = 0.0
                     bent = classification.get("political_bent", "")
 
-                    # Escalate low-confidence to full Flash model
-                    if conf < 0.45 or bent == "error":
+                    # Escalate only errors to full Flash model (single call, not 3-model ensemble)
+                    if bent == "error" or conf < 0.2:
                         try:
                             escalated, esc_cost = _escalate_classification(tweet, class_prompt)
                             batch_cost += esc_cost

@@ -146,8 +146,8 @@ def classify_tweets(tweets: list[dict], topic_classification_prompt: str) -> tup
                 conf = 0.0
             bent = classification.get("political_bent", "")
 
-            # Escalate if low confidence or unclear/error
-            if conf < 0.45 or bent == "error":
+            # Escalate only errors to Flash (single call, not 3-model ensemble)
+            if bent == "error" or conf < 0.2:
                 try:
                     escalated, esc_cost = _escalate_classification(tweet, topic_classification_prompt)
                     batch_cost += esc_cost
@@ -192,65 +192,24 @@ def classify_tweets(tweets: list[dict], topic_classification_prompt: str) -> tup
 
 def _escalate_classification(tweet: dict, topic_prompt: str) -> tuple[dict | None, float]:
     """
-    Escalate to ensemble: Gemini Flash-Lite + Claude Haiku + GPT-5-Mini.
-    Uses majority vote for final classification.
+    Escalate to Gemini Flash (full model) for a second opinion.
+    Much faster than 3-model ensemble — single API call instead of 3.
     """
     prompt = _build_classification_prompt([tweet], topic_prompt)
-    votes = []
     total_cost = 0.0
 
-    # Vote 1: Gemini Flash (upgraded from Flash-Lite)
     try:
         resp, cost = _call_gemini(prompt, model="gemini-2.0-flash")
         total_cost += cost
         parsed = _parse_classifications(resp)
         if parsed:
-            votes.append(("gemini-flash", parsed[0]))
+            result = parsed[0]
+            result["classification_method"] = "escalated-flash"
+            return result, total_cost
     except Exception:
         pass
 
-    # Vote 2: Claude Haiku
-    try:
-        haiku_result, cost = _call_claude_haiku(tweet, topic_prompt)
-        total_cost += cost
-        if haiku_result:
-            votes.append(("claude-haiku", haiku_result))
-    except Exception:
-        pass
-
-    # Vote 3: GPT-5-Mini
-    try:
-        gpt_result, cost = _call_gpt_mini(tweet, topic_prompt)
-        total_cost += cost
-        if gpt_result:
-            votes.append(("gpt-mini", gpt_result))
-    except Exception:
-        pass
-
-    if not votes:
-        return None, total_cost
-
-    # Majority vote on political_bent
-    bent_votes = [v[1].get("political_bent", "unclear") for v in votes]
-    from collections import Counter
-    vote_counts = Counter(bent_votes)
-    winner_bent = vote_counts.most_common(1)[0][0]
-
-    # Use the vote that matches the winner for details
-    winner_detail = None
-    for name, detail in votes:
-        if detail.get("political_bent") == winner_bent:
-            winner_detail = detail
-            break
-
-    if not winner_detail:
-        winner_detail = votes[0][1]
-
-    winner_detail["classification_method"] = "ensemble"
-    winner_detail["agreement"] = f"{vote_counts[winner_bent]}/{len(votes)}"
-    winner_detail["votes"] = json.dumps({name: v.get("political_bent", "?") for name, v in votes})
-
-    return winner_detail, total_cost
+    return None, total_cost
 
 
 def _call_claude_haiku(tweet: dict, topic_prompt: str) -> tuple[dict | None, float]:

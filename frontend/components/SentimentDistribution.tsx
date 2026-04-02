@@ -109,12 +109,12 @@ export default function SentimentDistribution({
   const width = 600;
   const height = isMobile ? 200 : 220;
   const padX = 16;
-  const padTop = isMobile ? 30 : 35;
-  const padBottom = isMobile ? 18 : 14;
+  const padTop = isMobile ? 20 : 20;
+  const padBottom = isMobile ? 14 : 10;
   const chartH = height - padTop - padBottom;
   const chartW = width - padX * 2;
 
-  const strokeW = isMobile ? 2.5 : 2;
+  const strokeW = isMobile ? 2.5 : 2.5;
   const biasLineW = isMobile ? 2.5 : 1.5;
   const dotR = isMobile ? 7 : 5;
   const youFontSize = isMobile ? 11 : 9;
@@ -185,7 +185,7 @@ export default function SentimentDistribution({
   // Build the smooth curve path
   const points = distribution.map((val, i) => ({
     x: padX + (i / 20) * chartW,
-    y: padTop + chartH - (val / maxVal) * chartH,
+    y: padTop + chartH - (val / maxVal) * chartH * 0.88,
   }));
 
   let pathD = `M ${points[0].x} ${points[0].y}`;

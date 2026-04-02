@@ -107,7 +107,7 @@ export default function SentimentDistribution({
 
   // Chart SVG dimensions — chart only, no labels
   const width = 600;
-  const height = isMobile ? 200 : 220;
+  const height = isMobile ? 170 : 160;
   const padX = 16;
   const padTop = isMobile ? 20 : 20;
   const padBottom = isMobile ? 14 : 10;

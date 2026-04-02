@@ -262,9 +262,23 @@ export default function NewTopicPage() {
                 <textarea
                   value={suggestion.description}
                   onChange={(e) => updateField("description", e.target.value)}
-                  rows={4}
+                  rows={3}
                   className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm resize-y"
                 />
+              </div>
+
+              {/* Quick create CTA */}
+              <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <p className="text-sm text-gray-400">
+                  Happy with the defaults? You can customize the details below, or create now.
+                </p>
+                <button
+                  onClick={handleCreate}
+                  disabled={creating}
+                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shrink-0 disabled:opacity-50"
+                >
+                  {creating ? "Creating..." : "Create Topic"}
+                </button>
               </div>
 
               <div>

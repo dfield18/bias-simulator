@@ -355,8 +355,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
         tweet_lookup = {t["id_str"]: t for t in parsed_tweets}
 
         if tweets_to_classify:
-            # PIPELINED APPROACH: classify → intensity → frames run as assembly line
-            # Classification batches feed into intensity scoring as they complete
+            # COMBINED APPROACH: classification + intensity in one prompt
             import concurrent.futures
             import threading
 
@@ -364,28 +363,22 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
             intensity_results = []
             cost_class = 0.0
             cost_intensity = 0.0
-            classified_lock = threading.Lock()
-            intensity_lock = threading.Lock()
+            results_lock = threading.Lock()
 
-            # Queue for classified batches waiting for intensity scoring
-            classified_queue = []
-            queue_lock = threading.Lock()
-            classification_done = threading.Event()
-
-            batch_size = 60
-            max_parallel = 20
+            batch_size = 40
+            max_parallel = 12
             batches = [tweets_to_classify[i:i + batch_size] for i in range(0, len(tweets_to_classify), batch_size)]
 
             def classify_batch(batch):
-                """Classify a batch and add results to the queue for intensity scoring."""
+                """Classify + score intensity in a single API call."""
                 from pipeline.classify import _build_classification_prompt, _call_gemini, _parse_classifications, _escalate_classification
                 nonlocal cost_class
 
                 batch_cost = 0.0
                 batch_results = []
+                batch_intensity = []
                 prompt = _build_classification_prompt(batch, class_prompt)
 
-                # First pass: Flash Lite (faster, cheaper)
                 try:
                     response_text, cost = _call_gemini(prompt, model="gemini-2.0-flash-lite")
                     batch_cost += cost
@@ -407,7 +400,6 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                         conf = 0.0
                     bent = classification.get("political_bent", "")
 
-                    # Escalate only errors to full Flash model (single call, not 3-model ensemble)
                     if bent == "error" or conf < 0.2:
                         try:
                             escalated, esc_cost = _escalate_classification(tweet, class_prompt)
@@ -419,83 +411,41 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
 
                     classification["id_str"] = tid
                     classification.setdefault("classification_method", "gemini-2.0-flash-lite")
-                    # Merge tweet text for intensity scoring
                     t = tweet_lookup.get(tid, {})
                     classification["full_text"] = t.get("full_text", "")
                     classification["screen_name"] = t.get("screen_name", "")
                     batch_results.append(classification)
 
-                with classified_lock:
-                    classifications.extend(batch_results)
-                    cost_class += batch_cost
+                    # Extract intensity from the combined response
+                    try:
+                        score = int(float(classification.get("intensity_score", 0)))
+                    except (TypeError, ValueError):
+                        score = 0
+                    if score != 0 and classification.get("about_subject"):
+                        batch_intensity.append({
+                            "id_str": tid,
+                            "intensity_score": max(-10, min(10, score)),
+                            "intensity_confidence": conf,
+                            "intensity_reasoning": classification.get("classification_basis", ""),
+                            "intensity_flag": "valid",
+                        })
 
-                # Add to intensity queue
-                with queue_lock:
-                    classified_queue.extend(batch_results)
+                with results_lock:
+                    classifications.extend(batch_results)
+                    intensity_results.extend(batch_intensity)
+                    cost_class += batch_cost
 
                 return batch_results
 
-            def intensity_worker():
-                """Continuously score intensity for newly classified batches."""
-                nonlocal cost_intensity
-                processed_ids = set()
-
-                while True:
-                    # Get unprocessed classified tweets
-                    with queue_lock:
-                        to_process = [c for c in classified_queue if c["id_str"] not in processed_ids
-                                      and c.get("political_bent") in (pro_bent, anti_bent)
-                                      and c.get("about_subject", False)]
-
-                    if to_process:
-                        for c in to_process:
-                            processed_ids.add(c["id_str"])
-
-                        try:
-                            results, cost = score_intensity(
-                                to_process, topic["intensity_prompt"],
-                                topic["pro_label"], topic["anti_label"],
-                                pro_bent, anti_bent,
-                            )
-                            with intensity_lock:
-                                intensity_results.extend(results)
-                                cost_intensity += cost
-                        except Exception as e:
-                            print(f"  Intensity scoring error: {e}")
-
-                    # Check if classification is done and no more to process
-                    if classification_done.is_set():
-                        with queue_lock:
-                            remaining = [c for c in classified_queue if c["id_str"] not in processed_ids
-                                         and c.get("political_bent") in (pro_bent, anti_bent)
-                                         and c.get("about_subject", False)]
-                        if not remaining:
-                            break
-
-                    import time
-                    time.sleep(2)  # Wait for more classified tweets
-
-            # Start intensity worker in background
-            intensity_thread = threading.Thread(target=intensity_worker, daemon=True)
-            intensity_thread.start()
-
-            # Run classification batches in parallel
             set_progress(topic_slug, 4, 7, "Analyzing tweets with AI",
-                         f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by AI, "
-                         f"with uncertain ones verified by multiple models for accuracy. "
-                         f"Intensity scoring runs in parallel as tweets are classified.")
-            print("\n[4-5/7] Classifying + scoring intensity (pipelined)...")
+                         f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by AI for stance and intensity in a single pass.")
+            print("\n[4-5/7] Classifying + scoring intensity (combined)...")
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_parallel) as executor:
                 futures = [executor.submit(classify_batch, batch) for batch in batches]
                 concurrent.futures.wait(futures)
 
-            # Signal classification is done, wait for intensity to finish
-            classification_done.set()
-            intensity_thread.join(timeout=300)
-
-            print(f"  Classified {len(classifications)} tweets | Cost: ${cost_class:.4f}")
-            print(f"  Scored intensity for {len(intensity_results)} tweets | Cost: ${cost_intensity:.4f}")
+            print(f"  Classified {len(classifications)} tweets with {len(intensity_results)} intensity scores | Cost: ${cost_class:.4f}")
         else:
             classifications = []
             intensity_results = []

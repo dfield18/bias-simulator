@@ -514,11 +514,36 @@ export default function AnalyticsPage() {
           </div>
         )}
 
+        {/* Sticky bias slider — feed tab only */}
+        {activeTab === "feed" && topic && (
+          <div className="sticky top-[88px] z-10 bg-gray-950 pb-3 pt-1 -mx-4 px-4">
+            <div className="flex justify-between mb-1">
+              <span className="text-xs font-semibold text-blue-400">{topic.anti_label}</span>
+              <span className="text-xs text-gray-500">
+                {getBiasDescription(bias)} <span className="text-gray-600">({bias > 0 ? "+" : ""}{bias.toFixed(1)})</span>
+              </span>
+              <span className="text-xs font-semibold text-red-400">{topic.pro_label}</span>
+            </div>
+            <input
+              type="range"
+              min={-10}
+              max={10}
+              step={0.1}
+              value={bias}
+              onChange={(e) => setBias(parseFloat(e.target.value))}
+              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, rgb(59,130,246), rgb(107,114,128) 45%, rgb(107,114,128) 55%, rgb(239,68,68))`,
+              }}
+            />
+          </div>
+        )}
+
         {/* ============ TAB 1: Executive Pulse ============ */}
         {/* ============ TAB: Feed ============ */}
         {activeTab === "feed" && (
           <>
-            {/* Sentiment distribution / bias slider */}
+            {/* Sentiment distribution chart */}
             {allTweets.length > 0 && (
               <SentimentDistribution
                 items={allTweets}

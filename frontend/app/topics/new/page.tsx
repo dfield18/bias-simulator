@@ -168,7 +168,7 @@ export default function NewTopicPage() {
           What topic do you want to analyze?
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          Enter a political topic and we&apos;ll suggest how to define the two sides.
+          Enter a political topic and Echo will suggest how to define the two sides.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <input

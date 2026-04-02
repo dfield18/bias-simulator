@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cachedFetch, invalidateCache } from "@/lib/cache";
 
@@ -77,9 +77,11 @@ const tabs = [
 
 export default function AnalyticsPage() {
   const params = useParams();
+  const router = useRouter();
   const topicSlug = params.topic as string;
 
   const [topic, setTopic] = useState<TopicData | null>(null);
+  const [allTopics, setAllTopics] = useState<TopicData[]>([]);
   const [summaries, setSummaries] = useState<Record<string, SummaryData>>({});
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [narrative, setNarrative] = useState<NarrativeData | null>(null);
@@ -116,6 +118,7 @@ export default function AnalyticsPage() {
     // Safety timeout: if topic doesn't load in 10s, stop showing spinner
     const timeout = setTimeout(() => setFeedLoading(false), 10000);
     cachedFetch(`topics`, () => fetchTopics(), 60 * 1000).then((topics) => {
+      setAllTopics(topics);
       const t = topics.find((t) => t.slug === s);
       if (t) setTopic(t);
       else { clearTimeout(timeout); setFeedLoading(false); }
@@ -338,7 +341,21 @@ export default function AnalyticsPage() {
                 &larr;<span className="hidden sm:inline"> Topics</span>
               </Link>
               <div className="flex items-baseline gap-2 min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold truncate">{topic.name}</h1>
+                <select
+                  value={topicSlug}
+                  onChange={(e) => router.push(`/analytics/${e.target.value}`)}
+                  className="text-lg sm:text-xl font-bold bg-transparent border-none text-gray-100 appearance-none cursor-pointer hover:text-white focus:outline-none truncate pr-6"
+                  style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0 center" }}
+                >
+                  {allTopics.map((t) => (
+                    <option key={t.slug} value={t.slug} className="bg-gray-900 text-gray-100">
+                      {t.name}
+                    </option>
+                  ))}
+                  {allTopics.length === 0 && (
+                    <option value={topicSlug}>{topic.name}</option>
+                  )}
+                </select>
                 <span className="text-[10px] text-gray-600 hidden sm:block">
                   {tabs.find((t) => t.id === activeTab)?.subtitle || ""}
                 </span>

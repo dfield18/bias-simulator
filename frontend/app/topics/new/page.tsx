@@ -25,6 +25,7 @@ export default function NewTopicPage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPrompts, setShowPrompts] = useState(false);
+  const [editingSearch, setEditingSearch] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [targetCountry, setTargetCountry] = useState("United States");
   const [maxPages, setMaxPages] = useState(25);
@@ -265,10 +266,28 @@ export default function NewTopicPage() {
                 />
               </div>
 
-              <SearchPills
-                value={suggestion.search_query}
-                onChange={(val) => updateField("search_query", val)}
-              />
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs text-gray-500">Twitter search terms</label>
+                  <button
+                    onClick={() => setEditingSearch(!editingSearch)}
+                    className="text-[10px] text-blue-400 hover:text-blue-300"
+                  >
+                    {editingSearch ? "Done" : "Edit"}
+                  </button>
+                </div>
+                {editingSearch ? (
+                  <SearchPills
+                    value={suggestion.search_query}
+                    onChange={(val) => updateField("search_query", val)}
+                  />
+                ) : (
+                  <p className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-400 leading-relaxed">
+                    {suggestion.search_query}
+                  </p>
+                )}
+                <p className="text-[10px] text-gray-600 mt-1">Auto-generated from your topic. Click Edit to customize.</p>
+              </div>
 
               <details className="group">
                 <summary className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer list-none flex items-center gap-1.5 mb-3">

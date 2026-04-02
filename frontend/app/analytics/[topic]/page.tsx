@@ -558,12 +558,7 @@ export default function AnalyticsPage() {
             </p>
 
             {/* Feed header with sort toggle + account filter */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="text-sm text-gray-500">
-                Showing{" "}
-                <span className="text-gray-300 font-medium">{getBiasDescription(bias)}</span>{" "}
-                feed &middot; {feedItems.length} tweets
-              </div>
+            <div className="flex items-center justify-end flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <select
                   value={feedAccountFilter}

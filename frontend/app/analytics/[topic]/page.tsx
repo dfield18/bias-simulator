@@ -333,7 +333,7 @@ export default function AnalyticsPage() {
       <header className="border-b border-gray-800 bg-gray-950 sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <div className="flex items-center gap-3 sm:gap-5 min-w-0">
               <Link
                 href="/dashboard"
                 className="text-gray-500 hover:text-gray-300 text-sm shrink-0"
@@ -344,8 +344,8 @@ export default function AnalyticsPage() {
                 <select
                   value={topicSlug}
                   onChange={(e) => router.push(`/analytics/${e.target.value}`)}
-                  className="text-lg sm:text-xl font-bold bg-transparent border-none text-gray-100 appearance-none cursor-pointer hover:text-white focus:outline-none truncate pr-6"
-                  style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0 center" }}
+                  className="text-lg sm:text-xl font-bold bg-gray-800/50 border border-gray-700/50 text-gray-100 cursor-pointer hover:text-white hover:border-gray-600 focus:outline-none focus:border-gray-500 rounded-lg px-3 py-1 pr-8 truncate"
+                  style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", WebkitAppearance: "none", MozAppearance: "none" }}
                 >
                   {allTopics.map((t) => (
                     <option key={t.slug} value={t.slug} className="bg-gray-900 text-gray-100">

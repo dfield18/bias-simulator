@@ -424,7 +424,7 @@ export default function AnalyticsPage() {
                 href={`/topics/${topicSlug}`}
                 className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors hidden sm:block"
               >
-                Refine Query
+                Settings
               </Link>
               <button
                 onClick={() => { setActiveTab("help"); window.scrollTo({ top: 0, behavior: "smooth" }); }}

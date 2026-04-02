@@ -96,7 +96,7 @@ export default function Home() {
               href={`/topics/${topic.slug}`}
               className="text-xs text-gray-500 hover:text-gray-300"
             >
-              Manage
+              Settings
             </Link>
           )}
           {isSubscribed && role !== "creator" && (

@@ -196,7 +196,7 @@ export default function TopicManagePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Manage: {topic.name}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Settings: {topic.name}</h1>
           <p className="text-sm text-gray-500 mt-1">
             /{topic.slug} &middot; Created {timeAgo(topic.created_at)}
             {!topic.is_active && (

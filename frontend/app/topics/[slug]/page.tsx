@@ -564,11 +564,11 @@ export default function TopicManagePage() {
         </div>
       </div>
 
-      {/* Danger zone */}
-      <div className="bg-gray-900 border border-red-500/20 rounded-xl p-5">
-        <h2 className="text-lg font-semibold text-red-400 mb-3">Delete This Topic</h2>
+      {/* Delete topic */}
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-gray-400 mb-2">Delete Topic</h2>
         <p className="text-xs text-gray-500 mb-4">
-          This will permanently remove the topic and all its tweets, classifications, and analytics data. This action cannot be undone.
+          Permanently removes this topic and all its data. This cannot be undone.
         </p>
         <div className="space-y-3">
           <button

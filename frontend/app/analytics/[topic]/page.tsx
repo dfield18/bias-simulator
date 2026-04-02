@@ -66,8 +66,8 @@ import NarrativeMix from "@/components/NarrativeMix";
 
 const tabs = [
   { id: "feed", label: "Feed", subtitle: "The conversation" },
-  { id: "pulse", label: "Executive Pulse", subtitle: "The big picture" },
-  { id: "narrative", label: "Narrative Deep-Dive", subtitle: "How each side frames it" },
+  { id: "pulse", label: "Overview", subtitle: "The big picture" },
+  { id: "narrative", label: "Arguments", subtitle: "How each side frames it" },
   { id: "voices", label: "Key Voices", subtitle: "Who's saying what" },
   { id: "dunks", label: "Flashpoints", subtitle: "Posts that sparked the other side" },
   { id: "echo", label: "Echo Chamber", subtitle: "Who & where" },
@@ -531,7 +531,7 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {/* ============ TAB 1: Executive Pulse ============ */}
+        {/* ============ TAB 1: Overview ============ */}
         {/* ============ TAB: Feed ============ */}
         {activeTab === "feed" && (
           <>
@@ -1148,8 +1148,8 @@ export default function AnalyticsPage() {
           </>
         )}
 
-        {/* ============ TAB 2: Narrative Deep-Dive ============ */}
-        {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Narrative Deep-Dive</div></div>}
+        {/* ============ TAB 2: Arguments ============ */}
+        {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Arguments</div></div>}
 
         {(activeTab === "narrative" || activeTab === "report") && (() => {
           /* Section wrapper — always expanded */
@@ -2064,8 +2064,8 @@ export default function AnalyticsPage() {
               <div className="space-y-3">
                 {([
                   { name: "Feed", desc: "A simulated Twitter feed ranked by the algorithm above. Use the bias slider to see how different political leanings change what content surfaces. Toggle between \"For You\" (algorithm-ranked) and \"Latest\" (chronological)." },
-                  { name: "Executive Pulse", desc: "High-level KPIs: who's leading the conversation, engagement comparison, narrative divide score, and what each side's audience actually sees." },
-                  { name: "Narrative Deep-Dive", desc: "How each side frames the topic (radar charts), emotional tone, trending phrases, hashtags, content format breakdown, engagement by frame, and rhetoric intensity." },
+                  { name: "Overview", desc: "High-level KPIs: who's leading the conversation, engagement comparison, narrative divide score, and what each side's audience actually sees." },
+                  { name: "Arguments", desc: "How each side frames the topic (radar charts), emotional tone, trending phrases, hashtags, content format breakdown, engagement by frame, and rhetoric intensity." },
                   { name: "Key Voices", desc: "Who is driving the conversation (high-reach vs organic accounts), top voices by engagement, and the highest-engagement tweets per narrative frame." },
                   { name: "Flashpoints", desc: "Tweets that triggered the other side — identified through high reply ratios (\"ratio'd\"), quote-tweet dunks from opposing accounts, and cross-side engagement patterns. Shows the original tweet, why it scored as a dunk, and example responses." },
                   { name: "Echo Chamber", desc: "How much overlap exists between the two sides: shared stories, blind spots (what each side misses), source analysis, and common ground." },

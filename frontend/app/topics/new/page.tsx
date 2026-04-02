@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import SearchPills from "@/components/SearchPills";
@@ -12,10 +12,13 @@ import {
   createTopic,
   runTopicPipeline,
   fetchPipelineProgress,
+  fetchMe,
 } from "@/lib/api";
 
 export default function NewTopicPage() {
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => { fetchMe().then((u) => setIsAdmin(u.tier === "admin")).catch(() => {}); }, []);
   const [topicInput, setTopicInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<TopicSuggestion | null>(null);
@@ -465,47 +468,49 @@ export default function NewTopicPage() {
             </div>
           ) : null}
 
-          {/* Advanced: view/edit prompts */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
-            <button
-              onClick={() => setShowPrompts(!showPrompts)}
-              className="text-sm text-gray-400 hover:text-gray-200 flex items-center gap-2"
-            >
-              <span>{showPrompts ? "\u25BC" : "\u25B6"}</span>
-              Advanced: View & Edit LLM Prompts
-            </button>
+          {/* Advanced: view/edit prompts — admin only */}
+          {isAdmin && (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
+              <button
+                onClick={() => setShowPrompts(!showPrompts)}
+                className="text-sm text-gray-400 hover:text-gray-200 flex items-center gap-2"
+              >
+                <span>{showPrompts ? "\u25BC" : "\u25B6"}</span>
+                Advanced: View & Edit AI Prompts
+              </button>
 
-            {showPrompts && (
-              <div className="mt-4 space-y-4">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Classification Prompt
-                  </label>
-                  <textarea
-                    value={suggestion.classification_prompt}
-                    onChange={(e) =>
-                      updateField("classification_prompt", e.target.value)
-                    }
-                    rows={12}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs font-mono resize-y"
-                  />
+              {showPrompts && (
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      Classification Prompt
+                    </label>
+                    <textarea
+                      value={suggestion.classification_prompt}
+                      onChange={(e) =>
+                        updateField("classification_prompt", e.target.value)
+                      }
+                      rows={12}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs font-mono resize-y"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      Intensity Scoring Prompt
+                    </label>
+                    <textarea
+                      value={suggestion.intensity_prompt}
+                      onChange={(e) =>
+                        updateField("intensity_prompt", e.target.value)
+                      }
+                      rows={12}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs font-mono resize-y"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Intensity Scoring Prompt
-                  </label>
-                  <textarea
-                    value={suggestion.intensity_prompt}
-                    onChange={(e) =>
-                      updateField("intensity_prompt", e.target.value)
-                    }
-                    rows={12}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs font-mono resize-y"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Create button */}
           <div className="flex justify-end gap-3">

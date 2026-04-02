@@ -356,9 +356,6 @@ export default function AnalyticsPage() {
                     <option value={topicSlug}>{topic.name}</option>
                   )}
                 </select>
-                <span className="text-[10px] text-gray-600 hidden sm:block">
-                  {tabs.find((t) => t.id === activeTab)?.subtitle || ""}
-                </span>
               </div>
             </div>
             <div className="flex items-center gap-2">

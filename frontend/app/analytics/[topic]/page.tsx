@@ -588,26 +588,32 @@ export default function AnalyticsPage() {
               {/* Tweet feed */}
               <div>
                 {feedLoading && smartFeedItems.length === 0 ? (
-                  <div className="space-y-4">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="h-3.5 w-28 bg-gray-800 rounded animate-pulse" />
-                          <div className="h-3 w-20 bg-gray-800/60 rounded animate-pulse" />
-                          <div className="h-5 w-16 bg-gray-800 rounded animate-pulse ml-auto" />
+                  <div className="relative">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                      <div className="animate-spin h-8 w-8 border-2 border-blue-400 border-t-transparent rounded-full mb-3" />
+                      <p className="text-sm text-gray-400">Loading tweets...</p>
+                    </div>
+                    <div className="space-y-4 opacity-40">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="h-3.5 w-28 bg-gray-800 rounded" />
+                            <div className="h-3 w-20 bg-gray-800/60 rounded" />
+                            <div className="h-5 w-16 bg-gray-800 rounded ml-auto" />
+                          </div>
+                          <div className="space-y-2 mb-3">
+                            <div className="h-3 w-full bg-gray-800/50 rounded" />
+                            <div className="h-3 w-11/12 bg-gray-800/50 rounded" />
+                            <div className="h-3 w-3/4 bg-gray-800/40 rounded" />
+                          </div>
+                          <div className="flex gap-5">
+                            {[...Array(4)].map((_, j) => (
+                              <div key={j} className="h-3 w-10 bg-gray-800/30 rounded" />
+                            ))}
+                          </div>
                         </div>
-                        <div className="space-y-2 mb-3">
-                          <div className="h-3 w-full bg-gray-800/50 rounded animate-pulse" />
-                          <div className="h-3 w-11/12 bg-gray-800/50 rounded animate-pulse" />
-                          <div className="h-3 w-3/4 bg-gray-800/40 rounded animate-pulse" />
-                        </div>
-                        <div className="flex gap-5">
-                          {[...Array(4)].map((_, j) => (
-                            <div key={j} className="h-3 w-10 bg-gray-800/30 rounded animate-pulse" />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 ) : feedItems.length === 0 ? (
                   <p className="text-gray-500 text-center py-12">No tweets found.</p>

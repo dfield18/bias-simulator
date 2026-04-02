@@ -121,22 +121,20 @@ export default function Home() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
-      <div className="flex items-center justify-between mb-2">
+    <main className="max-w-4xl mx-auto px-4 py-10 sm:py-16">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl sm:text-4xl font-bold">Echo</h1>
         <UserButton />
       </div>
-      <div className="flex items-center justify-between mb-6 sm:mb-8">
-        <p className="text-gray-400 text-sm sm:text-base">
-          Explore preloaded topics below, or create a new one — it takes about two minutes to gather tweets and build your dashboard.
-        </p>
-        <Link
-          href="/topics/new"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shrink-0 ml-4"
-        >
-          + New Topic
-        </Link>
-      </div>
+      <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
+        Explore preloaded topics below, or create a new one — it takes about two minutes to gather tweets and build your dashboard.
+      </p>
+      <Link
+        href="/topics/new"
+        className="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors mb-10 sm:mb-12"
+      >
+        + New Topic
+      </Link>
 
       {loading && <p className="text-gray-500">Loading topics...</p>}
       {error && <p className="text-red-400">Error: {error}</p>}
@@ -144,7 +142,7 @@ export default function Home() {
       {/* My Topics */}
       {!loading && (
         <>
-          <h2 className="text-lg font-semibold text-gray-300 mb-3">My Topics</h2>
+          <h2 className="text-lg font-semibold text-gray-300 mb-4">My Topics</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <Link
               href="/topics/new"

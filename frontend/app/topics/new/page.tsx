@@ -270,80 +270,87 @@ export default function NewTopicPage() {
                 onChange={(val) => updateField("search_query", val)}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Tweet Language</label>
-                  <select
-                    value={targetLanguage}
-                    onChange={(e) => setTargetLanguage(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
-                  >
-                    <option value="en">English</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                    <option value="pt">Portuguese</option>
-                    <option value="ar">Arabic</option>
-                    <option value="he">Hebrew</option>
-                    <option value="ja">Japanese</option>
-                    <option value="ko">Korean</option>
-                    <option value="zh">Chinese</option>
-                    <option value="hi">Hindi</option>
-                    <option value="ru">Russian</option>
-                    <option value="it">Italian</option>
-                  </select>
-                  <p className="text-[10px] text-gray-600 mt-1">Only fetch tweets in this language</p>
+              <details className="group">
+                <summary className="text-xs text-gray-500 hover:text-gray-300 cursor-pointer list-none flex items-center gap-1.5 mb-3">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="transition-transform group-open:rotate-90"><polyline points="9 6 15 12 9 18" /></svg>
+                  Advanced options
+                  <span className="text-[10px] text-gray-600">— language, country, volume, color scheme</span>
+                </summary>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tweet Language</label>
+                      <select
+                        value={targetLanguage}
+                        onChange={(e) => setTargetLanguage(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+                      >
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="ar">Arabic</option>
+                        <option value="he">Hebrew</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ko">Korean</option>
+                        <option value="zh">Chinese</option>
+                        <option value="hi">Hindi</option>
+                        <option value="ru">Russian</option>
+                        <option value="it">Italian</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Target Country</label>
+                      <select
+                        value={targetCountry}
+                        onChange={(e) => setTargetCountry(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+                      >
+                        <option value="">No filter (global)</option>
+                        <option value="United States">United States</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Australia">Australia</option>
+                        <option value="India">India</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="Brazil">Brazil</option>
+                        <option value="Japan">Japan</option>
+                        <option value="Israel">Israel</option>
+                        <option value="Mexico">Mexico</option>
+                        <option value="Spain">Spain</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tweet Volume</label>
+                      <select
+                        value={maxPages}
+                        onChange={(e) => setMaxPages(Number(e.target.value))}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+                      >
+                        <option value={10}>Small (~200 tweets)</option>
+                        <option value={25}>Medium (~500 tweets)</option>
+                        <option value={50}>Large (~1,000 tweets)</option>
+                        <option value={100}>Extra Large (~2,000 tweets)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Color Scheme</label>
+                      <select
+                        value={colorScheme}
+                        onChange={(e) => setColorScheme(e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+                      >
+                        <option value="political">Political (Blue / Red)</option>
+                        <option value="neutral">Neutral (Purple / Green)</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Target Audience Country</label>
-                  <select
-                    value={targetCountry}
-                    onChange={(e) => setTargetCountry(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
-                  >
-                    <option value="">No filter (global)</option>
-                    <option value="United States">United States</option>
-                    <option value="United Kingdom">United Kingdom</option>
-                    <option value="Canada">Canada</option>
-                    <option value="Australia">Australia</option>
-                    <option value="India">India</option>
-                    <option value="Germany">Germany</option>
-                    <option value="France">France</option>
-                    <option value="Brazil">Brazil</option>
-                    <option value="Japan">Japan</option>
-                    <option value="Israel">Israel</option>
-                    <option value="Mexico">Mexico</option>
-                    <option value="Spain">Spain</option>
-                  </select>
-                  <p className="text-[10px] text-gray-600 mt-1">Filter tweets to what someone in this country would likely see</p>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Tweet Volume</label>
-              <select
-                value={maxPages}
-                onChange={(e) => setMaxPages(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
-              >
-                <option value={10}>Small (~200 tweets)</option>
-                <option value={25}>Medium (~500 tweets)</option>
-                <option value={50}>Large (~1,000 tweets)</option>
-                <option value={100}>Extra Large (~2,000 tweets)</option>
-              </select>
-              <p className="text-[10px] text-gray-600 mt-1">More tweets = better analysis but slower pipeline</p>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Color Scheme</label>
-              <select
-                value={colorScheme}
-                onChange={(e) => setColorScheme(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
-              >
-                <option value="political">Political (Blue / Red)</option>
-                <option value="neutral">Neutral (Purple / Green)</option>
-              </select>
-              <p className="text-[10px] text-gray-600 mt-1">Use neutral for topics that don&apos;t map to left/right politics</p>
+              </details>
             </div>
           </div>
 

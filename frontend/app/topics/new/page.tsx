@@ -454,8 +454,8 @@ export default function NewTopicPage() {
             </div>
           </div>
 
-          {/* Narrative Frames & Emotions */}
-          {(suggestion.custom_frames?.length || suggestion.custom_emotions?.length) ? (
+          {/* Narrative Frames & Emotions — admin only */}
+          {isAdmin && (suggestion.custom_frames?.length || suggestion.custom_emotions?.length) ? (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
               <h2 className="text-lg font-semibold mb-1">Narrative Analysis</h2>
               <p className="text-sm text-gray-500 mb-4">

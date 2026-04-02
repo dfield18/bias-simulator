@@ -475,8 +475,8 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
 
             # Run classification batches in parallel
             set_progress(topic_slug, 4, 7, "Analyzing tweets with AI",
-                         f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by Gemini AI, "
-                         f"with uncertain ones double-checked by Claude and GPT for accuracy. "
+                         f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by AI, "
+                         f"with uncertain ones verified by multiple models for accuracy. "
                          f"Intensity scoring runs in parallel as tweets are classified.")
             print("\n[4-5/7] Classifying + scoring intensity (pipelined)...")
 

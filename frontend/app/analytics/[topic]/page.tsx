@@ -1377,7 +1377,7 @@ export default function AnalyticsPage() {
                 const intensityLabel = (avg: number) => avg <= 3 ? "Measured" : avg <= 5 ? "Heated" : avg <= 7 ? "Aggressive" : "Extreme";
 
                 return (
-                  <Section id="rhetoric" tag="Rhetoric Intensity" title="How aggressively each side argues" subtitle="Measures absolutist language, hyperbole, name-calling, and urgency — not which emotion, but how hard the language pushes">
+                  <Section id="rhetoric" tag="Rhetoric Intensity" title="How aggressively each side argues" subtitle="Measures strong language, hyperbole, name-calling, and urgency">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
                       {([
                         { side: anti, label: aL, color: "text-blue-400", border: "border-blue-500/20" },
@@ -1445,7 +1445,7 @@ export default function AnalyticsPage() {
 
               return (
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Amplification</div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Who Amplifies Whom</div>
                   <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
                     Who is driving the conversation
                   </h3>
@@ -1720,7 +1720,7 @@ export default function AnalyticsPage() {
               {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Flashpoints</div></div>}
 
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Cross-Side Conflict</div>
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Flashpoints</div>
                 <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
                   Tweets that triggered the other side
                 </h3>
@@ -1752,7 +1752,7 @@ export default function AnalyticsPage() {
             {/* Topic Overlap — full detail */}
             {narrative && exposureOverlap && (
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Topic Overlap</div>
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Shared Topics</div>
                 <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
                   Are They Seeing the Same Events?
                 </h3>

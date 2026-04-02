@@ -128,7 +128,7 @@ export default function Home() {
       </div>
       <div className="flex items-center justify-between mb-6 sm:mb-8">
         <p className="text-gray-400 text-sm sm:text-base">
-          Analyze any political topic from both sides.
+          Explore preloaded topics below, or create a new one — it takes about two minutes to gather tweets and build your dashboard.
         </p>
         <Link
           href="/topics/new"

@@ -71,6 +71,9 @@ async def create_portal_session(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a Stripe Customer Portal session for managing subscription."""
+    if user.get("tier") not in ("pro", "admin"):
+        raise HTTPException(status_code=403, detail="Only Pro users can access the billing portal")
+
     result = await db.execute(select(User).where(User.id == user["id"]))
     db_user = result.scalar_one()
 

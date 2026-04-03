@@ -183,7 +183,7 @@ export default function Home() {
         <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span></p>
-            <p className="text-xs text-gray-500 mt-0.5">Upgrade to create your own topics, refresh data, and get 30 runs per month.</p>
+            <p className="text-xs text-gray-500 mt-0.5">Upgrade to create your own topics, refresh data, and get 50 refreshes per month.</p>
           </div>
           <Link
             href="/pricing"

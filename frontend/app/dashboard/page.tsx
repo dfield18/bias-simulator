@@ -210,7 +210,7 @@ export default function Home() {
             if (isFree && featured.length > 0) {
               return (
                 <>
-                  <h2 className="text-lg font-semibold text-gray-300 mb-4">Featured Topics</h2>
+                  <h2 className="text-lg font-semibold text-gray-300 mb-4">Free Topics</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     {featured.map((topic) => (
                       <TopicCard key={topic.slug} topic={topic} />

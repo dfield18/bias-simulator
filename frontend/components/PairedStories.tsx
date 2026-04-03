@@ -78,14 +78,18 @@ function ExpandedStory({
       {/* Hero: side-by-side framing headlines */}
       <div className="grid grid-cols-1 sm:grid-cols-2">
         {/* Left */}
-        <div className="p-4 sm:p-5 border-b sm:border-b-0 sm:border-r border-gray-800 bg-blue-500/[0.03]">
+        <a
+          href={story.anti.url || "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block p-4 sm:p-5 border-b sm:border-b-0 sm:border-r border-gray-800 bg-blue-500/[0.03] hover:bg-blue-500/[0.06] transition-colors"
+        >
           <div className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider mb-2">
             {antiLabel}
           </div>
           <p className="text-base sm:text-lg font-semibold text-gray-100 leading-snug mb-3">
             {story.anti.headline}
           </p>
-          {/* Supporting excerpt */}
           <p className="text-[11px] text-gray-500 leading-relaxed mb-2">
             {truncate(story.anti.full_text, 140)}
           </p>
@@ -96,10 +100,15 @@ function ExpandedStory({
               {"\u2764"} {formatNumber(story.anti.likes)} &middot; {"\uD83D\uDC41"} {formatNumber(story.anti.views)}
             </span>
           </div>
-        </div>
+        </a>
 
         {/* Right */}
-        <div className="p-4 sm:p-5 bg-red-500/[0.03]">
+        <a
+          href={story.pro.url || "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block p-4 sm:p-5 bg-red-500/[0.03] hover:bg-red-500/[0.06] transition-colors"
+        >
           <div className="text-[10px] text-red-400 font-semibold uppercase tracking-wider mb-2">
             {proLabel}
           </div>
@@ -116,7 +125,7 @@ function ExpandedStory({
               {"\u2764"} {formatNumber(story.pro.likes)} &middot; {"\uD83D\uDC41"} {formatNumber(story.pro.views)}
             </span>
           </div>
-        </div>
+        </a>
       </div>
 
       {/* Frame vs Frame comparison strip */}

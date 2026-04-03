@@ -274,6 +274,8 @@ async def get_my_topics(
 @router.post("/topics/{slug}/run")
 async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), model: str = Query(default="fast"), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Trigger the pipeline for a topic in a background thread."""
+    if model not in ("fast", "balanced", "accurate"):
+        raise HTTPException(status_code=400, detail="Invalid model. Must be: fast, balanced, or accurate")
     await _check_topic_pipeline_access(slug, user, db)
     # Tier enforcement
     if user.get("tier") not in ("pro", "admin"):

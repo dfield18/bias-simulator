@@ -272,7 +272,7 @@ async def get_my_topics(
 
 
 @router.post("/topics/{slug}/run")
-async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), model: str = Query(default="fast"), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Trigger the pipeline for a topic in a background thread."""
     await _check_topic_pipeline_access(slug, user, db)
     # Tier enforcement
@@ -314,7 +314,7 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
 
     def _run():
         try:
-            run_pipeline(slug, hours=hours, max_pages=max_pages)
+            run_pipeline(slug, hours=hours, max_pages=max_pages, classification_model=model)
         except Exception as e:
             print(f"Pipeline error for {slug}: {e}")
             # Log failure to fetch_runs

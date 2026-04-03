@@ -31,6 +31,7 @@ export default function NewTopicPage() {
   const [targetCountry, setTargetCountry] = useState("United States");
   const [maxPages, setMaxPages] = useState(25);
   const [colorScheme, setColorScheme] = useState("political");
+  const [classificationModel, setClassificationModel] = useState("fast");
   const [pipelineProgress, setPipelineProgress] = useState<PipelineProgress | null>(null);
 
   const handleSuggest = async () => {
@@ -67,7 +68,7 @@ export default function NewTopicPage() {
       });
       topicCreated = true;
       invalidateCache("topics");
-      await runTopicPipeline(suggestion.slug, { maxPages });
+      await runTopicPipeline(suggestion.slug, { maxPages, model: classificationModel });
       // Poll for pipeline progress
       for (let i = 0; i < 300; i++) {
         await new Promise((r) => setTimeout(r, 5000));
@@ -382,6 +383,19 @@ export default function NewTopicPage() {
                         <option value="neutral">Neutral (Purple / Green)</option>
                       </select>
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">AI Model</label>
+                    <select
+                      value={classificationModel}
+                      onChange={(e) => setClassificationModel(e.target.value)}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+                    >
+                      <option value="fast">Fast — quickest, good accuracy</option>
+                      <option value="balanced">Balanced — slower, better accuracy</option>
+                      <option value="accurate">Accurate — slowest, best accuracy</option>
+                    </select>
+                    <p className="text-[10px] text-gray-600 mt-1">More accurate models take longer</p>
                   </div>
                 </div>
               </details>

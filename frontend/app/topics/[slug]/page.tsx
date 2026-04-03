@@ -56,6 +56,7 @@ export default function TopicManagePage() {
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [targetCountry, setTargetCountry] = useState("");
   const [colorScheme, setColorScheme] = useState("political");
+  const [classificationModel, setClassificationModel] = useState("fast");
 
   const loadData = () => {
     setLoading(true);
@@ -114,7 +115,7 @@ export default function TopicManagePage() {
     setPipelineProgress(null);
     setError(null);
     try {
-      await runTopicPipeline(slug, { hours: pipelineHours, maxPages });
+      await runTopicPipeline(slug, { hours: pipelineHours, maxPages, model: classificationModel });
       // Poll for progress
       for (let i = 0; i < 300; i++) {
         await new Promise((r) => setTimeout(r, 5000));
@@ -486,6 +487,21 @@ export default function TopicManagePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">AI Model</label>
+              <select
+                value={classificationModel}
+                onChange={(e) => setClassificationModel(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
+              >
+                <option value="fast">Fast (Flash Lite) — quickest, good accuracy</option>
+                <option value="balanced">Balanced (Flash) — slower, better accuracy</option>
+                <option value="accurate">Accurate (Flash 2.5) — slowest, best accuracy</option>
+              </select>
+              <p className="text-[10px] text-gray-600 mt-1">
+                More accurate models take longer to classify tweets
+              </p>
+            </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Left Label</label>
               <input

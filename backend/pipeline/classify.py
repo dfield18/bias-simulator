@@ -11,6 +11,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 COSTS = {
     "gemini-2.0-flash": {"input": 0.10, "output": 0.40},
     "gemini-2.0-flash-lite": {"input": 0.075, "output": 0.30},
+    "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
 }
 
 

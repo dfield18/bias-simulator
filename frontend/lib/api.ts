@@ -206,10 +206,11 @@ export async function createTopic(data: TopicSuggestion): Promise<TopicData> {
   return res.json();
 }
 
-export async function runTopicPipeline(slug: string, options?: { hours?: number; maxPages?: number }): Promise<void> {
+export async function runTopicPipeline(slug: string, options?: { hours?: number; maxPages?: number; model?: string }): Promise<void> {
   const params = new URLSearchParams();
   if (options?.hours) params.set("hours", String(options.hours));
   if (options?.maxPages) params.set("max_pages", String(options.maxPages));
+  if (options?.model) params.set("model", options.model);
   const qs = params.toString() ? `?${params}` : "";
   const res = await apiFetch(`${API_URL}/api/topics/${slug}/run${qs}`, {
     method: "POST",

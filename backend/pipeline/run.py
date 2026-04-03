@@ -229,7 +229,14 @@ def log_fetch_run(conn, topic_slug: str, tweets_fetched: int, tweets_new: int,
     conn.commit()
 
 
-def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
+MODEL_MAP = {
+    "fast": "gemini-2.0-flash-lite",
+    "balanced": "gemini-2.0-flash",
+    "accurate": "gemini-2.5-flash",
+}
+
+
+def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classification_model: str = "fast"):
     """Run the full pipeline for a topic."""
     import time as _time
     pipeline_start = _time.time()
@@ -379,8 +386,9 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                 batch_intensity = []
                 prompt = _build_classification_prompt(batch, class_prompt)
 
+                gemini_model = MODEL_MAP.get(classification_model, "gemini-2.0-flash-lite")
                 try:
-                    response_text, cost = _call_gemini(prompt, model="gemini-2.0-flash-lite")
+                    response_text, cost = _call_gemini(prompt, model=gemini_model)
                     batch_cost += cost
                     parsed = _parse_classifications(response_text)
                 except Exception:
@@ -410,7 +418,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25):
                             pass
 
                     classification["id_str"] = tid
-                    classification.setdefault("classification_method", "gemini-2.0-flash-lite")
+                    classification.setdefault("classification_method", gemini_model)
                     t = tweet_lookup.get(tid, {})
                     classification["full_text"] = t.get("full_text", "")
                     classification["screen_name"] = t.get("screen_name", "")

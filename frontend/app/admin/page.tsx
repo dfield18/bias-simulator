@@ -661,7 +661,9 @@ export default function AdminPage() {
                   key={row.tweet.id_str}
                   onClick={() => openModal(row, i)}
                   className={`border-b border-gray-800/50 hover:bg-gray-800/50 cursor-pointer transition-colors ${
-                    row.classification.override_flag
+                    row.classification.about_subject === false
+                      ? "opacity-40"
+                      : row.classification.override_flag
                       ? "bg-yellow-500/5"
                       : ""
                   }`}
@@ -681,40 +683,70 @@ export default function AdminPage() {
                         { value: antiBent, label: currentTopic?.anti_label || antiBent },
                         { value: proBent, label: currentTopic?.pro_label || proBent },
                         { value: "neutral", label: "Neutral" },
+                        { value: "_exclude", label: "Exclude" },
                       ].map((opt) => {
-                        const isActive = row.classification.effective_political_bent === opt.value;
+                        const isExcluded = row.classification.about_subject === false;
+                        const isActive = opt.value === "_exclude" ? isExcluded : (!isExcluded && row.classification.effective_political_bent === opt.value);
                         return (
                           <button
                             key={opt.value}
                             onClick={async () => {
                               if (isActive) return;
-                              // Optimistic update — change local state immediately
-                              setRows((prev) => prev.map((r) =>
-                                r.tweet.id_str === row.tweet.id_str
-                                  ? {
-                                      ...r,
-                                      classification: {
-                                        ...r.classification,
-                                        effective_political_bent: opt.value,
-                                        override_political_bent: opt.value,
-                                        override_flag: true,
-                                      },
-                                    }
-                                  : r
-                              ));
-                              // Save to backend in background
-                              try {
-                                await submitOverride({
-                                  id_str: row.tweet.id_str,
-                                  override_political_bent: opt.value,
-                                  override_intensity_score: null,
-                                  override_notes: "Reclassified via inline toggle",
-                                });
-                              } catch { /* ignore */ }
+                              if (opt.value === "_exclude") {
+                                // Exclude tweet from analytics
+                                setRows((prev) => prev.map((r) =>
+                                  r.tweet.id_str === row.tweet.id_str
+                                    ? { ...r, classification: { ...r.classification, about_subject: false, override_flag: true } }
+                                    : r
+                                ));
+                                try {
+                                  await submitOverride({
+                                    id_str: row.tweet.id_str,
+                                    override_political_bent: null,
+                                    override_intensity_score: null,
+                                    override_notes: "Excluded by admin",
+                                    exclude: true,
+                                  });
+                                } catch {}
+                              } else {
+                                // Re-include if excluded, then set classification
+                                setRows((prev) => prev.map((r) =>
+                                  r.tweet.id_str === row.tweet.id_str
+                                    ? {
+                                        ...r,
+                                        classification: {
+                                          ...r.classification,
+                                          about_subject: true,
+                                          effective_political_bent: opt.value,
+                                          override_political_bent: opt.value,
+                                          override_flag: true,
+                                        },
+                                      }
+                                    : r
+                                ));
+                                try {
+                                  if (isExcluded) {
+                                    // Re-include first
+                                    await submitOverride({
+                                      id_str: row.tweet.id_str,
+                                      override_political_bent: null,
+                                      override_intensity_score: null,
+                                      override_notes: "",
+                                      exclude: false,
+                                    });
+                                  }
+                                  await submitOverride({
+                                    id_str: row.tweet.id_str,
+                                    override_political_bent: opt.value,
+                                    override_intensity_score: null,
+                                    override_notes: "Reclassified via inline toggle",
+                                  });
+                                } catch {}
+                              }
                             }}
                             className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
                               isActive
-                                ? bentBadge(opt.value, antiBent, proBent) + " font-semibold"
+                                ? (opt.value === "_exclude" ? "bg-red-500/20 text-red-400 font-semibold line-through" : bentBadge(opt.value, antiBent, proBent) + " font-semibold")
                                 : "bg-gray-800 text-gray-600 hover:text-gray-400"
                             }`}
                           >

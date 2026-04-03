@@ -331,6 +331,7 @@ class OverrideRequest(BaseModel):
     override_political_bent: Optional[str] = None
     override_intensity_score: Optional[int] = None
     override_notes: str = ""
+    exclude: Optional[bool] = None  # set to True to hide from analytics
 
     def model_post_init(self, __context: Any) -> None:
         if self.override_intensity_score is not None:

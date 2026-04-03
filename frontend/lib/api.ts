@@ -974,6 +974,7 @@ export async function submitOverride(
     override_political_bent: string | null;
     override_intensity_score: number | null;
     override_notes: string;
+    exclude?: boolean;
   }
 ) {
   const res = await apiFetch(`${API_URL}/api/override`, {

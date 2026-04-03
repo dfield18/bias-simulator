@@ -38,9 +38,16 @@ async def create_override(
 
     # Update override fields
     classification.override_flag = True
-    classification.override_political_bent = body.override_political_bent
-    classification.override_intensity_score = body.override_intensity_score
-    classification.override_notes = body.override_notes
+    if body.exclude is True:
+        classification.about_subject = False
+        classification.override_notes = body.override_notes or "Excluded by admin"
+    elif body.exclude is False:
+        classification.about_subject = True
+        classification.override_notes = body.override_notes or "Re-included by admin"
+    else:
+        classification.override_political_bent = body.override_political_bent
+        classification.override_intensity_score = body.override_intensity_score
+        classification.override_notes = body.override_notes
     classification.override_at = datetime.now(timezone.utc)
 
     await db.commit()

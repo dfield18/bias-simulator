@@ -12,6 +12,7 @@ import {
   fetchBreakdown,
   runTopicPipeline,
   fetchPipelineProgress,
+  fetchMe,
   PipelineProgress,
   scoreFeed,
 } from "@/lib/api";
@@ -36,6 +37,8 @@ export default function FeedPage() {
   const isNew = searchParams.get("new") === "1";
 
   const [topic, setTopic] = useState<TopicData | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserTier, setCurrentUserTier] = useState<string>("free");
   const [bias, setBias] = useState(0);
   const [allTweets, setAllTweets] = useState<RawFeedItem[]>([]);
   const [breakdown, setBreakdown] = useState<BreakdownData | null>(null);
@@ -59,6 +62,11 @@ export default function FeedPage() {
     observer.observe(chartRef.current);
     return () => observer.disconnect();
   }, [allTweets.length]);
+
+  // Load user info
+  useEffect(() => {
+    fetchMe().then((u) => { setCurrentUserId(u.id); setCurrentUserTier(u.tier); }).catch(() => {});
+  }, []);
 
   // Load topic info
   useEffect(() => {
@@ -199,6 +207,7 @@ export default function FeedPage() {
               >
                 Export CSV
               </button>
+              {(currentUserTier === "admin" || (topic && topic.created_by != null && currentUserId === topic.created_by)) && (
               <button
                 onClick={async () => {
                   if (fetching) return;
@@ -206,7 +215,6 @@ export default function FeedPage() {
                   setPipelineProgress(null);
                   try {
                     await runTopicPipeline(topicSlug);
-                    // Poll for progress + completion
                     for (let i = 0; i < 120; i++) {
                       await new Promise((r) => setTimeout(r, 3000));
                       try {
@@ -219,7 +227,7 @@ export default function FeedPage() {
                     setPipelineProgress(null);
                     setFetching(false);
                   } catch (e) {
-                    console.error("[Refresh] Error:", e);
+                    alert(e instanceof Error ? e.message : "Failed to start pipeline");
                     setPipelineProgress(null);
                     setFetching(false);
                   }
@@ -233,6 +241,7 @@ export default function FeedPage() {
                     : "Starting..."
                   : "Fetch New Tweets"}
               </button>
+              )}
               <button
                 onClick={loadTweets}
                 className="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-xs sm:text-sm transition-colors"

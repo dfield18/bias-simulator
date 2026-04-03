@@ -24,33 +24,45 @@ async def create_checkout_session(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a Stripe Checkout session for upgrading to Pro."""
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=500, detail="Stripe is not configured. Set STRIPE_SECRET_KEY in environment variables.")
+    if not STRIPE_PRO_PRICE_ID:
+        raise HTTPException(status_code=500, detail="Stripe price not configured. Set STRIPE_PRO_PRICE_ID in environment variables.")
+
     if user.get("tier") == "pro":
         raise HTTPException(status_code=400, detail="Already on Pro plan")
 
-    # Get or create Stripe customer
-    result = await db.execute(select(User).where(User.id == user["id"]))
-    db_user = result.scalar_one()
+    try:
+        # Get or create Stripe customer
+        result = await db.execute(select(User).where(User.id == user["id"]))
+        db_user = result.scalar_one()
 
-    if not db_user.stripe_customer_id:
-        customer = stripe.Customer.create(
-            email=db_user.email or "",
+        if not db_user.stripe_customer_id:
+            customer = stripe.Customer.create(
+                email=db_user.email or "",
+                metadata={"user_id": user["id"]},
+            )
+            db_user.stripe_customer_id = customer.id
+            await db.commit()
+
+        customer_id = db_user.stripe_customer_id
+
+        session = stripe.checkout.Session.create(
+            customer=customer_id,
+            mode="subscription",
+            line_items=[{"price": STRIPE_PRO_PRICE_ID, "quantity": 1}],
+            success_url=f"{FRONTEND_URL}/dashboard?upgraded=true",
+            cancel_url=f"{FRONTEND_URL}/pricing",
             metadata={"user_id": user["id"]},
         )
-        db_user.stripe_customer_id = customer.id
-        await db.commit()
 
-    customer_id = db_user.stripe_customer_id
-
-    session = stripe.checkout.Session.create(
-        customer=customer_id,
-        mode="subscription",
-        line_items=[{"price": STRIPE_PRO_PRICE_ID, "quantity": 1}],
-        success_url=f"{FRONTEND_URL}/dashboard?upgraded=true",
-        cancel_url=f"{FRONTEND_URL}/pricing",
-        metadata={"user_id": user["id"]},
-    )
-
-    return {"url": session.url}
+        return {"url": session.url}
+    except stripe.error.StripeError as e:
+        print(f"[Stripe] Checkout error: {e}")
+        raise HTTPException(status_code=502, detail=f"Stripe error: {str(e)[:200]}")
+    except Exception as e:
+        print(f"[Stripe] Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail=f"Checkout error: {str(e)[:200]}")
 
 
 @router.post("/billing/portal")

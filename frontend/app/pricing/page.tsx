@@ -42,16 +42,19 @@ export default function PricingPage() {
           <p className="text-sm text-gray-500 mb-6">Forever free</p>
           <ul className="space-y-2 text-sm text-gray-400 mb-8">
             <li className="flex items-center gap-2">
-              <span className="text-green-400">&#10003;</span> 2 topics
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-green-400">&#10003;</span> 3 refreshes per day
+              <span className="text-green-400">&#10003;</span> 5 preloaded topics
             </li>
             <li className="flex items-center gap-2">
               <span className="text-green-400">&#10003;</span> All analytics tabs
             </li>
             <li className="flex items-center gap-2">
               <span className="text-green-400">&#10003;</span> AI classification
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-gray-600">&#10007;</span> <span className="text-gray-600">Create your own topics</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-gray-600">&#10007;</span> <span className="text-gray-600">Refresh data</span>
             </li>
           </ul>
           {isSignedIn ? (
@@ -81,10 +84,10 @@ export default function PricingPage() {
           <p className="text-sm text-gray-500 mb-6">For serious analysis</p>
           <ul className="space-y-2 text-sm text-gray-400 mb-8">
             <li className="flex items-center gap-2">
-              <span className="text-green-400">&#10003;</span> Unlimited topics
+              <span className="text-green-400">&#10003;</span> Create unlimited topics
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-green-400">&#10003;</span> Unlimited refreshes
+              <span className="text-green-400">&#10003;</span> 30 data refreshes per month
             </li>
             <li className="flex items-center gap-2">
               <span className="text-green-400">&#10003;</span> All analytics tabs

@@ -47,6 +47,7 @@ import {
   runTopicPipeline,
   fetchAllTweets,
   fetchBreakdown,
+  fetchMe,
   fetchSmartFeed,
   fetchDunks,
   SmartFeedItem,
@@ -82,6 +83,7 @@ export default function AnalyticsPage() {
 
   const [topic, setTopic] = useState<TopicData | null>(null);
   const [allTopics, setAllTopics] = useState<TopicData[]>([]);
+  const [userTier, setUserTier] = useState<string>("free");
   const [summaries, setSummaries] = useState<Record<string, SummaryData>>({});
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [narrative, setNarrative] = useState<NarrativeData | null>(null);
@@ -119,6 +121,7 @@ export default function AnalyticsPage() {
   // Essential data — loaded once on mount
   useEffect(() => {
     const s = topicSlug;
+    fetchMe().then((u) => setUserTier(u.tier)).catch(() => {});
     // Safety timeout: if topic doesn't load in 10s, stop showing spinner
     const timeout = setTimeout(() => setFeedLoading(false), 10000);
     cachedFetch(`topics`, () => fetchTopics(), 60 * 1000).then((topics) => {
@@ -384,7 +387,15 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
+              {userTier === "free" && (
+                <Link
+                  href="/pricing"
+                  className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-md transition-colors hover:bg-blue-500/20"
+                >
+                  Upgrade to Pro
+                </Link>
+              )}
+              {userTier !== "free" && <button
                 onClick={async () => {
                   if (isRunning === "done") {
                     window.location.reload();
@@ -444,13 +455,13 @@ export default function AnalyticsPage() {
                     ? `${pipelineProgress.label} (${pipelineProgress.pct}%)`
                     : "Starting..."
                   : isRunning === "done" ? "Reload page" : "Refresh Data"}
-              </button>
-              <Link
+              </button>}
+              {userTier !== "free" && <Link
                 href={`/topics/${topicSlug}`}
                 className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors hidden sm:block"
               >
                 Settings
-              </Link>
+              </Link>}
               <button
                 onClick={() => { setActiveTab("help"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${

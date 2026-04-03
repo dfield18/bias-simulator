@@ -57,6 +57,7 @@ export interface TopicData {
   color_scheme?: string;
   visibility?: string;
   created_by?: string | null;
+  featured?: boolean;
 }
 
 export interface MediaItem {

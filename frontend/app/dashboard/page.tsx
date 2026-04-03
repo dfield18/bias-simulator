@@ -134,22 +134,30 @@ export default function Home() {
         <h1 className="text-2xl sm:text-4xl font-bold">Echo</h1>
         <UserButton />
       </div>
-      <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
-        Explore preloaded topics below, or create a new one — it takes about two minutes to gather tweets and build your dashboard.
-      </p>
-      <Link
-        href="/topics/new"
-        className="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors mb-10 sm:mb-12"
-      >
-        + New Topic
-      </Link>
+      {user && user.tier !== "free" ? (
+        <>
+          <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
+            Explore preloaded topics below, or create a new one — it takes about two minutes to gather tweets and build your dashboard.
+          </p>
+          <Link
+            href="/topics/new"
+            className="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors mb-10 sm:mb-12"
+          >
+            + New Topic
+          </Link>
+        </>
+      ) : (
+        <p className="text-gray-400 text-sm sm:text-base mb-6 max-w-xl">
+          Explore preloaded topics below. Upgrade to Pro to create your own topics and refresh data.
+        </p>
+      )}
 
       {/* Upgrade banner for free users */}
       {user && user.tier === "free" && (
         <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span> (2 topics, 3 refreshes/day)</p>
-            <p className="text-xs text-gray-500 mt-0.5">Upgrade for unlimited topics and refreshes.</p>
+            <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span></p>
+            <p className="text-xs text-gray-500 mt-0.5">Upgrade to create your own topics, refresh data, and get 30 runs per month.</p>
           </div>
           <Link
             href="/pricing"
@@ -163,25 +171,48 @@ export default function Home() {
       {loading && <p className="text-gray-500">Loading topics...</p>}
       {error && <p className="text-red-400">Error: {error}</p>}
 
-      {/* My Topics */}
+      {/* My Topics / Featured Topics */}
       {!loading && (
         <>
-          <h2 className="text-lg font-semibold text-gray-300 mb-4">My Topics</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <Link
-              href="/topics/new"
-              className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
-            >
-              <div className="text-center">
-                <div className="text-2xl text-gray-600 mb-1">+</div>
-                <h2 className="text-base font-semibold text-gray-400">Add New Topic</h2>
-                <p className="text-gray-600 text-xs mt-1">Create a custom topic</p>
+          {user && user.tier !== "free" && myTopicsList.length > 0 && (
+            <>
+              <h2 className="text-lg font-semibold text-gray-300 mb-4">My Topics</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <Link
+                  href="/topics/new"
+                  className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
+                >
+                  <div className="text-center">
+                    <div className="text-2xl text-gray-600 mb-1">+</div>
+                    <h2 className="text-base font-semibold text-gray-400">Add New Topic</h2>
+                    <p className="text-gray-600 text-xs mt-1">Create a custom topic</p>
+                  </div>
+                </Link>
+                {myTopicsList.map((topic) => (
+                  <TopicCard key={topic.slug} topic={topic} />
+                ))}
               </div>
-            </Link>
-            {myTopicsList.map((topic) => (
-              <TopicCard key={topic.slug} topic={topic} />
-            ))}
-          </div>
+            </>
+          )}
+
+          {/* Featured topics for free users (or all users as explore section) */}
+          {(() => {
+            const featured = topics.filter((t) => t.featured);
+            const isFree = !user || user.tier === "free";
+            if (isFree && featured.length > 0) {
+              return (
+                <>
+                  <h2 className="text-lg font-semibold text-gray-300 mb-4">Featured Topics</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    {featured.map((topic) => (
+                      <TopicCard key={topic.slug} topic={topic} />
+                    ))}
+                  </div>
+                </>
+              );
+            }
+            return null;
+          })()}
         </>
       )}
 

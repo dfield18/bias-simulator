@@ -51,6 +51,7 @@ class Topic(Base):
     color_scheme = Column(Text, default="political")  # "political" (blue/red) or "neutral" (purple/green)
     account_rules = Column(JSONB)  # e.g. {"foxnews": "pro-bent", "maborosi": "anti-bent"} — override classification for specific accounts
     visibility = Column(Text, default="public")  # "public" or "private"
+    featured = Column(Boolean, default=False)  # featured topics visible to free users
     created_by = Column(Text, ForeignKey("users.id"))  # user who created this topic
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
@@ -182,6 +183,7 @@ class TopicResponse(BaseModel):
     account_rules: Optional[dict] = None
     visibility: Optional[str] = "public"
     created_by: Optional[str] = None
+    featured: Optional[bool] = False
 
     model_config = {"from_attributes": True}
 

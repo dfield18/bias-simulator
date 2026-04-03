@@ -94,7 +94,7 @@ class CreateTopicRequest(BaseModel):
     target_language: str = "en"
     target_country: str | None = None
     color_scheme: str = "political"
-    visibility: str = "public"
+    visibility: str = "private"
 
 
 @router.get("/topics", response_model=list[TopicResponse])

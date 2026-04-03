@@ -109,6 +109,8 @@ export default function AnalyticsPage() {
   const [feedAccountFilter, setFeedAccountFilter] = useState<string>("all");
   const [showStickySlider, setShowStickySlider] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(88);
   const [feedLoading, setFeedLoading] = useState(true);
   const [feedVisibleCount, setFeedVisibleCount] = useState(50);
   const [activeTab, setActiveTab] = useState("feed");
@@ -240,6 +242,15 @@ export default function AnalyticsPage() {
   // Reset feed visible count on sort/bias/filter change
   useEffect(() => { setFeedVisibleCount(50); }, [bias, feedSortMode, feedAccountFilter]);
 
+  // Track header height for sticky slider positioning
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(([entry]) => setHeaderHeight(entry.contentRect.height));
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   // Show sticky slider only when the chart scrolls out of view
   useEffect(() => {
     const el = chartRef.current;
@@ -344,7 +355,7 @@ export default function AnalyticsPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b border-gray-800 bg-gray-950 sticky top-0 z-20">
+      <header ref={headerRef} className="border-b border-gray-800 bg-gray-950 sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-5 min-w-0">
@@ -522,13 +533,13 @@ export default function AnalyticsPage() {
 
         {/* Sticky bias slider — feed tab only, appears when chart scrolls away */}
         {activeTab === "feed" && topic && showStickySlider && (
-          <div className="sticky top-[88px] z-10 bg-gray-950 pb-3 pt-2 -mx-4 px-4 border-b border-gray-800/30">
-            <div className="flex justify-between mb-1">
-              <span className="text-xs font-semibold text-blue-400">{topic.anti_label}</span>
+          <div className="sticky z-30 bg-gray-950 pb-2 pt-2 -mx-4 px-4 border-b border-gray-800/30" style={{ top: `${headerHeight}px` }}>
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-sm font-semibold text-blue-400">{topic.anti_label}</span>
               <span className="text-xs text-gray-500">
                 {getBiasDescription(bias)} <span className="text-gray-600">({bias > 0 ? "+" : ""}{bias.toFixed(1)})</span>
               </span>
-              <span className="text-xs font-semibold text-red-400">{topic.pro_label}</span>
+              <span className="text-sm font-semibold text-red-400">{topic.pro_label}</span>
             </div>
             <input
               type="range"

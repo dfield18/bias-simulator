@@ -10,6 +10,27 @@ from database import get_db
 from auth import get_current_user, optional_user
 from models import Topic, UserTopic, TopicResponse, TopicDetailResponse
 
+
+async def _check_topic_access(slug: str, user: dict, db: AsyncSession) -> Topic:
+    """Check that a topic exists and the user has access. Returns the topic or raises 404/403."""
+    result = await db.execute(select(Topic).where(Topic.slug == slug))
+    topic = result.scalar_one_or_none()
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    # Public/featured topics and admin users always have access
+    if topic.visibility != "private" or user.get("tier") == "admin":
+        return topic
+    # Private topics: only the creator has access
+    if topic.created_by == user["id"]:
+        return topic
+    # Check if user is subscribed
+    sub = await db.execute(
+        select(UserTopic).where(UserTopic.user_id == user["id"], UserTopic.topic_slug == slug)
+    )
+    if sub.scalar_one_or_none():
+        return topic
+    raise HTTPException(status_code=404, detail="Topic not found")
+
 router = APIRouter()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -315,12 +336,9 @@ class UpdateTopicRequest(BaseModel):
 
 
 @router.get("/topics/{slug}", response_model=TopicDetailResponse)
-async def get_topic_detail(slug: str, db: AsyncSession = Depends(get_db), _: dict = Depends(get_current_user)):
+async def get_topic_detail(slug: str, db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)):
     """Get full topic details including prompts."""
-    result = await db.execute(select(Topic).where(Topic.slug == slug))
-    topic = result.scalar_one_or_none()
-    if not topic:
-        raise HTTPException(status_code=404, detail="Topic not found")
+    topic = await _check_topic_access(slug, user, db)
     return TopicDetailResponse.model_validate(topic)
 
 
@@ -435,8 +453,9 @@ async def unsubscribe_from_topic(
 
 
 @router.get("/topics/{slug}/runs")
-async def get_topic_runs(slug: str, db: AsyncSession = Depends(get_db), _: dict = Depends(get_current_user)):
+async def get_topic_runs(slug: str, db: AsyncSession = Depends(get_db), user: dict = Depends(get_current_user)):
     """Get recent pipeline runs for a topic."""
+    await _check_topic_access(slug, user, db)
     from models import FetchRun
     stmt = (
         select(FetchRun)

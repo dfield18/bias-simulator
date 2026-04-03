@@ -11,7 +11,7 @@ from database import get_db
 from auth import get_current_user
 from pydantic import BaseModel
 from models import (
-    Tweet, Classification, FetchRun, Topic, TopicSummary,
+    Tweet, Classification, FetchRun, Topic, TopicSummary, UserTopic,
     FeedItemResponse, TweetResponse, ClassificationResponse,
     BreakdownResponse, BreakdownCategory, IntensityDistribution,
     extract_media,
@@ -22,6 +22,25 @@ def tweet_response_with_media(tweet: Tweet) -> TweetResponse:
     resp = TweetResponse.model_validate(tweet)
     resp.media = extract_media(tweet.raw_json)
     return resp
+
+
+async def _check_feed_topic_access(topic_slug: str, user: dict, db: AsyncSession):
+    """Check user can access this topic. Raises 404 for private topics the user can't see."""
+    result = await db.execute(select(Topic).where(Topic.slug == topic_slug))
+    topic_obj = result.scalar_one_or_none()
+    if not topic_obj:
+        return  # topic doesn't exist — endpoint will return empty data
+    if topic_obj.visibility != "private" or user.get("tier") == "admin":
+        return
+    if topic_obj.created_by == user["id"]:
+        return
+    sub = await db.execute(
+        select(UserTopic).where(UserTopic.user_id == user["id"], UserTopic.topic_slug == topic_slug)
+    )
+    if sub.scalar_one_or_none():
+        return
+    raise HTTPException(status_code=404, detail="Topic not found")
+
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -237,8 +256,10 @@ async def get_smart_feed(
     hours: int = Query(default=720),
     limit: int = Query(default=100, le=500),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Advanced feed algorithm with multi-signal scoring."""
+    await _check_feed_topic_access(topic, user, db)
     # Round bias for cache key stability
     bias_key = round(bias, 1)
     cache_key = f"{topic}:smart:{bias_key}:{hours}:{limit}"
@@ -1820,8 +1841,10 @@ async def get_analytics(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Get analytics data: engagement comparison, top voices, trending phrases."""
+    await _check_feed_topic_access(topic, user, db)
     cache_key = f"{topic}:analytics:{hours}"
     cached = get_cached(cache_key)
     if cached is not None:

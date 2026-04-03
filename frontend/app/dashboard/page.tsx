@@ -11,6 +11,7 @@ import {
   unsubscribeTopic,
   fetchMe,
   UserProfile,
+  apiFetchDirect,
 } from "@/lib/api";
 import { cachedFetch } from "@/lib/cache";
 
@@ -139,12 +140,29 @@ export default function Home() {
           <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
             Explore preloaded topics below, or create a new one — it takes about two minutes to gather tweets and build your dashboard.
           </p>
-          <Link
-            href="/topics/new"
-            className="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors mb-10 sm:mb-12"
-          >
-            + New Topic
-          </Link>
+          <div className="flex items-center gap-3 mb-10 sm:mb-12">
+            <Link
+              href="/topics/new"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              + New Topic
+            </Link>
+            {user.tier === "pro" && (
+              <button
+                onClick={async () => {
+                  try {
+                    const data = await apiFetchDirect("/api/billing/portal", { method: "POST" });
+                    if (data.url) window.location.href = data.url;
+                  } catch {
+                    alert("Could not open billing portal.");
+                  }
+                }}
+                className="px-4 py-2.5 text-gray-500 hover:text-gray-300 text-sm transition-colors"
+              >
+                Manage Billing
+              </button>
+            )}
+          </div>
         </>
       ) : (
         <>

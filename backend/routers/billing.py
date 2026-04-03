@@ -94,16 +94,16 @@ async def stripe_webhook(
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
 
-    if STRIPE_WEBHOOK_SECRET:
-        try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, STRIPE_WEBHOOK_SECRET
-            )
-        except (ValueError, stripe.error.SignatureVerificationError):
-            raise HTTPException(status_code=400, detail="Invalid webhook signature")
-    else:
-        import json
-        event = json.loads(payload)
+    if not STRIPE_WEBHOOK_SECRET:
+        print("[Stripe] WARNING: STRIPE_WEBHOOK_SECRET not set — rejecting webhook")
+        raise HTTPException(status_code=500, detail="Webhook secret not configured")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_WEBHOOK_SECRET
+        )
+    except (ValueError, stripe.error.SignatureVerificationError):
+        raise HTTPException(status_code=400, detail="Invalid webhook signature")
 
     event_type = event["type"]
     data = event["data"]["object"]
@@ -111,17 +111,26 @@ async def stripe_webhook(
     if event_type == "checkout.session.completed":
         # User completed checkout — upgrade to pro
         user_id = data.get("metadata", {}).get("user_id")
+        customer_id = data.get("customer")
         if user_id:
             await db.execute(
                 update(User)
                 .where(User.id == user_id)
-                .values(
-                    tier="pro",
-                    stripe_customer_id=data.get("customer"),
-                )
+                .values(tier="pro", stripe_customer_id=customer_id)
             )
             await db.commit()
             print(f"[Stripe] User {user_id} upgraded to pro")
+        elif customer_id:
+            # Fallback: look up user by Stripe customer ID
+            await db.execute(
+                update(User)
+                .where(User.stripe_customer_id == customer_id)
+                .values(tier="pro")
+            )
+            await db.commit()
+            print(f"[Stripe] Customer {customer_id} upgraded to pro (fallback)")
+        else:
+            print(f"[Stripe] WARNING: checkout.session.completed with no user_id or customer_id")
 
     elif event_type == "customer.subscription.updated":
         customer_id = data.get("customer")

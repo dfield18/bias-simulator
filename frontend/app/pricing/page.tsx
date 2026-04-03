@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
-import { apiFetchDirect } from "@/lib/api";
+import { apiFetchDirect, fetchMe } from "@/lib/api";
 
 export default function PricingPage() {
   const { isSignedIn } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [userTier, setUserTier] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetchMe().then((u) => setUserTier(u.tier)).catch(() => {});
+    }
+  }, [isSignedIn]);
 
   const handleUpgrade = async () => {
     if (!isSignedIn) {
@@ -58,12 +65,19 @@ export default function PricingPage() {
               <span className="text-gray-600">&#10007;</span> <span className="text-gray-600">Refresh data</span>
             </li>
           </ul>
-          {isSignedIn ? (
+          {isSignedIn && userTier === "free" ? (
             <Link
               href="/dashboard"
               className="block text-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
             >
               Current plan
+            </Link>
+          ) : isSignedIn && userTier === "pro" ? (
+            <Link
+              href="/dashboard"
+              className="block text-center px-4 py-2 bg-gray-800 text-gray-500 rounded-lg text-sm font-medium cursor-default"
+            >
+              Free plan
             </Link>
           ) : (
             <Link
@@ -100,13 +114,22 @@ export default function PricingPage() {
               <span className="text-green-400">&#10003;</span> Priority support
             </li>
           </ul>
-          <button
-            onClick={handleUpgrade}
-            disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-          >
-            {loading ? "Redirecting..." : "Upgrade to Pro"}
-          </button>
+          {userTier === "pro" ? (
+            <Link
+              href="/dashboard"
+              className="block text-center w-full px-4 py-2 bg-green-600/20 text-green-400 rounded-lg text-sm font-medium"
+            >
+              Current plan
+            </Link>
+          ) : (
+            <button
+              onClick={handleUpgrade}
+              disabled={loading}
+              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {loading ? "Redirecting..." : "Upgrade to Pro"}
+            </button>
+          )}
         </div>
       </div>
 

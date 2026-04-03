@@ -242,16 +242,25 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
             detail="Refreshing data requires a Pro plan. Free users can view preloaded topics."
         )
     if user.get("tier") == "pro":
-        # Pro: 30 runs per month
+        # Pro: 30 runs per month per user (count topics they created)
         from datetime import datetime, timezone
-        from models import FetchRun
+        from models import FetchRun, UserTopic
         month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        run_count_result = await db.execute(
-            select(func.count()).select_from(FetchRun)
-            .where(FetchRun.ran_at >= month_start)
-            .where(FetchRun.status == "success")
+        # Get slugs of topics this user created
+        user_topics_result = await db.execute(
+            select(UserTopic.topic_slug).where(UserTopic.user_id == user["id"])
         )
-        runs_this_month = run_count_result.scalar() or 0
+        user_slugs = [r[0] for r in user_topics_result.all()]
+        if user_slugs:
+            run_count_result = await db.execute(
+                select(func.count()).select_from(FetchRun)
+                .where(FetchRun.ran_at >= month_start)
+                .where(FetchRun.status == "success")
+                .where(FetchRun.topic_slug.in_(user_slugs))
+            )
+            runs_this_month = run_count_result.scalar() or 0
+        else:
+            runs_this_month = 0
         if runs_this_month >= 30:
             raise HTTPException(
                 status_code=403,

@@ -206,7 +206,7 @@ export default function Home() {
           {/* Featured topics for free users (or all users as explore section) */}
           {(() => {
             const featured = topics.filter((t) => t.featured);
-            const isFree = !user || user.tier === "free";
+            const isFree = user && user.tier === "free";
             if (isFree && featured.length > 0) {
               return (
                 <>

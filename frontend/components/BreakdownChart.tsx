@@ -80,10 +80,6 @@ export default function BreakdownChart({
         </div>
       )}
 
-      {/* Tweet count + sort method */}
-      <div className="text-[10px] text-gray-600">
-        Based on the top {data.on_topic} tweets by views
-      </div>
     </div>
   );
 }

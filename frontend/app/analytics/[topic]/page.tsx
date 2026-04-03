@@ -544,26 +544,28 @@ export default function AnalyticsPage() {
 
         {/* Sticky bias slider — feed tab only, appears when chart scrolls away */}
         {activeTab === "feed" && topic && showStickySlider && (
-          <div className="sticky z-30 bg-gray-950 pb-3 pt-3 -mx-4 px-6 border-b border-gray-800/30" style={{ top: `${headerHeight}px` }}>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-semibold text-blue-400">{topic.anti_label}</span>
-              <span className="text-xs text-gray-500">
-                {getBiasDescription(bias)} <span className="text-gray-600">({bias > 0 ? "+" : ""}{bias.toFixed(1)})</span>
-              </span>
-              <span className="text-sm font-semibold text-red-400">{topic.pro_label}</span>
+          <div className="fixed left-0 right-0 z-30 bg-gray-950 border-b border-gray-800/30" style={{ top: `${headerHeight}px` }}>
+            <div className="max-w-5xl mx-auto px-4 py-2.5">
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-sm font-semibold text-blue-400">{topic.anti_label}</span>
+                <span className="text-xs text-gray-500">
+                  {getBiasDescription(bias)} <span className="text-gray-600">({bias > 0 ? "+" : ""}{bias.toFixed(1)})</span>
+                </span>
+                <span className="text-sm font-semibold text-red-400">{topic.pro_label}</span>
+              </div>
+              <input
+                type="range"
+                min={-10}
+                max={10}
+                step={0.1}
+                value={bias}
+                onChange={(e) => setBias(parseFloat(e.target.value))}
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, rgb(59,130,246), rgb(107,114,128) 45%, rgb(107,114,128) 55%, rgb(239,68,68))`,
+                }}
+              />
             </div>
-            <input
-              type="range"
-              min={-10}
-              max={10}
-              step={0.1}
-              value={bias}
-              onChange={(e) => setBias(parseFloat(e.target.value))}
-              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-              style={{
-                background: `linear-gradient(to right, rgb(59,130,246), rgb(107,114,128) 45%, rgb(107,114,128) 55%, rgb(239,68,68))`,
-              }}
-            />
           </div>
         )}
 

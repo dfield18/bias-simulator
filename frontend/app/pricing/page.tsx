@@ -21,7 +21,12 @@ export default function PricingPage() {
         window.location.href = data.url;
       }
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to start checkout");
+      const msg = e instanceof Error ? e.message : "Failed to start checkout";
+      if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+        alert("Could not connect to the server. Please try again.");
+      } else {
+        alert(msg);
+      }
     } finally {
       setLoading(false);
     }

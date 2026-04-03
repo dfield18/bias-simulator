@@ -256,6 +256,7 @@ async def get_my_topics(
 @router.post("/topics/{slug}/run")
 async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Trigger the pipeline for a topic in a background thread."""
+    await _check_topic_access(slug, user, db)
     # Tier enforcement
     if user.get("tier") not in ("pro", "admin"):
         raise HTTPException(
@@ -314,8 +315,9 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
 
 
 @router.get("/topics/{slug}/progress")
-async def get_pipeline_progress(slug: str, _: dict = Depends(get_current_user)):
+async def get_pipeline_progress(slug: str, user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Get current pipeline progress for a topic."""
+    await _check_topic_access(slug, user, db)
     from pipeline.run import get_progress
     progress = get_progress(slug)
     if not progress:

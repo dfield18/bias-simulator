@@ -2,7 +2,7 @@ import math
 import asyncio
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict, Counter
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, and_, case, text
 from cache import get_cached, set_cache
 from sqlalchemy.ext.asyncio import AsyncSession

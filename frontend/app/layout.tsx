@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import AuthProvider from "@/components/AuthProvider";
 import "./globals.css";
+
+const GA_ID = "G-EVZ0CK3P4G";
 
 export const metadata: Metadata = {
   title: {
@@ -45,6 +48,15 @@ export default function RootLayout({
       },
     }}>
       <html lang="en">
+        <head>
+          <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+          <Script id="ga-init" strategy="afterInteractive">{`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}');
+          `}</Script>
+        </head>
         <body className="bg-gray-950 text-gray-100 min-h-screen">
           <AuthProvider>{children}</AuthProvider>
         </body>

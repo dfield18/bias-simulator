@@ -99,10 +99,10 @@ export default function PricingPage() {
           <p className="text-sm text-gray-500 mb-6">For serious analysis</p>
           <ul className="space-y-2 text-sm text-gray-400 mb-8">
             <li className="flex items-center gap-2">
-              <span className="text-green-400">&#10003;</span> Create unlimited topics
+              <span className="text-green-400">&#10003;</span> Create custom topics
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-green-400">&#10003;</span> 30 data refreshes per month
+              <span className="text-green-400">&#10003;</span> 50 data refreshes per month
             </li>
             <li className="flex items-center gap-2">
               <span className="text-green-400">&#10003;</span> All analytics tabs

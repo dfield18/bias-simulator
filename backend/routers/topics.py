@@ -261,10 +261,10 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
             runs_this_month = run_count_result.scalar() or 0
         else:
             runs_this_month = 0
-        if runs_this_month >= 30:
+        if runs_this_month >= 50:
             raise HTTPException(
                 status_code=403,
-                detail=f"You've used {runs_this_month} of 30 monthly pipeline runs. Resets on the 1st."
+                detail=f"You've used {runs_this_month} of 50 monthly data refreshes. Resets on the 1st."
             )
 
     import threading

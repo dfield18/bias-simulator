@@ -435,14 +435,27 @@ export default function AnalyticsPage() {
                               }
                             }
                             invalidateCache(topicSlug);
-                            const run = await fetchLastRun(topicSlug);
-                            if (run) setLastRun(run);
+                            invalidateCache("topics");
+                            // Re-fetch feed data automatically
+                            try {
+                              const [newFeed, newBreakdown, newRun] = await Promise.all([
+                                fetchSmartFeed(topicSlug, bias, 720, 200),
+                                fetchBreakdown(topicSlug, 720),
+                                fetchLastRun(topicSlug),
+                              ]);
+                              setSmartFeedItems(newFeed);
+                              setBreakdown(newBreakdown);
+                              if (newRun) setLastRun(newRun);
+                              // Also refresh all tweets for the chart
+                              fetchAllTweets(topicSlug, 720).then(setAllTweets).catch(() => {});
+                            } catch { /* page will show stale data, user can reload */ }
                             setIsRunning("done");
                             return;
                           }
                         } catch { /* keep polling */ }
                       }
                       invalidateCache(topicSlug);
+                      invalidateCache("topics");
                       setIsRunning("done");
                     };
                     poll();
@@ -464,7 +477,7 @@ export default function AnalyticsPage() {
                   ? pipelineProgress
                     ? `${pipelineProgress.label} (${pipelineProgress.pct}%)`
                     : "Starting..."
-                  : isRunning === "done" ? "Reload page" : "Refresh Data"}
+                  : isRunning === "done" ? "Data Updated" : "Refresh Data"}
               </button>}
               {(userTier === "admin" || (topic && topic.created_by != null && userId === topic.created_by)) && <Link
                 href={`/topics/${topicSlug}`}

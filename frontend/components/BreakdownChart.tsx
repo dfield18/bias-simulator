@@ -37,12 +37,7 @@ export default function BreakdownChart({
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-gray-400">
-        <span className="font-semibold text-gray-200">{data.on_topic}</span> on-topic tweets
-        <span className="text-gray-600"> / {data.total_tweets} total</span>
-      </div>
-
-      {/* Horizontal bar chart */}
+      {/* Horizontal bar chart — percentages only */}
       <div className="space-y-2">
         {categories.map(([key, cat]) => {
           const label = labels[key] || key;
@@ -51,19 +46,13 @@ export default function BreakdownChart({
             <div key={key}>
               <div className="flex justify-between text-xs text-gray-400 mb-1">
                 <span>{label}</span>
-                <span>
-                  {cat.count} ({cat.pct}%)
-                </span>
+                <span>{cat.pct}%</span>
               </div>
               <div className="h-4 bg-gray-800 rounded-full overflow-hidden">
                 <div
                   className={`h-full ${color} rounded-full transition-all`}
                   style={{ width: `${Math.max(cat.pct, 1)}%` }}
                 />
-              </div>
-              <div className="flex gap-3 text-xs text-gray-600 mt-0.5">
-                <span>Avg views: {formatNumber(cat.avg_views)}</span>
-                <span>Avg engagement: {formatNumber(cat.avg_engagement)}</span>
               </div>
             </div>
           );
@@ -91,12 +80,10 @@ export default function BreakdownChart({
         </div>
       )}
 
-      {/* Last updated */}
-      {data.last_updated && (
-        <div className="text-xs text-gray-600">
-          Last updated: {new Date(data.last_updated).toLocaleString()}
-        </div>
-      )}
+      {/* Tweet count + sort method */}
+      <div className="text-[10px] text-gray-600">
+        Based on the top {data.on_topic} tweets by views
+      </div>
     </div>
   );
 }

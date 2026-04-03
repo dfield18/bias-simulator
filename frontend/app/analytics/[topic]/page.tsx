@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cachedFetch, invalidateCache } from "@/lib/cache";
@@ -107,6 +107,8 @@ export default function AnalyticsPage() {
   const [bias, setBias] = useState(0);
   const [feedSortMode, setFeedSortMode] = useState<"smart" | "latest">("smart");
   const [feedAccountFilter, setFeedAccountFilter] = useState<string>("all");
+  const [showStickySlider, setShowStickySlider] = useState(false);
+  const chartRef = useRef<HTMLDivElement>(null);
   const [feedLoading, setFeedLoading] = useState(true);
   const [feedVisibleCount, setFeedVisibleCount] = useState(50);
   const [activeTab, setActiveTab] = useState("feed");
@@ -237,6 +239,18 @@ export default function AnalyticsPage() {
 
   // Reset feed visible count on sort/bias/filter change
   useEffect(() => { setFeedVisibleCount(50); }, [bias, feedSortMode, feedAccountFilter]);
+
+  // Show sticky slider only when the chart scrolls out of view
+  useEffect(() => {
+    const el = chartRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickySlider(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [activeTab]);
 
   // Feed infinite scroll
   useEffect(() => {
@@ -506,9 +520,9 @@ export default function AnalyticsPage() {
           </div>
         )}
 
-        {/* Sticky bias slider — feed tab only */}
-        {activeTab === "feed" && topic && (
-          <div className="sticky top-[88px] z-10 bg-gray-950 pb-3 pt-1 -mx-4 px-4">
+        {/* Sticky bias slider — feed tab only, appears when chart scrolls away */}
+        {activeTab === "feed" && topic && showStickySlider && (
+          <div className="sticky top-[88px] z-10 bg-gray-950 pb-3 pt-2 -mx-4 px-4 border-b border-gray-800/30">
             <div className="flex justify-between mb-1">
               <span className="text-xs font-semibold text-blue-400">{topic.anti_label}</span>
               <span className="text-xs text-gray-500">
@@ -536,6 +550,7 @@ export default function AnalyticsPage() {
         {activeTab === "feed" && (
           <>
             {/* Sentiment distribution chart */}
+            <div ref={chartRef}>
             {allTweets.length > 0 && (
               <SentimentDistribution
                 items={allTweets}
@@ -545,6 +560,7 @@ export default function AnalyticsPage() {
                 onChange={setBias}
               />
             )}
+            </div>
             <p className="text-[11px] text-gray-500 leading-relaxed">
               This feed is built from real tweets pulled from Twitter and classified by AI. Drag the slider to simulate how a feed algorithm would prioritize content based on political leaning. Classifications are estimates and may occasionally be inaccurate.
             </p>

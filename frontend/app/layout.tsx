@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import AuthProvider from "@/components/AuthProvider";
+import CookieBanner from "@/components/CookieBanner";
 import "./globals.css";
 
 const GA_ID = "G-EVZ0CK3P4G";
@@ -59,6 +60,7 @@ export default function RootLayout({
         </head>
         <body className="bg-gray-950 text-gray-100 min-h-screen">
           <AuthProvider>{children}</AuthProvider>
+          <CookieBanner />
         </body>
       </html>
     </ClerkProvider>

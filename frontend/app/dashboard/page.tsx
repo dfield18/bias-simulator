@@ -10,6 +10,7 @@ import {
   subscribeTopic,
   unsubscribeTopic,
 } from "@/lib/api";
+import { cachedFetch } from "@/lib/cache";
 
 export default function Home() {
   const [topics, setTopics] = useState<TopicData[]>([]);
@@ -18,7 +19,10 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchTopics(), fetchMyTopics()])
+    Promise.all([
+      cachedFetch("dashboard:topics", () => fetchTopics(), 2 * 60 * 1000),
+      cachedFetch("dashboard:myTopics", () => fetchMyTopics(), 2 * 60 * 1000),
+    ])
       .then(([t, my]) => {
         setTopics(t);
         setMyTopics(my);

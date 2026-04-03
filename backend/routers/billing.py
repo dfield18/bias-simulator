@@ -29,8 +29,8 @@ async def create_checkout_session(
     if not STRIPE_PRO_PRICE_ID:
         raise HTTPException(status_code=500, detail="Stripe price not configured. Set STRIPE_PRO_PRICE_ID in environment variables.")
 
-    if user.get("tier") == "pro":
-        raise HTTPException(status_code=400, detail="Already on Pro plan")
+    if user.get("tier") in ("pro", "admin"):
+        raise HTTPException(status_code=400, detail="Already on Pro plan or higher")
 
     try:
         # Get or create Stripe customer
@@ -111,23 +111,25 @@ async def stripe_webhook(
     event_type = event["type"]
     data = event["data"]["object"]
 
+    # Never overwrite admin tier via Stripe events
+    _admin_guard = User.tier != "admin"
+
     if event_type == "checkout.session.completed":
-        # User completed checkout — upgrade to pro
+        # User completed checkout — upgrade to pro (never downgrade admin)
         user_id = data.get("metadata", {}).get("user_id")
         customer_id = data.get("customer")
         if user_id:
             await db.execute(
                 update(User)
-                .where(User.id == user_id)
+                .where(User.id == user_id, _admin_guard)
                 .values(tier="pro", stripe_customer_id=customer_id)
             )
             await db.commit()
             print(f"[Stripe] User {user_id} upgraded to pro")
         elif customer_id:
-            # Fallback: look up user by Stripe customer ID
             await db.execute(
                 update(User)
-                .where(User.stripe_customer_id == customer_id)
+                .where(User.stripe_customer_id == customer_id, _admin_guard)
                 .values(tier="pro")
             )
             await db.commit()
@@ -139,13 +141,10 @@ async def stripe_webhook(
         customer_id = data.get("customer")
         status = data.get("status")
         if customer_id:
-            if status in ("active", "trialing"):
-                new_tier = "pro"
-            else:
-                new_tier = "free"
+            new_tier = "pro" if status in ("active", "trialing") else "free"
             await db.execute(
                 update(User)
-                .where(User.stripe_customer_id == customer_id)
+                .where(User.stripe_customer_id == customer_id, _admin_guard)
                 .values(tier=new_tier)
             )
             await db.commit()
@@ -156,7 +155,7 @@ async def stripe_webhook(
         if customer_id:
             await db.execute(
                 update(User)
-                .where(User.stripe_customer_id == customer_id)
+                .where(User.stripe_customer_id == customer_id, _admin_guard)
                 .values(tier="free")
             )
             await db.commit()

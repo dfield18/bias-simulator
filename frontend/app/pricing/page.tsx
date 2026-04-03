@@ -114,12 +114,12 @@ export default function PricingPage() {
               <span className="text-green-400">&#10003;</span> Priority support
             </li>
           </ul>
-          {userTier === "pro" ? (
+          {userTier === "pro" || userTier === "admin" ? (
             <Link
               href="/dashboard"
               className="block text-center w-full px-4 py-2 bg-green-600/20 text-green-400 rounded-lg text-sm font-medium"
             >
-              Current plan
+              {userTier === "admin" ? "Admin access" : "Current plan"}
             </Link>
           ) : (
             <button

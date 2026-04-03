@@ -242,7 +242,10 @@ export default function AnalyticsPage() {
   const feedItems = feedScored.slice(0, feedVisibleCount);
 
   // Reset feed visible count on sort/bias/filter change
-  useEffect(() => { setFeedVisibleCount(50); }, [bias, feedSortMode, feedAccountFilter]);
+  useEffect(() => {
+    setFeedVisibleCount(50);
+    if (activeTab === "feed") window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [bias, feedSortMode, feedAccountFilter]);
 
   // Track header height for sticky slider positioning
   useEffect(() => {

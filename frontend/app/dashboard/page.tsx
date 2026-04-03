@@ -147,9 +147,17 @@ export default function Home() {
           </Link>
         </>
       ) : (
-        <p className="text-gray-400 text-sm sm:text-base mb-6 max-w-xl">
-          Explore preloaded topics below. Upgrade to Pro to create your own topics and refresh data.
-        </p>
+        <>
+          <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
+            Explore preloaded topics below. Upgrade to Pro to create your own topics and refresh data.
+          </p>
+          <Link
+            href="/pricing"
+            className="inline-block px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-lg text-sm font-medium transition-colors mb-10 sm:mb-12"
+          >
+            + New Topic
+          </Link>
+        </>
       )}
 
       {/* Upgrade banner for free users */}

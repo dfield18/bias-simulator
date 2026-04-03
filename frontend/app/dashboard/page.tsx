@@ -212,6 +212,16 @@ export default function Home() {
                 <>
                   <h2 className="text-lg font-semibold text-gray-300 mb-4">Free Topics</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                    <Link
+                      href="/pricing"
+                      className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
+                    >
+                      <div className="text-center">
+                        <div className="text-2xl text-gray-600 mb-1">+</div>
+                        <h2 className="text-base font-semibold text-gray-400">Add New Topic</h2>
+                        <p className="text-gray-600 text-xs mt-1">Upgrade to Pro</p>
+                      </div>
+                    </Link>
                     {featured.map((topic) => (
                       <TopicCard key={topic.slug} topic={topic} />
                     ))}

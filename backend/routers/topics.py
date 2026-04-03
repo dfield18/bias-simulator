@@ -11,25 +11,43 @@ from auth import get_current_user, optional_user
 from models import Topic, UserTopic, TopicResponse, TopicDetailResponse
 
 
-async def _check_topic_access(slug: str, user: dict, db: AsyncSession) -> Topic:
-    """Check that a topic exists and the user has access. Returns the topic or raises 404/403."""
+async def _get_topic_or_404(slug: str, db: AsyncSession) -> Topic:
+    """Fetch a topic by slug or raise 404."""
     result = await db.execute(select(Topic).where(Topic.slug == slug))
     topic = result.scalar_one_or_none()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
-    # Public/featured topics and admin users always have access
+    return topic
+
+
+async def _check_topic_access(slug: str, user: dict, db: AsyncSession) -> Topic:
+    """READ access: topic exists and user can view it. Returns topic or raises 404."""
+    topic = await _get_topic_or_404(slug, db)
     if topic.visibility != "private" or user.get("tier") == "admin":
         return topic
-    # Private topics: only the creator has access
     if topic.created_by == user["id"]:
         return topic
-    # Check if user is subscribed
     sub = await db.execute(
         select(UserTopic).where(UserTopic.user_id == user["id"], UserTopic.topic_slug == slug)
     )
     if sub.scalar_one_or_none():
         return topic
     raise HTTPException(status_code=404, detail="Topic not found")
+
+
+async def _check_topic_pipeline_access(slug: str, user: dict, db: AsyncSession) -> Topic:
+    """PIPELINE access: only creator or admin can manage pipeline runs."""
+    topic = await _get_topic_or_404(slug, db)
+    if user.get("tier") == "admin":
+        return topic
+    if topic.created_by == user["id"]:
+        return topic
+    if topic.visibility == "private":
+        raise HTTPException(status_code=404, detail="Topic not found")
+    raise HTTPException(
+        status_code=403,
+        detail="Only the topic creator can manage pipeline runs for this topic",
+    )
 
 router = APIRouter()
 
@@ -256,7 +274,7 @@ async def get_my_topics(
 @router.post("/topics/{slug}/run")
 async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Trigger the pipeline for a topic in a background thread."""
-    await _check_topic_access(slug, user, db)
+    await _check_topic_pipeline_access(slug, user, db)
     # Tier enforcement
     if user.get("tier") not in ("pro", "admin"):
         raise HTTPException(
@@ -317,7 +335,7 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
 @router.get("/topics/{slug}/progress")
 async def get_pipeline_progress(slug: str, user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Get current pipeline progress for a topic."""
-    await _check_topic_access(slug, user, db)
+    await _check_topic_pipeline_access(slug, user, db)
     from pipeline.run import get_progress
     progress = get_progress(slug)
     if not progress:
@@ -353,13 +371,8 @@ async def update_topic(
     db: AsyncSession = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    """Update a topic's settings. Only the creator can edit."""
-    result = await db.execute(select(Topic).where(Topic.slug == slug))
-    topic = result.scalar_one_or_none()
-    if not topic:
-        raise HTTPException(status_code=404, detail="Topic not found")
-    if user.get("tier") != "admin" and topic.created_by != user["id"]:
-        raise HTTPException(status_code=403, detail="Only the topic creator can edit settings")
+    """Update a topic's settings. Only the creator or admin can edit."""
+    topic = await _check_topic_pipeline_access(slug, user, db)
 
     if body.topic_name is not None:
         topic.name = body.topic_name
@@ -396,13 +409,7 @@ async def delete_topic(
     user: dict = Depends(get_current_user),
 ):
     """Deactivate a topic (soft delete). Only the creator or admin can delete."""
-    result = await db.execute(select(Topic).where(Topic.slug == slug))
-    topic = result.scalar_one_or_none()
-    if not topic:
-        raise HTTPException(status_code=404, detail="Topic not found")
-    if user.get("tier") != "admin" and topic.created_by != user["id"]:
-        raise HTTPException(status_code=403, detail="Only the topic creator can delete")
-
+    topic = await _check_topic_pipeline_access(slug, user, db)
     topic.is_active = False
     await db.commit()
     return {"status": "deactivated", "topic": slug}

@@ -84,6 +84,7 @@ export default function AnalyticsPage() {
   const [topic, setTopic] = useState<TopicData | null>(null);
   const [allTopics, setAllTopics] = useState<TopicData[]>([]);
   const [userTier, setUserTier] = useState<string>("free");
+  const [userId, setUserId] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<Record<string, SummaryData>>({});
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [narrative, setNarrative] = useState<NarrativeData | null>(null);
@@ -120,7 +121,7 @@ export default function AnalyticsPage() {
   // Essential data — loaded once on mount
   useEffect(() => {
     const s = topicSlug;
-    fetchMe().then((u) => setUserTier(u.tier)).catch(() => {});
+    fetchMe().then((u) => { setUserTier(u.tier); setUserId(u.id); }).catch(() => {});
     // Safety timeout: if topic doesn't load in 10s, stop showing spinner
     const timeout = setTimeout(() => setFeedLoading(false), 10000);
     cachedFetch(`topics`, () => fetchTopics(), 60 * 1000).then((topics) => {
@@ -401,7 +402,7 @@ export default function AnalyticsPage() {
                   Upgrade to Pro
                 </Link>
               )}
-              {userTier !== "free" && <button
+              {(userTier === "admin" || (topic && topic.created_by != null && userId === topic.created_by)) && <button
                 onClick={async () => {
                   if (isRunning === "done") {
                     window.location.reload();
@@ -462,7 +463,7 @@ export default function AnalyticsPage() {
                     : "Starting..."
                   : isRunning === "done" ? "Reload page" : "Refresh Data"}
               </button>}
-              {userTier !== "free" && <Link
+              {(userTier === "admin" || (topic && topic.created_by != null && userId === topic.created_by)) && <Link
                 href={`/topics/${topicSlug}`}
                 className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors hidden sm:block"
               >

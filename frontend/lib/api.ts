@@ -214,7 +214,10 @@ export async function runTopicPipeline(slug: string, options?: { hours?: number;
   const res = await apiFetch(`${API_URL}/api/topics/${slug}/run${qs}`, {
     method: "POST",
   });
-  if (!res.ok) throw new Error("Failed to start pipeline");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to start pipeline");
+  }
 }
 
 export async function fetchFeed(

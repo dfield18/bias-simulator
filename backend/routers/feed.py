@@ -52,8 +52,10 @@ async def get_feed(
     limit: int = Query(default=20, le=50),
     hours: int = Query(default=24),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Get a simulated feed filtered by political bias (continuous -10 to +10)."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     # Query tweets with classifications
@@ -127,8 +129,10 @@ async def get_feed_all(
     topic: str,
     hours: int = Query(default=24),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Return all on-topic tweets with classifications, unsorted. Client does scoring."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     stmt = (
@@ -697,8 +701,10 @@ async def get_breakdown(
     topic: str,
     hours: int = Query(default=24),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Get breakdown stats for a topic."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     # Total tweets
@@ -801,8 +807,10 @@ async def get_breakdown(
 async def get_summaries(
     topic: str,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Get AI-generated summaries for a topic."""
+    await _check_feed_topic_access(topic, user, db)
     stmt = (
         select(TopicSummary)
         .where(TopicSummary.topic_slug == topic)
@@ -826,8 +834,10 @@ async def get_narrative(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Get narrative frame and emotion distributions by side."""
+    await _check_feed_topic_access(topic, user, db)
     cache_key = f"{topic}:narrative:{hours}"
     cached = get_cached(cache_key)
     if cached is not None:
@@ -973,8 +983,10 @@ async def get_gap_analysis(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Compute comparative diagnostic metrics explaining why the narrative gap exists."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -1194,8 +1206,10 @@ async def get_exposure_overlap(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Compute Exposure Overlap: how much of the story universe is shared between sides."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -1403,8 +1417,10 @@ async def get_paired_stories(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Find stories covered by both sides and show how each frames them differently."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -1716,8 +1732,10 @@ async def get_recommendations(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Generate strategic recommendations for each side based on analytics data."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2272,8 +2290,10 @@ async def get_pulse_extras(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Return viral posts and alert flags for the executive pulse tab."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2397,8 +2417,10 @@ async def get_narrative_strategy(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Return frame engagement, playbook structure, and narrative gaps."""
+    await _check_feed_topic_access(topic, user, db)
     ck = f"{topic}:narr_strategy:{hours}"
     cv = get_cached(ck)
     if cv is not None: return cv
@@ -2514,8 +2536,10 @@ async def get_narrative_depth(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Return rhetoric intensity, example tweets per frame, and amplification signals."""
+    await _check_feed_topic_access(topic, user, db)
     ck = f"{topic}:narr_depth:{hours}"
     cv = get_cached(ck)
     if cv is not None: return cv
@@ -2711,8 +2735,10 @@ async def get_media_breakdown(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Return media type distribution per side."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2791,8 +2817,10 @@ async def get_side_by_side_feed(
     hours: int = Query(default=720),
     n: int = Query(default=5, le=10),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Return top N tweets per side for a side-by-side feed preview."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2856,8 +2884,10 @@ async def get_hashtags(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Return hashtag frequency per side."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2917,8 +2947,10 @@ async def get_hashtags(
 async def get_last_run(
     topic: str,
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Return the most recent pipeline run metadata."""
+    await _check_feed_topic_access(topic, user, db)
     stmt = (
         select(FetchRun)
         .where(FetchRun.topic_slug == topic)
@@ -2961,8 +2993,10 @@ async def get_dunks(
     topic: str,
     hours: int = Query(default=720),
     db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
 ):
     """Find tweets being 'dunked on' — cross-side engagement, ratio'd tweets, quote-dunks."""
+    await _check_feed_topic_access(topic, user, db)
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))

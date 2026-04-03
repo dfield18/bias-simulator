@@ -224,8 +224,8 @@ export default function Home() {
         </>
       )}
 
-      {/* Public Topics (not yet subscribed) */}
-      {publicTopics.length > 0 && (
+      {/* Public Topics (not yet subscribed) — hidden for free users */}
+      {publicTopics.length > 0 && user && user.tier !== "free" && (
         <>
           <h2 className="text-lg font-semibold text-gray-300 mb-3">
             {myTopicsList.length > 0 ? "Explore Topics" : "Topics"}

@@ -50,6 +50,7 @@ import {
   fetchMe,
   fetchSmartFeed,
   fetchDunks,
+  fetchMyTopics,
   SmartFeedItem,
 } from "@/lib/api";
 import SummaryTabs from "@/components/SummaryTabs";
@@ -155,6 +156,8 @@ export default function AnalyticsPage() {
       cachedFetch(`${s}:hashtags`, () => fetchHashtags(s)).then((d) => d && setHashtags(d)).catch(console.error);
       cachedFetch(`${s}:mediaBreakdown`, () => fetchMediaBreakdown(s)).then((d) => d && setMediaBreakdown(d)).catch(console.error);
       cachedFetch(`${s}:dunks`, () => fetchDunks(s)).then((d) => d && setDunksData(d)).catch(console.error);
+      // Prefetch dashboard data so navigating back is instant
+      cachedFetch("myTopics", () => fetchMyTopics(), 2 * 60 * 1000).catch(() => {});
     }, 1000);
     return () => clearTimeout(bgTimer);
   }, [topicSlug]);

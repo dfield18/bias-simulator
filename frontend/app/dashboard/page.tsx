@@ -25,8 +25,8 @@ export default function Home() {
   useEffect(() => {
     fetchMe().then(setUser).catch(() => {});
     Promise.all([
-      cachedFetch("dashboard:topics", () => fetchTopics(), 2 * 60 * 1000),
-      cachedFetch("dashboard:myTopics", () => fetchMyTopics(), 2 * 60 * 1000),
+      cachedFetch("topics", () => fetchTopics(), 2 * 60 * 1000),
+      cachedFetch("myTopics", () => fetchMyTopics(), 2 * 60 * 1000),
     ])
       .then(([t, my]) => {
         setTopics(t);

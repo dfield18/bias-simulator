@@ -110,7 +110,6 @@ export default function AnalyticsPage() {
   const [feedSortMode, setFeedSortMode] = useState<"smart" | "latest">("smart");
   const [feedAccountFilter, setFeedAccountFilter] = useState<string>("all");
   const [showStickySlider, setShowStickySlider] = useState(false);
-  const chartRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const [headerHeight, setHeaderHeight] = useState(88);
   const [feedLoading, setFeedLoading] = useState(true);
@@ -254,16 +253,18 @@ export default function AnalyticsPage() {
     return () => obs.disconnect();
   }, []);
 
-  // Show sticky slider only when the chart scrolls out of view
+  // Show sticky slider when user scrolls past 300px on feed tab
   useEffect(() => {
-    const el = chartRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setShowStickySlider(!entry.isIntersecting),
-      { threshold: 0 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    if (activeTab !== "feed") {
+      setShowStickySlider(false);
+      return;
+    }
+    const handleScroll = () => {
+      setShowStickySlider(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [activeTab]);
 
   // Feed infinite scroll
@@ -574,7 +575,6 @@ export default function AnalyticsPage() {
         {activeTab === "feed" && (
           <>
             {/* Sentiment distribution chart */}
-            <div ref={chartRef}>
             {allTweets.length > 0 && (
               <SentimentDistribution
                 items={allTweets}
@@ -584,7 +584,6 @@ export default function AnalyticsPage() {
                 onChange={setBias}
               />
             )}
-            </div>
             <p className="text-[11px] text-gray-500 leading-relaxed">
               This feed is built from real tweets pulled from Twitter and classified by AI. Drag the slider to simulate how a feed algorithm would prioritize content based on political leaning. Classifications are estimates and may occasionally be inaccurate.
             </p>

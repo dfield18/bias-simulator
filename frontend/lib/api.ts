@@ -38,6 +38,14 @@ async function apiFetch(url: string, init?: RequestInit): Promise<Response> {
   return fetch(url, { ...init, headers });
 }
 
+/** Convenience: apiFetch a path, parse JSON, throw on error. */
+export async function apiFetchDirect(path: string, init?: RequestInit): Promise<any> {
+  const res = await apiFetch(`${API_URL}${path}`, init);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || "Request failed");
+  return data;
+}
+
 export interface TopicData {
   slug: string;
   name: string;

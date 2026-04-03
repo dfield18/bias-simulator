@@ -8,7 +8,7 @@ load_dotenv()
 
 from database import init_db
 from auth import get_current_user
-from routers import feed, topics, overrides
+from routers import feed, topics, overrides, billing
 
 
 @asynccontextmanager
@@ -38,6 +38,7 @@ app.add_middleware(
 app.include_router(feed.router, prefix="/api")
 app.include_router(topics.router, prefix="/api")
 app.include_router(overrides.router, prefix="/api")
+app.include_router(billing.router, prefix="/api")
 
 
 @app.get("/health")

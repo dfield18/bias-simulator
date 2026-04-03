@@ -3,7 +3,7 @@ import json
 import re
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -173,6 +173,20 @@ async def create_topic(
     user: dict = Depends(get_current_user),
 ):
     """Create a new topic from user-adjusted definitions."""
+    # Tier enforcement: free users limited to 2 topics
+    if user.get("tier") != "pro" and user.get("tier") != "admin":
+        from models import UserTopic
+        count_result = await db.execute(
+            select(func.count()).select_from(UserTopic)
+            .where(UserTopic.user_id == user["id"], UserTopic.role == "creator")
+        )
+        topic_count = count_result.scalar() or 0
+        if topic_count >= 2:
+            raise HTTPException(
+                status_code=403,
+                detail="Free plan allows up to 2 topics. Upgrade to Pro for unlimited topics."
+            )
+
     # Check if slug already exists
     existing = await db.execute(select(Topic).where(Topic.slug == body.slug))
     if existing.scalar_one_or_none():
@@ -223,8 +237,24 @@ async def get_my_topics(
 
 
 @router.post("/topics/{slug}/run")
-async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), _: dict = Depends(get_current_user)):
+async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Trigger the pipeline for a topic in a background thread."""
+    # Tier enforcement: free users limited to 3 pipeline runs per day
+    if user.get("tier") not in ("pro", "admin"):
+        from datetime import datetime, timezone, timedelta
+        from models import FetchRun
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        run_count_result = await db.execute(
+            select(func.count()).select_from(FetchRun)
+            .where(FetchRun.topic_slug == slug, FetchRun.ran_at >= today_start)
+        )
+        runs_today = run_count_result.scalar() or 0
+        if runs_today >= 3:
+            raise HTTPException(
+                status_code=403,
+                detail="Free plan allows 3 pipeline runs per day. Upgrade to Pro for unlimited runs."
+            )
+
     import threading
     from pipeline.run import run_pipeline
 

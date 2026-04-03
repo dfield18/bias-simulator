@@ -9,16 +9,20 @@ import {
   fetchMyTopics,
   subscribeTopic,
   unsubscribeTopic,
+  fetchMe,
+  UserProfile,
 } from "@/lib/api";
 import { cachedFetch } from "@/lib/cache";
 
 export default function Home() {
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [myTopics, setMyTopics] = useState<Record<string, string>>({}); // slug → role
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    fetchMe().then(setUser).catch(() => {});
     Promise.all([
       cachedFetch("dashboard:topics", () => fetchTopics(), 2 * 60 * 1000),
       cachedFetch("dashboard:myTopics", () => fetchMyTopics(), 2 * 60 * 1000),
@@ -139,6 +143,22 @@ export default function Home() {
       >
         + New Topic
       </Link>
+
+      {/* Upgrade banner for free users */}
+      {user && user.tier === "free" && (
+        <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span> (2 topics, 3 refreshes/day)</p>
+            <p className="text-xs text-gray-500 mt-0.5">Upgrade for unlimited topics and refreshes.</p>
+          </div>
+          <Link
+            href="/pricing"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shrink-0 ml-4"
+          >
+            Upgrade
+          </Link>
+        </div>
+      )}
 
       {loading && <p className="text-gray-500">Loading topics...</p>}
       {error && <p className="text-red-400">Error: {error}</p>}

@@ -1593,13 +1593,12 @@ async def get_paired_stories(
     for s in stories:
         anti_id = s["anti"]["id_str"]
         pro_id = s["pro"]["id_str"]
-        # Skip if either representative tweet already appears in a prior story
         if anti_id in seen_tweet_ids_in_stories or pro_id in seen_tweet_ids_in_stories:
             continue
         seen_tweet_ids_in_stories.add(anti_id)
         seen_tweet_ids_in_stories.add(pro_id)
         deduped.append(s)
-        if len(deduped) >= 4:
+        if len(deduped) >= 8:  # send more candidates so we have extras after validation
             break
     stories = deduped
 
@@ -1619,32 +1618,25 @@ Side A frame: {s['anti']['frame']}
 Side B ({topic_obj.pro_label}): {s['pro']['full_text'][:300]}
 Side B frame: {s['pro']['frame']}""")
 
-            prompt = f"""For each story below, generate:
-1. A story_title: a short, specific title for the shared event or issue (3-8 words). This must describe a SPECIFIC event, policy, incident, or development — NOT a vague stance like "Against X" or "Support for Y". If the cluster label is vague, infer the actual story from the tweet text.
-2. A headline_a: framing headline for Side A (6-14 words, captures their interpretation)
-3. A headline_b: framing headline for Side B (6-14 words, captures their interpretation)
-4. A takeaway: one-line comparison (neutral, explains the contrast)
+            prompt = f"""For each story below, determine whether both tweets are actually about the SAME specific event or issue. Then generate metadata.
 
-Rules for story_title:
-- Must be a SPECIFIC event, decision, incident, or policy — e.g. "ICC Arrest Warrant Debate", "Gaza Aid Blockade", "Campus Protest Crackdowns"
-- NEVER use generic stance labels like "Against Israel", "Pro-Immigration", "Support for X"
-- If you can't identify a specific event, describe the specific sub-debate, e.g. "Civilian Casualty Reporting" rather than "The Conflict"
+For each story, return:
+1. same_story: boolean — are both tweets genuinely about the same specific event, policy, or development? Set to false if the tweets are about different topics that just happen to share a keyword.
+2. story_title: a short, specific title (3-8 words) for the shared event. Must be a SPECIFIC event — e.g. "ICC Arrest Warrant Debate", not "Against Israel".
+3. headline_a: framing headline for Side A (6-14 words)
+4. headline_b: framing headline for Side B (6-14 words)
+5. takeaway: one-line neutral comparison of how framing differs
 
-Rules for headlines:
-- Capture how that side frames/interprets the event
-- Do NOT quote the tweet verbatim
-- No hashtags, no @mentions, no URLs
-- No leading emojis or "BREAKING:"
-- Sound like a newspaper sub-headline, not a tweet
-
-Rules for takeaway:
-- One sentence, neutral tone
-- Reference the shared event and how framing differs
+Rules:
+- same_story=false if the tweets discuss unrelated events that coincidentally share keywords
+- same_story=false if one tweet is about a general stance and the other is about a specific event
+- Headlines should sound like newspaper sub-headlines, not tweets
+- No hashtags, @mentions, URLs, or emojis in headlines
 
 {chr(10).join(prompt_parts)}
 
 Return a JSON array with one object per story:
-[{{"story_title": "...", "headline_a": "...", "headline_b": "...", "takeaway": "..."}}]"""
+[{{"same_story": true/false, "story_title": "...", "headline_a": "...", "headline_b": "...", "takeaway": "..."}}]"""
 
             resp = client.models.generate_content(
                 model="gemini-2.0-flash",
@@ -1656,9 +1648,13 @@ Return a JSON array with one object per story:
                 text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
             headlines = json.loads(text)
 
+            validated = []
             for i, s in enumerate(stories):
                 if i < len(headlines):
                     h = headlines[i]
+                    # Filter out pairs the LLM says aren't about the same story
+                    if not h.get("same_story", True):
+                        continue
                     if h.get("story_title"):
                         s["story_label"] = h["story_title"]
                     s["anti"]["headline"] = h.get("headline_a", s["anti"]["full_text"][:80])
@@ -1668,6 +1664,8 @@ Return a JSON array with one object per story:
                     s["anti"]["headline"] = s["anti"]["full_text"][:80]
                     s["pro"]["headline"] = s["pro"]["full_text"][:80]
                     s["interpretation"] = ""
+                validated.append(s)
+            stories = validated[:4]
         except Exception as e:
             # Fallback: simple first-sentence extraction
             import re as _re

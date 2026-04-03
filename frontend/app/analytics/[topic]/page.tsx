@@ -242,10 +242,12 @@ export default function AnalyticsPage() {
   const feedItems = feedScored.slice(0, feedVisibleCount);
 
   // Reset feed visible count on sort/bias/filter change
+  useEffect(() => { setFeedVisibleCount(50); }, [bias, feedSortMode, feedAccountFilter]);
+
+  // Scroll to top when sort or filter changes (not bias — that uses onPointerUp)
   useEffect(() => {
-    setFeedVisibleCount(50);
     if (activeTab === "feed") window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [bias, feedSortMode, feedAccountFilter]);
+  }, [feedSortMode, feedAccountFilter]);
 
   // Track header height for sticky slider positioning
   useEffect(() => {
@@ -564,6 +566,8 @@ export default function AnalyticsPage() {
                 step={0.1}
                 value={bias}
                 onChange={(e) => setBias(parseFloat(e.target.value))}
+                onPointerUp={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                onTouchEnd={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                 className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                 style={{
                   background: `linear-gradient(to right, rgb(59,130,246), rgb(107,114,128) 45%, rgb(107,114,128) 55%, rgb(239,68,68))`,

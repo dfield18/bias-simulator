@@ -1837,27 +1837,27 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="space-y-2">
                           {sharedNarr.slice(0, 6).map(n => {
+                            const total = n.anti_count + n.pro_count;
+                            const antiPct = total > 0 ? Math.round((n.anti_count / total) * 100) : 0;
+                            const proPct = total > 0 ? 100 - antiPct : 0;
                             const antiW = maxCount > 0 ? (n.anti_count / maxCount) * 100 : 0;
                             const proW = maxCount > 0 ? (n.pro_count / maxCount) * 100 : 0;
                             return (
                               <div key={n.frame} className="flex items-center">
-                                {/* Left bar (blue, grows right-to-left) */}
                                 <div className="w-[45%] flex items-center justify-end gap-1.5">
-                                  <span className="text-[9px] text-blue-400/70 shrink-0">{n.anti_count}</span>
+                                  <span className="text-[9px] text-blue-400/70 shrink-0">{antiPct}%</span>
                                   <div className="h-4 flex-1 flex justify-end">
                                     <div className="h-full bg-blue-500/50 rounded-l-sm" style={{ width: `${antiW}%` }} />
                                   </div>
                                 </div>
-                                {/* Center label */}
                                 <div className="w-[10%] text-center">
                                   <span className="text-[9px] text-gray-500 leading-none">{n.label.length > 12 ? n.label.slice(0, 11) + "..." : n.label}</span>
                                 </div>
-                                {/* Right bar (red, grows left-to-right) */}
                                 <div className="w-[45%] flex items-center gap-1.5">
                                   <div className="h-4 flex-1 flex justify-start">
                                     <div className="h-full bg-red-500/50 rounded-r-sm" style={{ width: `${proW}%` }} />
                                   </div>
-                                  <span className="text-[9px] text-red-400/70 shrink-0">{n.pro_count}</span>
+                                  <span className="text-[9px] text-red-400/70 shrink-0">{proPct}%</span>
                                 </div>
                               </div>
                             );
@@ -1875,12 +1875,15 @@ export default function AnalyticsPage() {
                         <div className="text-[10px] text-gray-500 font-medium mb-3">Shared Sources</div>
                         <div className="space-y-2">
                           {shared_sources.slice(0, 6).map(s => {
+                            const total = s.anti_count + s.pro_count;
+                            const antiPct = total > 0 ? Math.round((s.anti_count / total) * 100) : 0;
+                            const proPct = total > 0 ? 100 - antiPct : 0;
                             const antiW = maxSrc > 0 ? (s.anti_count / maxSrc) * 100 : 0;
                             const proW = maxSrc > 0 ? (s.pro_count / maxSrc) * 100 : 0;
                             return (
                               <div key={s.domain} className="flex items-center">
                                 <div className="w-[45%] flex items-center justify-end gap-1.5">
-                                  <span className="text-[9px] text-blue-400/70 shrink-0">{s.anti_count}</span>
+                                  <span className="text-[9px] text-blue-400/70 shrink-0">{antiPct}%</span>
                                   <div className="h-4 flex-1 flex justify-end">
                                     <div className="h-full bg-blue-500/50 rounded-l-sm" style={{ width: `${antiW}%` }} />
                                   </div>
@@ -1892,7 +1895,7 @@ export default function AnalyticsPage() {
                                   <div className="h-4 flex-1 flex justify-start">
                                     <div className="h-full bg-red-500/50 rounded-r-sm" style={{ width: `${proW}%` }} />
                                   </div>
-                                  <span className="text-[9px] text-red-400/70 shrink-0">{s.pro_count}</span>
+                                  <span className="text-[9px] text-red-400/70 shrink-0">{proPct}%</span>
                                 </div>
                               </div>
                             );

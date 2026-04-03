@@ -48,6 +48,43 @@ async def create_override(
         classification.override_political_bent = body.override_political_bent
         classification.override_intensity_score = body.override_intensity_score
         classification.override_notes = body.override_notes
+
+        # Auto-set account rule so future tweets from this account get the same classification
+        if body.override_political_bent:
+            tweet_result = await db.execute(
+                select(Tweet).where(Tweet.id_str == body.id_str)
+            )
+            tweet = tweet_result.scalar_one_or_none()
+            if tweet and tweet.screen_name and tweet.topic_slug:
+                topic_result = await db.execute(
+                    select(Topic).where(Topic.slug == tweet.topic_slug)
+                )
+                topic_obj = topic_result.scalar_one_or_none()
+                if topic_obj:
+                    rules = topic_obj.account_rules or {}
+                    screen = tweet.screen_name.lower().strip()
+                    rules[screen] = body.override_political_bent
+                    topic_obj.account_rules = rules
+                    # Also override all existing tweets from this account in this topic
+                    tweet_ids_result = await db.execute(
+                        select(Tweet.id_str).where(
+                            Tweet.topic_slug == tweet.topic_slug,
+                            Tweet.screen_name.ilike(screen),
+                        )
+                    )
+                    existing_ids = [r[0] for r in tweet_ids_result.all()]
+                    if existing_ids:
+                        await db.execute(
+                            update(Classification)
+                            .where(Classification.id_str.in_(existing_ids))
+                            .values(
+                                override_political_bent=body.override_political_bent,
+                                override_flag=True,
+                                override_notes=f"Account rule: always {body.override_political_bent}",
+                                override_at=datetime.now(timezone.utc),
+                            )
+                        )
+
     classification.override_at = datetime.now(timezone.utc)
 
     await db.commit()

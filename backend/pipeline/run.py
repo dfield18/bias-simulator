@@ -601,9 +601,10 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
         timings["framing_and_summaries"] = round(_time.time() - t_framing_start, 1)
         timings["total"] = round(_time.time() - pipeline_start, 1)
 
-        # Summary — invalidate backend cache for this topic
+        # Summary — invalidate backend cache for this topic + demo landing
         from cache import invalidate as invalidate_cache
         invalidate_cache(topic_slug)
+        invalidate_cache("demo:")
         # Log run with complete timings
         log_fetch_run(conn, topic_slug, tweets_fetched, tweets_new,
                       len(classifications), total_cost, "success", step_timings=timings)

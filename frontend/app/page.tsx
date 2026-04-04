@@ -65,7 +65,17 @@ export default function LandingPage() {
 
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    fetch(`${API}/api/demo/landing`).then(r => r.json()).then(setLandingData).catch(() => {});
+    fetch(`${API}/api/demo/landing`)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(data => {
+        if (data && (data.echo_chamber || data.frames)) {
+          setLandingData(data);
+        }
+      })
+      .catch(e => console.error("[Landing] Demo data fetch failed:", e));
   }, []);
 
   useEffect(() => {

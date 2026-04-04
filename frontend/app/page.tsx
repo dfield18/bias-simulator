@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function LandingPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -66,8 +66,70 @@ export default function LandingPage() {
           </Link>
         </div>
 
+        {/* Interactive demo slider */}
+        {(() => {
+          const [demoBias, setDemoBias] = useState(0);
+          const abs = Math.abs(demoBias);
+          const biasLabel = abs <= 1 ? "all perspectives"
+            : `${abs <= 3 ? "slightly" : abs <= 5 ? "moderately" : abs <= 7.5 ? "strongly" : "extremely"} ${demoBias < 0 ? "anti-war" : "pro-war"}`;
+
+          // Sample distribution data for Iran war
+          const dist = [1,2,4,8,14,22,30,35,28,18,12,10,12,15,20,28,18,10,5,3,1];
+          const maxD = Math.max(...dist);
+
+          return (
+            <div className="mt-16 sm:mt-20 bg-gray-900/80 border border-gray-800/60 rounded-xl p-5 sm:p-6">
+              <div className="flex items-start justify-between mb-1">
+                <div>
+                  <div className="text-xs sm:text-sm text-gray-400 font-semibold">Iran War — Tweet Volume by Sentiment</div>
+                  <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">Drag the slider to simulate how a feed algorithm prioritizes content</p>
+                </div>
+                <span className="text-[10px] sm:text-xs text-gray-600 shrink-0">Live demo</span>
+              </div>
+
+              {/* Mini chart */}
+              <div className="flex items-end gap-[2px] h-20 sm:h-24 my-4">
+                {dist.map((v, i) => {
+                  const h = (v / maxD) * 100;
+                  const pos = (i / 20) * 20 - 10;
+                  const biasWeight = demoBias === 0 ? 1 :
+                    demoBias < 0 ? (pos < 0 ? 1 + Math.abs(demoBias) * 0.15 : Math.max(0.2, 1 - demoBias * -0.1)) :
+                    (pos > 0 ? 1 + demoBias * 0.15 : Math.max(0.2, 1 - demoBias * 0.1));
+                  const adjustedH = Math.min(100, h * biasWeight);
+                  const color = i < 10 ? `rgba(59,130,246,${0.3 + (adjustedH / 100) * 0.4})` : i === 10 ? "rgba(107,114,128,0.4)" : `rgba(239,68,68,${0.3 + (adjustedH / 100) * 0.4})`;
+                  return (
+                    <div key={i} className="flex-1 rounded-t-sm" style={{ height: `${adjustedH}%`, backgroundColor: color }} />
+                  );
+                })}
+              </div>
+
+              {/* Labels */}
+              <div className="flex justify-between mb-2">
+                <span className="text-xs sm:text-sm font-semibold text-blue-400">Anti-War</span>
+                <span className="text-xs sm:text-sm font-semibold text-red-400">Pro-War</span>
+              </div>
+
+              {/* Slider */}
+              <input
+                type="range"
+                min={-10}
+                max={10}
+                step={0.5}
+                value={demoBias}
+                onChange={(e) => setDemoBias(parseFloat(e.target.value))}
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                style={{ background: "linear-gradient(to right, rgb(59,130,246), rgb(107,114,128) 45%, rgb(107,114,128) 55%, rgb(239,68,68))" }}
+              />
+              <div className="text-center mt-1.5">
+                <span className="text-xs text-gray-400">{biasLabel}</span>
+                <span className="text-[10px] text-gray-600 ml-1.5">({demoBias > 0 ? "+" : ""}{demoBias.toFixed(1)})</span>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Product preview — three panels */}
-        <div className="mt-16 sm:mt-20 grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
 
           {/* Panel 1: Mini feed — scrollable */}
           <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 lg:col-span-1 flex flex-col">

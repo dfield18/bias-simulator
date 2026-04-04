@@ -132,7 +132,7 @@ export default function Home() {
   return (
     <main className="max-w-4xl mx-auto px-4 py-10 sm:py-16">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl sm:text-4xl font-bold">Echo</h1>
+        <h1 className="text-2xl sm:text-4xl font-bold">DividedView</h1>
         <UserButton />
       </div>
       {user && user.tier !== "free" ? (

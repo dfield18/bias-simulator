@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Echo API", lifespan=lifespan)
+app = FastAPI(title="DividedView API", lifespan=lifespan)
 
 _origins = [
     o.strip() for o in [

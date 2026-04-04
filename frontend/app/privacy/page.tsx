@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Privacy Policy — Echo" };
+export const metadata = { title: "Privacy Policy — DividedView" };
 
 export default function PrivacyPolicy() {
   return (
@@ -13,22 +13,22 @@ export default function PrivacyPolicy() {
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">1. Who We Are</h2>
           <p>
-            Echo (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) operates the Echo platform, a service that analyzes public social media posts to visualize political bias and narrative framing. This Privacy Policy explains how we collect, use, and protect your information.
+            DividedView (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) operates the DividedView platform, a service that analyzes public social media posts to visualize political bias and narrative framing. This Privacy Policy explains how we collect, use, and protect your information.
           </p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">2. Information We Collect</h2>
           <p className="mb-3"><strong className="text-gray-100">Account information:</strong> When you create an account, we collect your name and email address through our authentication provider (Clerk). If you subscribe to a paid plan, payment information is processed by Stripe — we do not store your credit card details.</p>
-          <p className="mb-3"><strong className="text-gray-100">Usage data:</strong> We collect information about how you use Echo, including topics you create or subscribe to, pipeline runs, and feature interactions. This helps us improve the product and enforce usage limits.</p>
-          <p className="mb-3"><strong className="text-gray-100">Social media data:</strong> Echo collects publicly available tweets related to topics you analyze. This data includes tweet text, author usernames, engagement metrics, and media attachments. We do not collect private or protected tweets. This data is used solely for analysis within the platform.</p>
+          <p className="mb-3"><strong className="text-gray-100">Usage data:</strong> We collect information about how you use DividedView, including topics you create or subscribe to, pipeline runs, and feature interactions. This helps us improve the product and enforce usage limits.</p>
+          <p className="mb-3"><strong className="text-gray-100">Social media data:</strong> DividedView collects publicly available tweets related to topics you analyze. This data includes tweet text, author usernames, engagement metrics, and media attachments. We do not collect private or protected tweets. This data is used solely for analysis within the platform.</p>
           <p><strong className="text-gray-100">AI classifications:</strong> Tweets are processed by artificial intelligence models to generate political stance classifications, intensity scores, narrative framing, and emotional tone. These are algorithmic estimates, not editorial judgments.</p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">3. How We Use Your Information</h2>
           <ul className="list-disc list-inside space-y-1.5 text-gray-400">
-            <li>To provide and maintain the Echo platform</li>
+            <li>To provide and maintain the DividedView platform</li>
             <li>To authenticate your identity and manage your account</li>
             <li>To process payments and manage subscriptions</li>
             <li>To enforce usage limits based on your subscription tier</li>
@@ -39,7 +39,7 @@ export default function PrivacyPolicy() {
 
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">4. Data Sharing</h2>
-          <p className="mb-3">We do not sell your personal information. We share data only with the following categories of service providers who help us operate Echo:</p>
+          <p className="mb-3">We do not sell your personal information. We share data only with the following categories of service providers who help us operate DividedView:</p>
           <ul className="list-disc list-inside space-y-1.5 text-gray-400">
             <li><strong className="text-gray-300">Clerk</strong> — authentication and user management</li>
             <li><strong className="text-gray-300">Stripe</strong> — payment processing</li>
@@ -71,7 +71,7 @@ export default function PrivacyPolicy() {
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">7. Cookies</h2>
           <p>
-            Echo uses essential cookies for authentication (managed by Clerk). We do not use advertising or tracking cookies. No third-party analytics cookies are set.
+            DividedView uses essential cookies for authentication (managed by Clerk). We do not use advertising or tracking cookies. No third-party analytics cookies are set.
           </p>
         </section>
 
@@ -85,7 +85,7 @@ export default function PrivacyPolicy() {
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">9. Children</h2>
           <p>
-            Echo is not intended for use by anyone under the age of 13. We do not knowingly collect personal information from children.
+            DividedView is not intended for use by anyone under the age of 13. We do not knowingly collect personal information from children.
           </p>
         </section>
 

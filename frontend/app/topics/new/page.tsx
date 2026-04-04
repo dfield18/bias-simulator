@@ -127,7 +127,7 @@ export default function NewTopicPage() {
                 const tips = [
                   "Each tweet is analyzed for political stance, intensity, and narrative framing",
                   "Low-confidence classifications are double-checked by multiple AI models",
-                  "Echo maps which arguments each side uses — and which they ignore",
+                  "DividedView maps which arguments each side uses — and which they ignore",
                   "The bias slider lets you simulate what different echo chambers see",
                   "Narrative frames reveal how the same event gets spun differently",
                 ];
@@ -174,7 +174,7 @@ export default function NewTopicPage() {
           What topic do you want to analyze?
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          Enter a political topic and Echo will suggest how to define the two sides.
+          Enter a political topic and DividedView will suggest how to define the two sides.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
@@ -405,7 +405,7 @@ export default function NewTopicPage() {
           {/* Pro/Anti definitions */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <label className="text-xs text-gray-500">How Echo will define each side</label>
+              <label className="text-xs text-gray-500">How DividedView will define each side</label>
               <button
                 onClick={() => setEditingDefs(!editingDefs)}
                 className="text-[10px] text-blue-400 hover:text-blue-300"

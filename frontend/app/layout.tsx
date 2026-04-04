@@ -9,20 +9,20 @@ const GA_ID = "G-EVZ0CK3P4G";
 
 export const metadata: Metadata = {
   title: {
-    default: "Echo — See How Political Bias Shapes Your Feed",
-    template: "%s — Echo",
+    default: "DividedView — See How Political Bias Shapes Your Feed",
+    template: "%s — DividedView",
   },
   description: "Analyze any political topic from both sides. Echo uses AI to classify thousands of tweets, map narrative frames, and reveal the echo chambers that algorithms create.",
   icons: { icon: "/favicon.svg" },
   openGraph: {
-    title: "Echo — See How Political Bias Shapes Your Feed",
+    title: "DividedView — See How Political Bias Shapes Your Feed",
     description: "Analyze any political topic from both sides. AI-powered tweet classification, narrative analysis, and echo chamber detection.",
-    siteName: "Echo",
+    siteName: "DividedView",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Echo — See How Political Bias Shapes Your Feed",
+    title: "DividedView — See How Political Bias Shapes Your Feed",
     description: "Analyze any political topic from both sides. AI-powered tweet classification, narrative analysis, and echo chamber detection.",
   },
   robots: {

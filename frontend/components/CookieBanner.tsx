@@ -24,7 +24,7 @@ export default function CookieBanner() {
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <p className="text-xs text-gray-400">
           This site uses cookies for authentication and analytics.
-          By continuing to use Echo, you agree to our{" "}
+          By continuing to use DividedView, you agree to our{" "}
           <Link href="/privacy" className="text-blue-400 hover:text-blue-300">Privacy Policy</Link>.
         </p>
         <button

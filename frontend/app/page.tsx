@@ -97,7 +97,7 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className="bg-gray-950/80 backdrop-blur sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 py-5 flex items-center justify-between">
-          <div className="text-base font-semibold tracking-tight text-gray-100">echo</div>
+          <div className="text-base font-semibold tracking-tight text-gray-100">DividedView</div>
           <div className="flex items-center gap-4">
             <Link
               href="/sign-in"
@@ -124,7 +124,7 @@ export default function LandingPage() {
             Two different realities.
           </h1>
           <p className="text-base sm:text-lg text-gray-400 mb-8 leading-relaxed max-w-lg">
-            Echo pulls real tweets on any political topic and rebuilds the feed from both perspectives.
+            DividedView pulls real posts from X on any political topic and rebuilds the feed from both perspectives.
           </p>
           <Link
             href="/sign-up"
@@ -279,7 +279,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-800/30 py-8">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-600">
-          <div>echo</div>
+          <div>DividedView</div>
           <div className="flex gap-5">
             <Link href="/pricing" className="hover:text-gray-400 transition-colors">Pricing</Link>
 

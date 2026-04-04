@@ -532,7 +532,7 @@ export default function AnalyticsPage() {
             "Each tweet is analyzed for political stance, intensity, and narrative framing",
             "Low-confidence classifications are double-checked by a multi-model ensemble",
             "The bias slider lets you simulate what different echo chambers see",
-            "Echo detects which arguments each side uses — and which they ignore",
+            "DividedView detects which arguments each side uses — and which they ignore",
             "Narrative frames reveal how the same event gets spun differently by each side",
           ];
           const tipIndex = Math.floor(Date.now() / 5000) % tips.length;

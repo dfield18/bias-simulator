@@ -72,7 +72,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Nav */}
       <nav className="bg-gray-950/80 backdrop-blur sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 py-5 flex items-center justify-between">

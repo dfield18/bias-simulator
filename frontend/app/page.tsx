@@ -114,7 +114,7 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p className="text-sm text-gray-400 mt-16 sm:mt-20 mb-4">Drag the slider to see a simulated Twitter feed based on political bias.</p>
+        <p className="text-lg sm:text-xl text-gray-300 mt-16 sm:mt-20 mb-4 font-medium">Drag the slider to see a simulated Twitter feed based on political bias.</p>
 
         {/* Interactive demo — Iran War feed */}
         {(() => {

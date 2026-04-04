@@ -114,6 +114,8 @@ export default function LandingPage() {
           </Link>
         </div>
 
+        <p className="text-sm text-gray-400 mt-16 sm:mt-20 mb-4">Drag the slider to see a simulated Twitter feed based on political bias.</p>
+
         {/* Interactive demo — Iran War feed */}
         {(() => {
           const [demoBias, setDemoBias] = useState(0);
@@ -142,12 +144,11 @@ export default function LandingPage() {
           });
 
           return (
-            <div className="mt-16 sm:mt-20 bg-gray-900/80 border border-gray-800/60 rounded-xl overflow-hidden">
+            <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl overflow-hidden">
               {/* Title */}
               <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2">
                 <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Live Demo</div>
                 <h3 className="text-sm font-semibold text-gray-300">Iran War — Simulated Feed</h3>
-                <p className="text-[10px] text-gray-600 mt-0.5">Drag the slider to see how the feed changes based on political bias</p>
               </div>
 
               {/* Chart */}

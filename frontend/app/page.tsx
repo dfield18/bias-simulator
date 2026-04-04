@@ -55,8 +55,8 @@ export default function LandingPage() {
             Two different realities.
           </h1>
           <p className="text-base sm:text-lg text-gray-400 mb-10 leading-relaxed max-w-lg">
-            Echo analyzes thousands of tweets on any political topic and shows you
-            how each side frames, argues, and ignores the same events.
+            Echo pulls real tweets on any political topic and rebuilds the feed from both perspectives.
+            Drag a slider to shift from left to right and watch the same conversation transform.
           </p>
           <Link
             href="/sign-up"

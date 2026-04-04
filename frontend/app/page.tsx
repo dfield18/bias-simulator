@@ -113,7 +113,8 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p className="text-xl sm:text-2xl text-gray-200 mt-16 sm:mt-20 mb-5 font-semibold">Drag the slider to shift from left to right and watch the same conversation transform.</p>
+        <p className="text-sm text-gray-500 mt-16 sm:mt-20 mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
+        <p className="text-xl sm:text-2xl text-gray-200 mb-5 font-semibold">Drag the slider to shift from left to right and watch the same conversation transform.</p>
 
         {/* Interactive demo — Iran War feed */}
         {(() => {
@@ -264,7 +265,6 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="border-t border-gray-800/30">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
-          <p className="text-sm text-gray-500 mb-6">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">See what both sides are saying.</h2>
           <p className="text-gray-500 mb-8 text-sm">Free to start. No credit card required.</p>
           <Link

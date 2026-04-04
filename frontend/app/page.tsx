@@ -204,7 +204,7 @@ export default function LandingPage() {
               {/* Echo Chamber Score */}
               <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 flex flex-col">
                 <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber Score</div>
-                <div className="text-xs text-gray-400 mb-5">{landingData?.topic_name || "Iran War"} — {landingData?.total_tweets || "..."} tweets analyzed</div>
+                <div className="text-xs text-gray-400 mb-5">{landingData?.topic_name || "Iran War"}</div>
                 <div className="flex-1 flex flex-col items-center justify-center">
                   <div className="text-5xl font-bold text-orange-400 mb-1">{ec ? `${ec.score}%` : "..."}</div>
                   <div className="text-xs text-gray-500 mb-4">overlap between sides</div>

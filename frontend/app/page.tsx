@@ -56,6 +56,17 @@ const DEMO_TWEETS: { tweet: TweetData; classification: ClassificationData; score
 export default function LandingPage() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
+  const [demoBias, setDemoBias] = useState(0);
+  const [landingData, setLandingData] = useState<{
+    topic_name?: string; anti_label?: string; pro_label?: string; total_tweets?: number;
+    echo_chamber?: { score: number; shared_sources: string; shared_frames: string };
+    frames?: { key: string; label: string; anti_pct: number; pro_pct: number }[];
+  } | null>(null);
+
+  useEffect(() => {
+    const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    fetch(`${API}/api/demo/landing`).then(r => r.json()).then(setLandingData).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
@@ -118,9 +129,6 @@ export default function LandingPage() {
 
         {/* Interactive demo — Iran War feed */}
         {(() => {
-          const [demoBias, setDemoBias] = useState(0);
-
-          // Score and sort tweets based on bias (simplified version of smart feed algorithm)
           const sortedTweets = [...DEMO_TWEETS].sort((a, b) => {
             const scoreA = (() => {
               const bent = a.classification.effective_political_bent || "";
@@ -176,28 +184,17 @@ export default function LandingPage() {
 
         {/* Live analytics panels */}
         {(() => {
-          const [landing, setLanding] = useState<{
-            topic_name?: string; anti_label?: string; pro_label?: string; total_tweets?: number;
-            echo_chamber?: { score: number; shared_sources: string; shared_frames: string };
-            frames?: { key: string; label: string; anti_pct: number; pro_pct: number }[];
-          } | null>(null);
-
-          useEffect(() => {
-            const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-            fetch(`${API}/api/demo/landing`).then(r => r.json()).then(setLanding).catch(() => {});
-          }, []);
-
-          const ec = landing?.echo_chamber;
-          const frames = landing?.frames;
-          const aL = landing?.anti_label || "Anti-War";
-          const pL = landing?.pro_label || "Pro-War";
+          const ec = landingData?.echo_chamber;
+          const frames = landingData?.frames;
+          const aL = landingData?.anti_label || "Anti-War";
+          const pL = landingData?.pro_label || "Pro-War";
 
           return (
             <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
               {/* Echo Chamber Score */}
               <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 flex flex-col">
                 <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber Score</div>
-                <div className="text-xs text-gray-400 mb-5">{landing?.topic_name || "Iran War"} — {landing?.total_tweets || "..."} tweets analyzed</div>
+                <div className="text-xs text-gray-400 mb-5">{landingData?.topic_name || "Iran War"} — {landingData?.total_tweets || "..."} tweets analyzed</div>
                 <div className="flex-1 flex flex-col items-center justify-center">
                   <div className="text-5xl font-bold text-orange-400 mb-1">{ec ? `${ec.score}%` : "..."}</div>
                   <div className="text-xs text-gray-500 mb-4">overlap between sides</div>

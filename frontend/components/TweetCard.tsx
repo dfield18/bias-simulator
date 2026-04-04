@@ -68,7 +68,7 @@ export default function TweetCard({
 
   return (
     <div
-      className={`bg-gray-900 border ${bentColor} rounded-xl p-3 sm:p-4 hover:bg-gray-850 transition-colors`}
+      className={`bg-gray-900 border ${bentColor} rounded-xl p-3 sm:p-4 hover:bg-gray-850 transition-colors overflow-hidden min-w-0`}
     >
       {/* Author header */}
       <div className="flex items-start justify-between mb-2">

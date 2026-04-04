@@ -5,7 +5,8 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SentimentDistribution from "@/components/SentimentDistribution";
-import { RawFeedItem } from "@/lib/api";
+import TweetCard from "@/components/TweetCard";
+import { RawFeedItem, TweetData, ClassificationData } from "@/lib/api";
 
 // Sample Iran War data for the landing page demo
 const DEMO_ITEMS: RawFeedItem[] = (() => {
@@ -35,6 +36,22 @@ const DEMO_ITEMS: RawFeedItem[] = (() => {
   }
   return items;
 })();
+
+// Sample tweets for the Iran War demo feed
+const DEMO_TWEETS: { tweet: TweetData; classification: ClassificationData; score: number }[] = [
+  { tweet: { id_str: "d1", topic_slug: "iran-conflict", created_at: "2026-04-02T14:00:00Z", screen_name: "BBCBreaking", author_name: "BBC Breaking News", author_bio: "Breaking news alerts from the BBC", author_followers: 48200000, full_text: "Israeli forces launch coordinated strikes across multiple Iranian military installations, marking the largest escalation since January.", likes: 42300, retweets: 18200, replies: 3100, quotes: 890, views: 2100000, engagement: 64490, url: null, media: [] }, classification: { id_str: "d1", about_subject: true, political_bent: "neutral", author_lean: null, classification_basis: null, confidence: 0.95, agreement: null, classification_method: null, votes: null, intensity_score: 0, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "neutral", effective_intensity_score: 0, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 95 },
+  { tweet: { id_str: "d2", topic_slug: "iran-conflict", created_at: "2026-04-02T15:30:00Z", screen_name: "SenTedCruz", author_name: "Ted Cruz", author_bio: "U.S. Senator for Texas", author_followers: 5400000, full_text: "Iran has been the world's leading state sponsor of terror for decades. President Trump is right to respond with overwhelming force. Peace through strength.", likes: 31200, retweets: 8900, replies: 4200, quotes: 1200, views: 890000, engagement: 45500, url: null, media: [] }, classification: { id_str: "d2", about_subject: true, political_bent: "pro-war", author_lean: null, classification_basis: null, confidence: 0.92, agreement: null, classification_method: null, votes: null, intensity_score: 7, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "pro-war", effective_intensity_score: 7, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 88 },
+  { tweet: { id_str: "d3", topic_slug: "iran-conflict", created_at: "2026-04-02T13:00:00Z", screen_name: "RoKhanna", author_name: "Ro Khanna", author_bio: "Rep. CA-17. Fighting for an economy that works for everyone.", author_followers: 1200000, full_text: "Congress has not authorized military action against Iran. The President does not have a blank check for war. We need diplomacy, not another endless conflict in the Middle East.", likes: 28100, retweets: 9400, replies: 2100, quotes: 780, views: 650000, engagement: 40380, url: null, media: [] }, classification: { id_str: "d3", about_subject: true, political_bent: "anti-war", author_lean: null, classification_basis: null, confidence: 0.94, agreement: null, classification_method: null, votes: null, intensity_score: -6, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "anti-war", effective_intensity_score: -6, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 85 },
+  { tweet: { id_str: "d4", topic_slug: "iran-conflict", created_at: "2026-04-02T16:00:00Z", screen_name: "FoxNews", author_name: "Fox News", author_bio: "Follow America's #1 cable news network", author_followers: 24100000, full_text: "BREAKING: Pentagon confirms successful strikes on Iranian nuclear enrichment facilities. Defense Secretary calls it a 'decisive response to years of provocations.'", likes: 38900, retweets: 12300, replies: 5600, quotes: 2100, views: 1800000, engagement: 58900, url: null, media: [] }, classification: { id_str: "d4", about_subject: true, political_bent: "pro-war", author_lean: null, classification_basis: null, confidence: 0.88, agreement: null, classification_method: null, votes: null, intensity_score: 5, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "pro-war", effective_intensity_score: 5, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 82 },
+  { tweet: { id_str: "d5", topic_slug: "iran-conflict", created_at: "2026-04-02T12:00:00Z", screen_name: "tabornici", author_name: "Nic Taborn", author_bio: "Defense analyst. Former DoD.", author_followers: 89000, full_text: "The strikes on Iran's nuclear facilities are significant but the real question is what happens next. Escalation ladder is steep and there is no clear off-ramp.", likes: 4200, retweets: 1800, replies: 340, quotes: 210, views: 180000, engagement: 6550, url: null, media: [] }, classification: { id_str: "d5", about_subject: true, political_bent: "neutral", author_lean: null, classification_basis: null, confidence: 0.91, agreement: null, classification_method: null, votes: null, intensity_score: 1, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "neutral", effective_intensity_score: 1, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 70 },
+  { tweet: { id_str: "d6", topic_slug: "iran-conflict", created_at: "2026-04-02T14:45:00Z", screen_name: "IlhanMN", author_name: "Ilhan Omar", author_bio: "U.S. Congresswoman. Mom. Refugee.", author_followers: 3200000, full_text: "We learned nothing from Iraq. Nothing from Afghanistan. Nothing from Libya. And now we are sleepwalking into another catastrophic war. This must stop.", likes: 22100, retweets: 7800, replies: 3400, quotes: 920, views: 540000, engagement: 34220, url: null, media: [] }, classification: { id_str: "d6", about_subject: true, political_bent: "anti-war", author_lean: null, classification_basis: null, confidence: 0.96, agreement: null, classification_method: null, votes: null, intensity_score: -8, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "anti-war", effective_intensity_score: -8, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 78 },
+  { tweet: { id_str: "d7", topic_slug: "iran-conflict", created_at: "2026-04-02T15:00:00Z", screen_name: "LindseyGrahamSC", author_name: "Lindsey Graham", author_bio: "U.S. Senator for South Carolina", author_followers: 3800000, full_text: "If Iran retaliates, the response should be devastating. The regime needs to understand that the era of unanswered aggression is over.", likes: 19800, retweets: 5400, replies: 4100, quotes: 1500, views: 720000, engagement: 30800, url: null, media: [] }, classification: { id_str: "d7", about_subject: true, political_bent: "pro-war", author_lean: null, classification_basis: null, confidence: 0.93, agreement: null, classification_method: null, votes: null, intensity_score: 9, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "pro-war", effective_intensity_score: 9, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 75 },
+  { tweet: { id_str: "d8", topic_slug: "iran-conflict", created_at: "2026-04-02T11:30:00Z", screen_name: "Reuters", author_name: "Reuters", author_bio: "Top and breaking news, pictures and videos from Reuters.", author_followers: 26400000, full_text: "Oil prices surge 12% following U.S. strikes on Iran. European and Asian markets drop sharply as investors assess risk of wider regional conflict.", likes: 15200, retweets: 8100, replies: 1200, quotes: 560, views: 1400000, engagement: 25060, url: null, media: [] }, classification: { id_str: "d8", about_subject: true, political_bent: "neutral", author_lean: null, classification_basis: null, confidence: 0.97, agreement: null, classification_method: null, votes: null, intensity_score: 0, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "neutral", effective_intensity_score: 0, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 72 },
+  { tweet: { id_str: "d9", topic_slug: "iran-conflict", created_at: "2026-04-02T13:30:00Z", screen_name: "BernieSanders", author_name: "Bernie Sanders", author_bio: "U.S. Senator from Vermont.", author_followers: 18500000, full_text: "The American people are tired of endless wars. We should be investing in healthcare, education, and climate — not spending billions on another military adventure in the Middle East.", likes: 52000, retweets: 14200, replies: 3800, quotes: 1100, views: 2400000, engagement: 71100, url: null, media: [] }, classification: { id_str: "d9", about_subject: true, political_bent: "anti-war", author_lean: null, classification_basis: null, confidence: 0.95, agreement: null, classification_method: null, votes: null, intensity_score: -5, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "anti-war", effective_intensity_score: -5, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 92 },
+  { tweet: { id_str: "d10", topic_slug: "iran-conflict", created_at: "2026-04-02T16:30:00Z", screen_name: "DanCrenshawTX", author_name: "Dan Crenshaw", author_bio: "Congressman TX-02. Former Navy SEAL.", author_followers: 2100000, full_text: "Iran has killed hundreds of American service members through its proxies. This is not about starting a war — it's about finishing one they started long ago.", likes: 24300, retweets: 6200, replies: 2800, quotes: 890, views: 480000, engagement: 34190, url: null, media: [] }, classification: { id_str: "d10", about_subject: true, political_bent: "pro-war", author_lean: null, classification_basis: null, confidence: 0.91, agreement: null, classification_method: null, votes: null, intensity_score: 6, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "pro-war", effective_intensity_score: 6, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 76 },
+  { tweet: { id_str: "d11", topic_slug: "iran-conflict", created_at: "2026-04-02T12:45:00Z", screen_name: "AOC", author_name: "Alexandria Ocasio-Cortez", author_bio: "US Representative, NY-14.", author_followers: 13200000, full_text: "No congressional authorization. No exit strategy. No plan for the day after. But sure, let's bomb another country and call it leadership.", likes: 41000, retweets: 11500, replies: 5200, quotes: 2300, views: 1900000, engagement: 60000, url: null, media: [] }, classification: { id_str: "d11", about_subject: true, political_bent: "anti-war", author_lean: null, classification_basis: null, confidence: 0.94, agreement: null, classification_method: null, votes: null, intensity_score: -7, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "anti-war", effective_intensity_score: -7, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 90 },
+  { tweet: { id_str: "d12", topic_slug: "iran-conflict", created_at: "2026-04-02T17:00:00Z", screen_name: "AP", author_name: "The Associated Press", author_bio: "Advancing the power of facts.", author_followers: 16800000, full_text: "DEVELOPING: Iran's foreign minister warns of 'severe consequences' following U.S. strikes. UN Security Council emergency session called for tomorrow.", likes: 12400, retweets: 7200, replies: 980, quotes: 420, views: 980000, engagement: 21000, url: null, media: [] }, classification: { id_str: "d12", about_subject: true, political_bent: "neutral", author_lean: null, classification_basis: null, confidence: 0.96, agreement: null, classification_method: null, votes: null, intensity_score: 0, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "neutral", effective_intensity_score: 0, narrative_frames: null, emotion_mode: null, frame_confidence: null }, score: 68 },
+];
 
 export default function LandingPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -97,54 +114,73 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        {/* Interactive demo — same chart as the analytics page */}
+        {/* Interactive demo — Iran War feed */}
         {(() => {
           const [demoBias, setDemoBias] = useState(0);
+
+          // Score and sort tweets based on bias (simplified version of smart feed algorithm)
+          const sortedTweets = [...DEMO_TWEETS].sort((a, b) => {
+            const scoreA = (() => {
+              const bent = a.classification.effective_political_bent || "";
+              const intensity = Math.abs(a.classification.effective_intensity_score || 0);
+              if (demoBias === 0) return a.score;
+              if (demoBias < 0 && bent === "anti-war") return a.score + Math.abs(demoBias) * intensity * 2;
+              if (demoBias > 0 && bent === "pro-war") return a.score + demoBias * intensity * 2;
+              if (bent === "neutral") return a.score * 0.8;
+              return a.score * Math.max(0.2, 1 - Math.abs(demoBias) * 0.08);
+            })();
+            const scoreB = (() => {
+              const bent = b.classification.effective_political_bent || "";
+              const intensity = Math.abs(b.classification.effective_intensity_score || 0);
+              if (demoBias === 0) return b.score;
+              if (demoBias < 0 && bent === "anti-war") return b.score + Math.abs(demoBias) * intensity * 2;
+              if (demoBias > 0 && bent === "pro-war") return b.score + demoBias * intensity * 2;
+              if (bent === "neutral") return b.score * 0.8;
+              return b.score * Math.max(0.2, 1 - Math.abs(demoBias) * 0.08);
+            })();
+            return scoreB - scoreA;
+          });
+
           return (
-            <div className="mt-16 sm:mt-20 bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 sm:p-5">
-              <SentimentDistribution
-                items={DEMO_ITEMS}
-                antiLabel="Anti-War"
-                proLabel="Pro-War"
-                bias={demoBias}
-                onChange={setDemoBias}
-              />
+            <div className="mt-16 sm:mt-20 bg-gray-900/80 border border-gray-800/60 rounded-xl overflow-hidden">
+              {/* Title */}
+              <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Live Demo</div>
+                <h3 className="text-sm font-semibold text-gray-300">Iran War — Simulated Feed</h3>
+                <p className="text-[10px] text-gray-600 mt-0.5">Drag the slider to see how the feed changes based on political bias</p>
+              </div>
+
+              {/* Chart */}
+              <div className="px-4 sm:px-5">
+                <SentimentDistribution
+                  items={DEMO_ITEMS}
+                  antiLabel="Anti-War"
+                  proLabel="Pro-War"
+                  bias={demoBias}
+                  onChange={setDemoBias}
+                />
+              </div>
+
+              {/* Scrollable feed */}
+              <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
+                  {sortedTweets.map((item) => (
+                    <TweetCard
+                      key={item.tweet.id_str}
+                      tweet={item.tweet}
+                      classification={item.classification}
+                      proLabel="Pro-War"
+                      antiLabel="Anti-War"
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           );
         })()}
 
-        {/* Product preview — three panels */}
-        <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
-
-          {/* Panel 1: Mini feed — scrollable */}
-          <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 lg:col-span-1 flex flex-col">
-            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-3 font-medium">Simulated Feed</div>
-            <div className="space-y-2.5 overflow-y-auto max-h-72 pr-1 scrollbar-thin">
-              {[
-                { name: "Reuters", handle: "@Reuters", text: "Border patrol reports record crossings as asylum policy debate intensifies in Congress ahead of midterms.", bent: "neutral", color: "bg-gray-500/20 text-gray-400" },
-                { name: "Rep. Garcia", handle: "@RepGarcia", text: "These families are fleeing violence. We need a humane path, not more walls and cages.", bent: "pro-immigration", color: "bg-blue-500/20 text-blue-400" },
-                { name: "Daily Wire", handle: "@DailyWire", text: "EXPOSED: Sanctuary cities quietly release hundreds of criminal migrants back into communities.", bent: "border-security", color: "bg-red-500/20 text-red-400" },
-                { name: "ACLU", handle: "@ACLU", text: "Reminder: seeking asylum is legal. Criminalizing refugees doesn't make anyone safer — it just makes us crueler.", bent: "pro-immigration", color: "bg-blue-500/20 text-blue-400" },
-                { name: "Fox News", handle: "@FoxNews", text: "Texas Governor deploys additional National Guard troops to southern border amid record surge.", bent: "border-security", color: "bg-red-500/20 text-red-400" },
-                { name: "AP News", handle: "@AP", text: "New DHS data shows migrant encounters down 40% from peak but remain above historical averages.", bent: "neutral", color: "bg-gray-500/20 text-gray-400" },
-                { name: "Sen. Warren", handle: "@SenWarren", text: "Children don't belong in detention centers. Period. We must end family separation once and for all.", bent: "pro-immigration", color: "bg-blue-500/20 text-blue-400" },
-                { name: "Breitbart", handle: "@BreitbartNews", text: "Illegal immigrant crime wave: three more arrests this week in cities that refused to cooperate with ICE.", bent: "border-security", color: "bg-red-500/20 text-red-400" },
-                { name: "The Economist", handle: "@TheEconomist", text: "Immigration's economic impact is more nuanced than either side admits — new data shows mixed effects on wages.", bent: "neutral", color: "bg-gray-500/20 text-gray-400" },
-                { name: "Rep. Ocasio-Cortez", handle: "@AOC", text: "No human being is illegal. Our immigration system is broken, and cruelty is not the fix.", bent: "pro-immigration", color: "bg-blue-500/20 text-blue-400" },
-              ].map((t, i) => (
-                <div key={i} className="border border-gray-800/40 rounded-lg p-2.5 shrink-0">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-[11px] font-medium text-gray-200 truncate">{t.name}</span>
-                      <span className="text-[10px] text-gray-600 truncate">{t.handle}</span>
-                    </div>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded shrink-0 ml-2 ${t.color}`}>{t.bent}</span>
-                  </div>
-                  <p className="text-[11px] text-gray-400 leading-relaxed">{t.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Product preview — two panels */}
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
 
           {/* Panel 2: Echo Chamber Score + key stats */}
           <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 flex flex-col">

@@ -163,14 +163,21 @@ export default function LandingPage() {
 
           return (
             <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl overflow-hidden">
+              {/* Custom title for landing page */}
+              <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-1">
+                <div className="text-xs sm:text-sm text-gray-300 font-semibold">Simulated X Feed — Iran War</div>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">This reconstruction shows how the same posts get prioritized differently based on political leaning.</p>
+              </div>
+
               {/* Chart */}
-              <div className="px-4 sm:px-5 pt-4 sm:pt-5">
+              <div className="px-4 sm:px-5">
                 <SentimentDistribution
                   items={DEMO_ITEMS}
                   antiLabel="Anti-War"
                   proLabel="Pro-War"
                   bias={demoBias}
                   onChange={setDemoBias}
+                  hideTitle
                 />
               </div>
 

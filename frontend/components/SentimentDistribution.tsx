@@ -9,6 +9,7 @@ interface SentimentDistributionProps {
   proLabel: string;
   bias: number;
   onChange: (value: number) => void;
+  hideTitle?: boolean;
 }
 
 function buildDistribution(items: RawFeedItem[]): number[] {
@@ -90,6 +91,7 @@ export default function SentimentDistribution({
   proLabel,
   bias,
   onChange,
+  hideTitle = false,
 }: SentimentDistributionProps) {
   const distribution = useMemo(() => buildDistribution(items), [items]);
   const maxVal = Math.max(...distribution, 1);
@@ -208,19 +210,21 @@ export default function SentimentDistribution({
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl px-4 pt-4 pb-3 sm:pb-4">
       {/* Title */}
-      <div className="flex items-start justify-between mb-1">
-        <div>
-          <div className="text-xs sm:text-sm text-gray-400 font-semibold">
-            Tweet Volume by Sentiment
+      {!hideTitle && (
+        <div className="flex items-start justify-between mb-1">
+          <div>
+            <div className="text-xs sm:text-sm text-gray-400 font-semibold">
+              Tweet Volume by Sentiment
+            </div>
+            <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
+              Height = relative number of tweets at each intensity level. Slide the scale to simulate political bias.
+            </p>
           </div>
-          <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
-            Height = relative number of tweets at each intensity level. Slide the scale to simulate political bias.
-          </p>
+          <span className="text-[10px] sm:text-xs text-gray-600 shrink-0 mt-0.5">
+            Drag to adjust bias
+          </span>
         </div>
-        <span className="text-[10px] sm:text-xs text-gray-600 shrink-0 mt-0.5">
-          Drag to adjust bias
-        </span>
-      </div>
+      )}
 
       {/* SVG Chart — draggable */}
       <svg

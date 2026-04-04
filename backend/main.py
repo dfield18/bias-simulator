@@ -24,6 +24,8 @@ _origins = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         os.getenv("FRONTEND_URL", ""),
+        "https://www.dividedview.com",
+        "https://dividedview.com",
     ] if o.strip()
 ]
 

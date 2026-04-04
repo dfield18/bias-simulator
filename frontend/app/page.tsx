@@ -113,8 +113,8 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p className="text-sm text-gray-500 mt-10 sm:mt-14 mb-2">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
-        <p className="text-base sm:text-lg text-gray-300 mb-4 font-medium">Slide to see how a user&apos;s political bias reshapes their feed.</p>
+        <p className="text-sm text-gray-500 mt-10 sm:mt-14 mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
+        <p className="text-base sm:text-lg text-gray-300 mb-6 font-medium">Slide to see how a user&apos;s political bias reshapes their feed.</p>
 
         {/* Interactive demo — Iran War feed */}
         {(() => {
@@ -145,14 +145,8 @@ export default function LandingPage() {
 
           return (
             <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl overflow-hidden">
-              {/* Title */}
-              <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-2">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Live Demo</div>
-                <h3 className="text-sm font-semibold text-gray-300">Iran War — Simulated Feed</h3>
-              </div>
-
               {/* Chart */}
-              <div className="px-4 sm:px-5">
+              <div className="px-4 sm:px-5 pt-4 sm:pt-5">
                 <SentimentDistribution
                   items={DEMO_ITEMS}
                   antiLabel="Anti-War"

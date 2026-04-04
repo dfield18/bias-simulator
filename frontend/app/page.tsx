@@ -95,14 +95,14 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-5 sm:px-8 pt-20 sm:pt-32 pb-20 sm:pb-28">
+      <section className="max-w-5xl mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-12 sm:pb-16">
         <div className="max-w-2xl">
-          <p className="text-sm text-gray-500 mb-4 tracking-wide">Political media analysis</p>
-          <h1 className="text-4xl sm:text-[3.5rem] font-bold leading-[1.1] mb-6 tracking-tight">
+          <p className="text-sm text-gray-500 mb-3 tracking-wide">Political media analysis</p>
+          <h1 className="text-4xl sm:text-[3.5rem] font-bold leading-[1.1] mb-5 tracking-tight">
             The same story.<br />
             Two different realities.
           </h1>
-          <p className="text-base sm:text-lg text-gray-400 mb-10 leading-relaxed max-w-lg">
+          <p className="text-base sm:text-lg text-gray-400 mb-8 leading-relaxed max-w-lg">
             Echo pulls real tweets on any political topic and rebuilds the feed from both perspectives.
           </p>
           <Link
@@ -113,8 +113,8 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p className="text-sm text-gray-500 mt-16 sm:mt-20 mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
-        <p className="text-base sm:text-lg text-gray-300 mb-5 font-medium">Slide to see how a user&apos;s political bias reshapes their feed.</p>
+        <p className="text-sm text-gray-500 mt-10 sm:mt-14 mb-2">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
+        <p className="text-base sm:text-lg text-gray-300 mb-4 font-medium">Slide to see how a user&apos;s political bias reshapes their feed.</p>
 
         {/* Interactive demo — Iran War feed */}
         {(() => {
@@ -258,13 +258,12 @@ export default function LandingPage() {
             </div>
           );
         })()}
-        <p className="text-[10px] text-gray-600 text-center mt-3">Live data from {(() => { return "Iran War"; })()} analysis</p>
+        <p className="text-[10px] text-gray-600 text-center mt-3">Live data from Iran War analysis</p>
       </section>
-
 
       {/* CTA */}
       <section className="border-t border-gray-800/30">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">See what both sides are saying.</h2>
           <p className="text-gray-500 mb-8 text-sm">Free to start. No credit card required.</p>
           <Link

@@ -261,36 +261,10 @@ export default function LandingPage() {
       </section>
 
 
-      {/* How it works — minimal, not numbered */}
-      <section className="border-t border-gray-800/30 bg-gray-900/20">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
-          <p className="text-sm text-gray-500 mb-10 tracking-wide">How it works</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-200 mb-1.5">Enter a topic</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Type any political issue. Echo generates the classification framework for you.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-200 mb-1.5">AI classifies tweets</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Thousands of real tweets are pulled and analyzed for stance, intensity, and framing.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-200 mb-1.5">Explore the results</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Interactive dashboards, side-by-side comparisons, and the full narrative map.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="border-t border-gray-800/30">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
+          <p className="text-sm text-gray-500 mb-6">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">See what both sides are saying.</h2>
           <p className="text-gray-500 mb-8 text-sm">Free to start. No credit card required.</p>
           <Link

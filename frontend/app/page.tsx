@@ -4,6 +4,37 @@ import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import SentimentDistribution from "@/components/SentimentDistribution";
+import { RawFeedItem } from "@/lib/api";
+
+// Sample Iran War data for the landing page demo
+const DEMO_ITEMS: RawFeedItem[] = (() => {
+  const items: RawFeedItem[] = [];
+  // Anti-war tweets (negative intensity scores)
+  const antiScores = [-8,-7,-7,-6,-6,-6,-5,-5,-5,-5,-4,-4,-4,-4,-4,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-1,-1,-1,-1];
+  for (const score of antiScores) {
+    items.push({
+      tweet: { id_str: `anti${score}${Math.random()}`, topic_slug: "iran-conflict", created_at: null, screen_name: null, author_name: null, author_bio: null, author_followers: null, full_text: null, likes: 0, retweets: 0, replies: 0, quotes: 0, views: 0, engagement: null, url: null, media: [] },
+      classification: { id_str: `anti${score}${Math.random()}`, about_subject: true, political_bent: "anti-war", author_lean: null, classification_basis: null, confidence: 0.9, agreement: null, classification_method: null, votes: null, intensity_score: score, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "anti-war", effective_intensity_score: score, narrative_frames: null, emotion_mode: null, frame_confidence: null },
+    });
+  }
+  // Pro-war tweets (positive intensity scores)
+  const proScores = [8,7,7,6,6,6,5,5,5,5,4,4,4,4,3,3,3,3,3,2,2,2,2,1,1,1];
+  for (const score of proScores) {
+    items.push({
+      tweet: { id_str: `pro${score}${Math.random()}`, topic_slug: "iran-conflict", created_at: null, screen_name: null, author_name: null, author_bio: null, author_followers: null, full_text: null, likes: 0, retweets: 0, replies: 0, quotes: 0, views: 0, engagement: null, url: null, media: [] },
+      classification: { id_str: `pro${score}${Math.random()}`, about_subject: true, political_bent: "pro-war", author_lean: null, classification_basis: null, confidence: 0.9, agreement: null, classification_method: null, votes: null, intensity_score: score, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "pro-war", effective_intensity_score: score, narrative_frames: null, emotion_mode: null, frame_confidence: null },
+    });
+  }
+  // Neutral tweets
+  for (let i = 0; i < 15; i++) {
+    items.push({
+      tweet: { id_str: `neutral${i}`, topic_slug: "iran-conflict", created_at: null, screen_name: null, author_name: null, author_bio: null, author_followers: null, full_text: null, likes: 0, retweets: 0, replies: 0, quotes: 0, views: 0, engagement: null, url: null, media: [] },
+      classification: { id_str: `neutral${i}`, about_subject: true, political_bent: "neutral", author_lean: null, classification_basis: null, confidence: 0.9, agreement: null, classification_method: null, votes: null, intensity_score: 0, intensity_confidence: null, intensity_reasoning: null, intensity_flag: null, override_flag: false, override_political_bent: null, override_intensity_score: null, override_notes: null, override_at: null, effective_political_bent: "neutral", effective_intensity_score: 0, narrative_frames: null, emotion_mode: null, frame_confidence: null },
+    });
+  }
+  return items;
+})();
 
 export default function LandingPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -66,64 +97,18 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        {/* Interactive demo slider */}
+        {/* Interactive demo — same chart as the analytics page */}
         {(() => {
           const [demoBias, setDemoBias] = useState(0);
-          const abs = Math.abs(demoBias);
-          const biasLabel = abs <= 1 ? "all perspectives"
-            : `${abs <= 3 ? "slightly" : abs <= 5 ? "moderately" : abs <= 7.5 ? "strongly" : "extremely"} ${demoBias < 0 ? "anti-war" : "pro-war"}`;
-
-          // Sample distribution data for Iran war
-          const dist = [1,2,4,8,14,22,30,35,28,18,12,10,12,15,20,28,18,10,5,3,1];
-          const maxD = Math.max(...dist);
-
           return (
-            <div className="mt-16 sm:mt-20 bg-gray-900/80 border border-gray-800/60 rounded-xl p-5 sm:p-6">
-              <div className="flex items-start justify-between mb-1">
-                <div>
-                  <div className="text-xs sm:text-sm text-gray-400 font-semibold">Iran War — Tweet Volume by Sentiment</div>
-                  <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">Drag the slider to simulate how a feed algorithm prioritizes content</p>
-                </div>
-                <span className="text-[10px] sm:text-xs text-gray-600 shrink-0">Live demo</span>
-              </div>
-
-              {/* Mini chart */}
-              <div className="flex items-end gap-[2px] h-20 sm:h-24 my-4">
-                {dist.map((v, i) => {
-                  const h = (v / maxD) * 100;
-                  const pos = (i / 20) * 20 - 10;
-                  const biasWeight = demoBias === 0 ? 1 :
-                    demoBias < 0 ? (pos < 0 ? 1 + Math.abs(demoBias) * 0.15 : Math.max(0.2, 1 - demoBias * -0.1)) :
-                    (pos > 0 ? 1 + demoBias * 0.15 : Math.max(0.2, 1 - demoBias * 0.1));
-                  const adjustedH = Math.min(100, h * biasWeight);
-                  const color = i < 10 ? `rgba(59,130,246,${0.3 + (adjustedH / 100) * 0.4})` : i === 10 ? "rgba(107,114,128,0.4)" : `rgba(239,68,68,${0.3 + (adjustedH / 100) * 0.4})`;
-                  return (
-                    <div key={i} className="flex-1 rounded-t-sm" style={{ height: `${adjustedH}%`, backgroundColor: color }} />
-                  );
-                })}
-              </div>
-
-              {/* Labels */}
-              <div className="flex justify-between mb-2">
-                <span className="text-xs sm:text-sm font-semibold text-blue-400">Anti-War</span>
-                <span className="text-xs sm:text-sm font-semibold text-red-400">Pro-War</span>
-              </div>
-
-              {/* Slider */}
-              <input
-                type="range"
-                min={-10}
-                max={10}
-                step={0.5}
-                value={demoBias}
-                onChange={(e) => setDemoBias(parseFloat(e.target.value))}
-                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-                style={{ background: "linear-gradient(to right, rgb(59,130,246), rgb(107,114,128) 45%, rgb(107,114,128) 55%, rgb(239,68,68))" }}
+            <div className="mt-16 sm:mt-20 bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 sm:p-5">
+              <SentimentDistribution
+                items={DEMO_ITEMS}
+                antiLabel="Anti-War"
+                proLabel="Pro-War"
+                bias={demoBias}
+                onChange={setDemoBias}
               />
-              <div className="text-center mt-1.5">
-                <span className="text-xs text-gray-400">{biasLabel}</span>
-                <span className="text-[10px] text-gray-600 ml-1.5">({demoBias > 0 ? "+" : ""}{demoBias.toFixed(1)})</span>
-              </div>
             </div>
           );
         })()}

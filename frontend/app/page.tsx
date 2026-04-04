@@ -104,7 +104,6 @@ export default function LandingPage() {
           </h1>
           <p className="text-base sm:text-lg text-gray-400 mb-10 leading-relaxed max-w-lg">
             Echo pulls real tweets on any political topic and rebuilds the feed from both perspectives.
-            Drag a slider to shift from left to right and watch the same conversation transform.
           </p>
           <Link
             href="/sign-up"
@@ -114,7 +113,7 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        <p className="text-lg sm:text-xl text-gray-300 mt-16 sm:mt-20 mb-4 font-medium">Drag the slider to see a simulated Twitter feed based on political bias.</p>
+        <p className="text-xl sm:text-2xl text-gray-200 mt-16 sm:mt-20 mb-5 font-semibold">Drag the slider to shift from left to right and watch the same conversation transform.</p>
 
         {/* Interactive demo — Iran War feed */}
         {(() => {

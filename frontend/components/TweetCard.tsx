@@ -199,7 +199,7 @@ export default function TweetCard({
       )}
 
       {/* Engagement stats */}
-      <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mb-3">
         <span className="flex items-center gap-1">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -234,7 +234,7 @@ export default function TweetCard({
           {formatNumber(tweet.views)}
         </span>
         {tweet.author_followers != null && (
-          <span className="text-gray-600 ml-auto">
+          <span className="text-gray-600 sm:ml-auto">
             {formatNumber(tweet.author_followers)} followers
           </span>
         )}

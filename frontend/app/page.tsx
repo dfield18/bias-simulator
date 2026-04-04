@@ -260,51 +260,6 @@ export default function LandingPage() {
         <p className="text-[10px] text-gray-600 text-center mt-3">Live data from {(() => { return "Iran War"; })()} analysis</p>
       </section>
 
-      {/* What Echo shows you — staggered, not a grid */}
-      <section className="border-t border-gray-800/30">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
-          <p className="text-sm text-gray-500 mb-10 tracking-wide">What you get</p>
-
-          <div className="space-y-12 sm:space-y-16">
-            {/* Feature 1 */}
-            <div className="max-w-lg">
-              <h3 className="text-lg font-semibold text-gray-100 mb-2">Simulated feed with bias control</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Drag a slider from left to right and watch the feed transform. See exactly what
-                someone in each echo chamber would see on any given day.
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="max-w-lg sm:ml-auto">
-              <h3 className="text-lg font-semibold text-gray-100 mb-2">Narrative breakdown</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                Which arguments does each side reach for? Which do they ignore?
-                Radar charts, emotional tone analysis, and rhetoric intensity scoring
-                show the full picture.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="max-w-lg">
-              <h3 className="text-lg font-semibold text-gray-100 mb-2">Same story, different lens</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                When both sides cover the same event, Echo pairs their tweets side by side
-                so you can see how framing changes the story.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="max-w-lg sm:ml-auto">
-              <h3 className="text-lg font-semibold text-gray-100 mb-2">Echo chamber detection</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                A single score measuring how separated the two sides are — based on shared sources,
-                overlapping arguments, and cross-side engagement.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* How it works — minimal, not numbered */}
       <section className="border-t border-gray-800/30 bg-gray-900/20">

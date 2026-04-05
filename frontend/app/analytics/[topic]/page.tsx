@@ -385,7 +385,9 @@ export default function AnalyticsPage() {
                   className="text-lg sm:text-xl font-bold bg-gray-800/50 border border-gray-700/50 text-gray-100 cursor-pointer hover:text-white hover:border-gray-600 focus:outline-none focus:border-gray-500 rounded-lg px-3 py-1 pr-8 truncate"
                   style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center", WebkitAppearance: "none", MozAppearance: "none" }}
                 >
-                  {allTopics.map((t) => (
+                  {allTopics
+                    .filter((t) => userTier !== "free" || t.featured)
+                    .map((t) => (
                     <option key={t.slug} value={t.slug} className="bg-gray-900 text-gray-100">
                       {t.name}
                     </option>

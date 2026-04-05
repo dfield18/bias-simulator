@@ -569,7 +569,7 @@ export default function AnalyticsPage() {
 
         {/* Sticky bias slider — feed tab only, appears when chart scrolls away */}
         {activeTab === "feed" && topic && showStickySlider && (
-          <div className="fixed left-0 right-0 z-30 bg-gray-950 border-b border-gray-800/30" style={{ top: `${headerHeight + 12}px` }}>
+          <div className="fixed left-0 right-0 z-30 bg-gray-950 border-b border-gray-800/30" style={{ top: `${headerHeight}px`, paddingTop: "8px" }}>
             <div className="max-w-5xl mx-auto px-4 py-2.5">
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-sm font-semibold text-blue-400">{topic.anti_label}</span>

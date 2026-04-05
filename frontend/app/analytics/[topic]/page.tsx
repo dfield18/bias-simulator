@@ -257,7 +257,9 @@ export default function AnalyticsPage() {
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
-    const obs = new ResizeObserver(([entry]) => setHeaderHeight(entry.contentRect.height));
+    const measure = () => setHeaderHeight(el.getBoundingClientRect().height);
+    measure();
+    const obs = new ResizeObserver(measure);
     obs.observe(el);
     return () => obs.disconnect();
   }, []);

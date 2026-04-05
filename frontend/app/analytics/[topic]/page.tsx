@@ -593,6 +593,10 @@ export default function AnalyticsPage() {
             </div>
           </div>
         )}
+        {/* Spacer to prevent content from hiding behind the fixed slider */}
+        {activeTab === "feed" && topic && showStickySlider && (
+          <div className="h-16" />
+        )}
 
         {/* ============ TAB 1: Overview ============ */}
         {/* ============ TAB: Feed ============ */}

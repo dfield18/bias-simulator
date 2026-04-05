@@ -370,7 +370,7 @@ export default function AnalyticsPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header ref={headerRef} className="border-b border-gray-800 bg-gray-950 sticky top-0 z-20">
+      <header ref={headerRef} className="border-b border-gray-800 bg-gray-950 fixed top-0 left-0 right-0 z-20">
         <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-5 min-w-0">
@@ -527,6 +527,8 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </header>
+      {/* Spacer for fixed header */}
+      <div style={{ height: `${headerHeight}px` }} />
 
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
 

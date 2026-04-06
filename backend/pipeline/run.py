@@ -265,7 +265,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classifi
         print(f"  Labels: {topic['anti_label']} / {topic['pro_label']}")
 
         # 2. Fetch tweets
-        set_progress(topic_slug, 2, 7, "Collecting tweets from Twitter", "Searching for relevant posts across Twitter...")
+        set_progress(topic_slug, 2, 7, "Collecting posts from X", "Searching for relevant posts...")
         print("\n[2/7] Fetching tweets...")
         t_fetch_start = _time.time()
         search_query = topic.get("search_query") or topic["name"]
@@ -275,7 +275,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classifi
         timings["fetch"] = round(_time.time() - t_fetch_start, 1)
 
         # 3. Parse and upsert tweets
-        set_progress(topic_slug, 3, 7, "Processing collected tweets", f"Found {tweets_fetched} tweets, saving to database...")
+        set_progress(topic_slug, 3, 7, "Processing collected posts", "Saving posts to database...")
         print("\n[3/7] Saving tweets to database...")
         parsed_tweets = [parse_tweet(t, topic_slug) for t in raw_tweets]
         tweets_new = upsert_tweets(conn, parsed_tweets)
@@ -350,10 +350,10 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classifi
             print(f"  Auto-classified {len(rule_classifications)} tweets via account rules")
         tweets_to_classify = remaining_tweets
 
-        set_progress(topic_slug, 4, 7, "Analyzing tweets with AI",
-                     f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by AI, "
-                     f"with uncertain ones verified by multiple models for accuracy. "
-                     f"This is the longest step." if tweets_to_classify else "All tweets already classified.")
+        set_progress(topic_slug, 4, 7, "Analyzing posts with AI",
+                     "Classifying posts — each is analyzed by AI, "
+                     "with uncertain ones verified by multiple models for accuracy. "
+                     "This is the longest step." if tweets_to_classify else "All posts already classified.")
 
         # Determine pro/anti bent values from labels
         t_classify_start = _time.time()
@@ -445,8 +445,8 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classifi
 
                 return batch_results
 
-            set_progress(topic_slug, 4, 7, "Analyzing tweets with AI",
-                         f"Classifying {len(tweets_to_classify)} tweets — each is analyzed by AI for stance and intensity in a single pass.")
+            set_progress(topic_slug, 4, 7, "Analyzing posts with AI",
+                         "Classifying posts — each is analyzed by AI for stance and intensity in a single pass.")
             print("\n[4-5/7] Classifying + scoring intensity (combined)...")
 
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_parallel) as executor:
@@ -467,7 +467,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classifi
             classifications.extend(rule_classifications)
 
         # Write classifications + intensity to DB
-        set_progress(topic_slug, 5, 7, "Saving results", f"Writing {len(classifications)} classifications to database...")
+        set_progress(topic_slug, 5, 7, "Saving results", "Writing classifications to database...")
         upsert_classifications(conn, classifications, intensity_results, cost_class, cost_intensity)
 
         # Cache author_type for cross-topic reuse
@@ -609,7 +609,7 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
         log_fetch_run(conn, topic_slug, tweets_fetched, tweets_new,
                       len(classifications), total_cost, "success", step_timings=timings)
 
-        set_progress(topic_slug, 7, 7, "Your dashboard is ready", f"Analyzed {len(classifications)} tweets, {tweets_new} new")
+        set_progress(topic_slug, 7, 7, "Your dashboard is ready", "Analysis complete — your results are ready to explore.")
         _pipeline_progress[topic_slug]["running"] = False
         print(f"\n{'='*60}")
         print(f"Fetched: {tweets_fetched} tweets | New: {tweets_new} | "

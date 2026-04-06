@@ -122,10 +122,11 @@ async def get_topics(
 
 
 @router.post("/topics/suggest", response_model=TopicSuggestion)
-async def suggest_topic(body: SuggestRequest, user: dict = Depends(get_current_user)):
+async def suggest_topic(body: SuggestRequest, user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Use LLM to suggest pro/anti definitions and prompts for a topic."""
-    if user.get("tier") not in ("pro", "admin"):
-        raise HTTPException(status_code=403, detail="Creating topics requires a Pro plan.")
+    # Free users can suggest (they get 1 topic)
+    if user.get("tier") not in ("pro", "admin", "free"):
+        raise HTTPException(status_code=403, detail="Please sign up to create topics.")
 
     from google import genai
 
@@ -215,12 +216,19 @@ async def create_topic(
     user: dict = Depends(get_current_user),
 ):
     """Create a new topic from user-adjusted definitions."""
-    # Tier enforcement: free users can't create topics
-    if user.get("tier") not in ("pro", "admin"):
-        raise HTTPException(
-            status_code=403,
-            detail="Creating topics requires a Pro plan. Upgrade to create your own topics."
+    # Tier enforcement: free users get 1 topic, pro gets unlimited
+    if user.get("tier") == "free":
+        from models import UserTopic
+        count_result = await db.execute(
+            select(func.count()).select_from(UserTopic)
+            .where(UserTopic.user_id == user["id"], UserTopic.role == "creator")
         )
+        topic_count = count_result.scalar() or 0
+        if topic_count >= 1:
+            raise HTTPException(
+                status_code=403,
+                detail="Free plan allows 1 custom topic. Upgrade to Pro for unlimited topics."
+            )
 
     # Check if slug already exists
     existing = await db.execute(select(Topic).where(Topic.slug == body.slug))
@@ -278,16 +286,14 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
         raise HTTPException(status_code=400, detail="Invalid model. Must be: fast, balanced, or accurate")
     await _check_topic_pipeline_access(slug, user, db)
     # Tier enforcement
-    if user.get("tier") not in ("pro", "admin"):
-        raise HTTPException(
-            status_code=403,
-            detail="Refreshing data requires a Pro plan. Free users can view preloaded topics."
-        )
-    if user.get("tier") == "pro":
-        # Pro: 50 runs per month — count only topics this user created
+    # Tier-based refresh limits
+    if user.get("tier") not in ("pro", "admin", "free"):
+        raise HTTPException(status_code=403, detail="Please sign up to refresh data.")
+    if user.get("tier") in ("pro", "free"):
         from datetime import datetime, timezone
         from models import FetchRun, UserTopic
         month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        max_runs = 100 if user.get("tier") == "pro" else 10
         creator_topics_result = await db.execute(
             select(UserTopic.topic_slug).where(
                 UserTopic.user_id == user["id"],
@@ -305,10 +311,10 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
             runs_this_month = run_count_result.scalar() or 0
         else:
             runs_this_month = 0
-        if runs_this_month >= 100:
+        if runs_this_month >= max_runs:
             raise HTTPException(
                 status_code=403,
-                detail=f"You've used {runs_this_month} of 100 monthly data refreshes. Resets on the 1st."
+                detail=f"You've used {runs_this_month} of {max_runs} monthly data refreshes. Upgrade to Pro for more." if user.get("tier") == "free" else f"You've used {runs_this_month} of {max_runs} monthly data refreshes. Resets on the 1st."
             )
 
     import threading

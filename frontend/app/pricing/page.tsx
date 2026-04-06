@@ -53,16 +53,16 @@ export default function PricingPage() {
               <span className="text-green-400">&#10003;</span> 5 preloaded topics
             </li>
             <li className="flex items-center gap-2">
+              <span className="text-green-400">&#10003;</span> 1 custom topic
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="text-green-400">&#10003;</span> 10 data refreshes per month
+            </li>
+            <li className="flex items-center gap-2">
               <span className="text-green-400">&#10003;</span> All analytics tabs
             </li>
             <li className="flex items-center gap-2">
               <span className="text-green-400">&#10003;</span> AI classification
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-gray-600">&#10007;</span> <span className="text-gray-600">Create your own topics</span>
-            </li>
-            <li className="flex items-center gap-2">
-              <span className="text-gray-600">&#10007;</span> <span className="text-gray-600">Refresh data</span>
             </li>
           </ul>
           {isSignedIn && userTier === "free" ? (

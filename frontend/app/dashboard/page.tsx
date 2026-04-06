@@ -151,11 +151,11 @@ export default function Home() {
       ) : (
         <>
           <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
-            Explore preloaded topics below. Upgrade to Pro to create your own topics and refresh data.
+            Explore preloaded topics below, or create your own — free plan includes 1 custom topic and 10 refreshes per month.
           </p>
           <Link
-            href="/pricing"
-            className="inline-block px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-lg text-sm font-medium transition-colors mb-10 sm:mb-12"
+            href="/topics/new"
+            className="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors mb-10 sm:mb-12"
           >
             + New Topic
           </Link>
@@ -166,8 +166,8 @@ export default function Home() {
       {user && user.tier === "free" && (
         <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span></p>
-            <p className="text-xs text-gray-500 mt-0.5">Upgrade to create your own topics, refresh data, and get 100 refreshes per month.</p>
+            <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span> — 1 custom topic, 10 refreshes/month</p>
+            <p className="text-xs text-gray-500 mt-0.5">Upgrade to Pro for unlimited topics and 100 refreshes per month.</p>
           </div>
           <Link
             href="/pricing"
@@ -215,13 +215,13 @@ export default function Home() {
                   <h2 className="text-lg font-semibold text-gray-300 mb-4">Free Topics</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     <Link
-                      href="/pricing"
+                      href="/topics/new"
                       className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
                     >
                       <div className="text-center">
                         <div className="text-2xl text-gray-600 mb-1">+</div>
                         <h2 className="text-base font-semibold text-gray-400">Add New Topic</h2>
-                        <p className="text-gray-600 text-xs mt-1">Upgrade to Pro</p>
+                        <p className="text-gray-600 text-xs mt-1">1 free custom topic</p>
                       </div>
                     </Link>
                     {featured.map((topic) => (

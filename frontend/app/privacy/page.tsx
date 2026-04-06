@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-export const metadata = { title: "Privacy Policy — DividedView" };
+export const metadata = {
+  title: "Privacy Policy",
+  description: "DividedView Privacy Policy — how we collect, use, and protect your data.",
+};
 
 export default function PrivacyPolicy() {
   return (

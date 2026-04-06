@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-export const metadata = { title: "Terms of Service — DividedView" };
+export const metadata = {
+  title: "Terms of Service",
+  description: "DividedView Terms of Service — rules for using the platform, subscription billing, and AI disclaimer.",
+};
 
 export default function TermsOfService() {
   return (

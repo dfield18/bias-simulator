@@ -92,8 +92,25 @@ export default function LandingPage() {
     );
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "DividedView",
+    "applicationCategory": "AnalyticsApplication",
+    "operatingSystem": "Web",
+    "description": "DividedView uses AI to analyze real posts from X on any political topic, showing how each side frames the same events.",
+    "url": "https://www.dividedview.com",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "description": "Free plan with 5 preloaded topics and 1 custom topic",
+    },
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Nav */}
       <nav className="bg-gray-950/80 backdrop-blur sticky top-0 z-20">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 py-5 flex items-center justify-between">

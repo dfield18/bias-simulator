@@ -1,7 +1,7 @@
 import os
 import json
 import re
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -122,7 +122,7 @@ async def get_topics(
 
 
 @router.post("/topics/suggest", response_model=TopicSuggestion)
-async def suggest_topic(request: Request, body: SuggestRequest, user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def suggest_topic(body: SuggestRequest, user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Use LLM to suggest pro/anti definitions and prompts for a topic."""
     # Free users can suggest (they get 1 topic)
     if user.get("tier") not in ("pro", "admin", "free"):
@@ -282,7 +282,7 @@ async def get_my_topics(
 
 
 @router.post("/topics/{slug}/run")
-async def run_topic_pipeline(request: Request, slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), model: str = Query(default="fast"), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), model: str = Query(default="fast"), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Trigger the pipeline for a topic in a background thread."""
     if model not in ("fast", "balanced", "accurate"):
         raise HTTPException(status_code=400, detail="Invalid model. Must be: fast, balanced, or accurate")

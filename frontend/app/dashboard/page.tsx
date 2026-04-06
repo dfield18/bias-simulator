@@ -184,7 +184,7 @@ export default function Home() {
       {/* My Topics / Featured Topics */}
       {!loading && (
         <>
-          {user && user.tier !== "free" && myTopicsList.length > 0 && (
+          {user && myTopicsList.length > 0 && (
             <>
               <h2 className="text-lg font-semibold text-gray-300 mb-4">My Topics</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">

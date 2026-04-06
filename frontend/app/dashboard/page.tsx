@@ -108,22 +108,6 @@ export default function Home() {
               Settings
             </Link>
           )}
-          {isSubscribed && role !== "creator" && (
-            <button
-              onClick={() => handleUnsubscribe(topic.slug)}
-              className="text-xs text-gray-600 hover:text-red-400 ml-auto"
-            >
-              Unsubscribe
-            </button>
-          )}
-          {!isSubscribed && (
-            <button
-              onClick={() => handleSubscribe(topic.slug)}
-              className="text-xs text-blue-500 hover:text-blue-400 ml-auto"
-            >
-              + Subscribe
-            </button>
-          )}
         </div>
       </div>
     );

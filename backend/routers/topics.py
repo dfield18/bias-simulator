@@ -1,7 +1,7 @@
 import os
 import json
 import re
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from auth import get_current_user, optional_user
 from models import Topic, UserTopic, TopicResponse, TopicDetailResponse
+from rate_limit import limiter
 
 
 async def _get_topic_or_404(slug: str, db: AsyncSession) -> Topic:
@@ -122,7 +123,7 @@ async def get_topics(
 
 
 @router.post("/topics/suggest", response_model=TopicSuggestion)
-async def suggest_topic(body: SuggestRequest, user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def suggest_topic(request: Request, body: SuggestRequest, user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Use LLM to suggest pro/anti definitions and prompts for a topic."""
     # Free users can suggest (they get 1 topic)
     if user.get("tier") not in ("pro", "admin", "free"):
@@ -200,7 +201,8 @@ Make the classification_prompt and intensity_prompt detailed and specific to thi
             text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
         data = json.loads(text)
     except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="Failed to parse LLM response")
+        print(f"Failed to parse Gemini response: {text[:500]}")
+        raise HTTPException(status_code=500, detail=f"Failed to parse LLM response: {text[:200]}")
 
     try:
         return TopicSuggestion(**data)
@@ -217,8 +219,8 @@ async def create_topic(
 ):
     """Create a new topic from user-adjusted definitions."""
     # Tier enforcement: free users get 1 topic, pro gets unlimited
+    from models import UserTopic
     if user.get("tier") == "free":
-        from models import UserTopic
         count_result = await db.execute(
             select(func.count()).select_from(UserTopic)
             .where(UserTopic.user_id == user["id"], UserTopic.role == "creator")
@@ -280,7 +282,7 @@ async def get_my_topics(
 
 
 @router.post("/topics/{slug}/run")
-async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), model: str = Query(default="fast"), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def run_topic_pipeline(request: Request, slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), model: str = Query(default="fast"), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Trigger the pipeline for a topic in a background thread."""
     if model not in ("fast", "balanced", "accurate"):
         raise HTTPException(status_code=400, detail="Invalid model. Must be: fast, balanced, or accurate")

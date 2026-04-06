@@ -188,6 +188,7 @@ Make the classification_prompt and intensity_prompt detailed and specific to thi
             config={
                 "response_mime_type": "application/json",
                 "temperature": 0.3,
+                "max_output_tokens": 8192,
             },
         )
     except Exception as e:

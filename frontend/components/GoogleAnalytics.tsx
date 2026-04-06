@@ -4,6 +4,7 @@ import Script from "next/script";
 import { useEffect, useState } from "react";
 
 const GA_ID = "G-EVZ0CK3P4G";
+const AW_ID = "AW-18069178143";
 
 export default function GoogleAnalytics() {
   const [consented, setConsented] = useState(false);
@@ -43,7 +44,9 @@ export default function GoogleAnalytics() {
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', '${GA_ID}');
+        gtag('config', '${AW_ID}');
       `}</Script>
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=${AW_ID}`} strategy="afterInteractive" />
     </>
   );
 }

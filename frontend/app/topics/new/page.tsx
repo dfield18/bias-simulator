@@ -13,12 +13,26 @@ import {
   runTopicPipeline,
   fetchPipelineProgress,
   fetchMe,
+  fetchMyTopics,
 } from "@/lib/api";
 
 export default function NewTopicPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
-  useEffect(() => { fetchMe().then((u) => setIsAdmin(u.tier === "admin")).catch(() => {}); }, []);
+  useEffect(() => {
+    fetchMe().then((u) => {
+      setIsAdmin(u.tier === "admin");
+      // Free user who already used their 1 free topic → redirect to pricing
+      if (u.tier === "free") {
+        fetchMyTopics().then((topics) => {
+          const createdCount = Object.values(topics).filter((role) => role === "creator").length;
+          if (createdCount >= 1) {
+            router.replace("/pricing");
+          }
+        }).catch(() => {});
+      }
+    }).catch(() => {});
+  }, [router]);
   const [topicInput, setTopicInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<TopicSuggestion | null>(null);

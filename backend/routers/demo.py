@@ -27,7 +27,7 @@ async def get_landing_data(
     slug = "iran-conflict"
     result = await db.execute(select(Topic).where(Topic.slug == slug, Topic.featured == True))
     topic_obj = result.scalar_one_or_none()
-    if not topic_obj:
+    if not topic_obj or not topic_obj.anti_label or not topic_obj.pro_label:
         return {"echo_chamber": None, "frames": None}
 
     anti_bent = topic_obj.anti_label.lower().replace(" ", "-")

@@ -2157,6 +2157,15 @@ export default function AnalyticsPage() {
                 ))}
               </div>
             </div>
+
+            {/* Support contact */}
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6">
+              <h2 className="text-base font-bold text-gray-200 mb-2">Need Help?</h2>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                If you have questions, feedback, or run into any issues, reach out to us at{" "}
+                <a href="mailto:support@dividedview.com" className="text-blue-400 hover:text-blue-300">support@dividedview.com</a>.
+              </p>
+            </div>
           </div>
         )}
 

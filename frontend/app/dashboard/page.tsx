@@ -167,7 +167,7 @@ export default function Home() {
         <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span> — 1 custom topic, 3 refreshes/month</p>
-            <p className="text-xs text-gray-500 mt-0.5">Upgrade to Pro for unlimited topics and 100 refreshes per month.</p>
+            <p className="text-xs text-gray-500 mt-0.5">Upgrade to Pro for unlimited topics and 100 refreshes per month. Questions? <a href="mailto:support@dividedview.com" className="text-blue-400 hover:text-blue-300">support@dividedview.com</a></p>
           </div>
           <Link
             href="/pricing"

@@ -56,7 +56,7 @@ export default function PricingPage() {
               <span className="text-green-400">&#10003;</span> 1 custom topic
             </li>
             <li className="flex items-center gap-2">
-              <span className="text-green-400">&#10003;</span> 10 data refreshes per month
+              <span className="text-green-400">&#10003;</span> 3 data refreshes per month
             </li>
             <li className="flex items-center gap-2">
               <span className="text-green-400">&#10003;</span> All analytics tabs

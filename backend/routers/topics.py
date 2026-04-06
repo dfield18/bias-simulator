@@ -293,7 +293,7 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
         from datetime import datetime, timezone
         from models import FetchRun, UserTopic
         month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        max_runs = 100 if user.get("tier") == "pro" else 10
+        max_runs = 100 if user.get("tier") == "pro" else 3
         creator_topics_result = await db.execute(
             select(UserTopic.topic_slug).where(
                 UserTopic.user_id == user["id"],

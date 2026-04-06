@@ -151,7 +151,7 @@ export default function Home() {
       ) : (
         <>
           <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
-            Explore preloaded topics below, or create your own — free plan includes 1 custom topic and 10 refreshes per month.
+            Explore preloaded topics below, or create your own — free plan includes 1 custom topic and 3 refreshes per month.
           </p>
           <Link
             href="/topics/new"
@@ -166,7 +166,7 @@ export default function Home() {
       {user && user.tier === "free" && (
         <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span> — 1 custom topic, 10 refreshes/month</p>
+            <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span> — 1 custom topic, 3 refreshes/month</p>
             <p className="text-xs text-gray-500 mt-0.5">Upgrade to Pro for unlimited topics and 100 refreshes per month.</p>
           </div>
           <Link

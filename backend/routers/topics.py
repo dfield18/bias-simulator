@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from auth import get_current_user, optional_user
 from models import Topic, UserTopic, TopicResponse, TopicDetailResponse
-from rate_limit import limiter
 
 
 async def _get_topic_or_404(slug: str, db: AsyncSession) -> Topic:

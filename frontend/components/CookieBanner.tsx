@@ -14,6 +14,12 @@ export default function CookieBanner() {
 
   const accept = () => {
     localStorage.setItem("cookie-consent", "accepted");
+    window.dispatchEvent(new Event("cookie-consent-change"));
+    setVisible(false);
+  };
+
+  const decline = () => {
+    localStorage.setItem("cookie-consent", "declined");
     setVisible(false);
   };
 
@@ -24,15 +30,24 @@ export default function CookieBanner() {
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <p className="text-xs text-gray-400">
           This site uses cookies for authentication and analytics.
-          By continuing to use DividedView, you agree to our{" "}
+          By accepting, you consent to Google Analytics cookies.
+          See our{" "}
           <Link href="/privacy" className="text-blue-400 hover:text-blue-300">Privacy Policy</Link>.
         </p>
-        <button
-          onClick={accept}
-          className="px-4 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-md text-xs font-medium transition-colors shrink-0"
-        >
-          Got it
-        </button>
+        <div className="flex gap-2 shrink-0">
+          <button
+            onClick={decline}
+            className="px-4 py-1.5 text-gray-500 hover:text-gray-300 text-xs font-medium transition-colors"
+          >
+            Decline
+          </button>
+          <button
+            onClick={accept}
+            className="px-4 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-md text-xs font-medium transition-colors"
+          >
+            Accept
+          </button>
+        </div>
       </div>
     </div>
   );

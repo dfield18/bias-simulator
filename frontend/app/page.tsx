@@ -303,7 +303,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-800/30 py-8">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-600">
-          <div>DividedView</div>
+          <div>&copy; 2026 BrooklynEcho LLC. All rights reserved.</div>
           <div className="flex gap-5">
             <Link href="/pricing" className="hover:text-gray-400 transition-colors">Pricing</Link>
             <Link href="/privacy" className="hover:text-gray-400 transition-colors">Privacy</Link>

@@ -1,7 +1,8 @@
-"""Account management endpoints — deletion and data export."""
+"""Account management endpoints — deletion, data export, and usage stats."""
 
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -9,6 +10,61 @@ from auth import get_current_user
 from models import User, UserTopic, Topic, Tweet, Classification, FetchRun
 
 router = APIRouter()
+
+
+@router.get("/account/usage")
+async def get_account_usage(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return usage stats: topics created and runs this month."""
+    user_id = user["id"]
+    tier = user.get("tier", "free")
+
+    # Count topics created
+    topic_count_result = await db.execute(
+        select(func.count()).select_from(UserTopic)
+        .where(UserTopic.user_id == user_id, UserTopic.role == "creator")
+    )
+    topics_created = topic_count_result.scalar() or 0
+
+    # Count successful runs this month for user's created topics
+    month_start = datetime.now(timezone.utc).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    creator_topics_result = await db.execute(
+        select(UserTopic.topic_slug).where(
+            UserTopic.user_id == user_id, UserTopic.role == "creator"
+        )
+    )
+    creator_slugs = [r[0] for r in creator_topics_result.all()]
+
+    runs_this_month = 0
+    if creator_slugs:
+        run_count_result = await db.execute(
+            select(func.count()).select_from(FetchRun)
+            .where(FetchRun.ran_at >= month_start)
+            .where(FetchRun.status == "success")
+            .where(FetchRun.topic_slug.in_(creator_slugs))
+        )
+        runs_this_month = run_count_result.scalar() or 0
+
+    if tier == "free":
+        max_topics = 1
+        max_runs = 3
+    elif tier == "pro":
+        max_topics = None  # unlimited
+        max_runs = 100
+    else:
+        max_topics = None
+        max_runs = None
+
+    return {
+        "topics_created": topics_created,
+        "max_topics": max_topics,
+        "runs_this_month": runs_this_month,
+        "max_runs": max_runs,
+    }
 
 
 @router.delete("/account")

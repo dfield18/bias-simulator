@@ -10,13 +10,13 @@ export default function TermsOfService() {
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
       <Link href="/" className="text-sm text-gray-500 hover:text-gray-300 mb-8 inline-block">&larr; Back</Link>
       <h1 className="text-3xl font-bold mb-2">Terms of Service</h1>
-      <p className="text-sm text-gray-500 mb-10">Last updated: March 31, 2026</p>
+      <p className="text-sm text-gray-500 mb-10">Last updated: April 6, 2026</p>
 
       <div className="space-y-8 text-sm text-gray-300 leading-relaxed">
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">1. Agreement to Terms</h2>
           <p>
-            By accessing or using DividedView (&ldquo;the Service&rdquo;), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service. DividedView is operated by DividedView (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;).
+            By accessing or using DividedView (&ldquo;the Service&rdquo;), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service. DividedView is operated by BrooklynEcho LLC (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;), a limited liability company.
           </p>
         </section>
 
@@ -66,7 +66,7 @@ export default function TermsOfService() {
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">6. Intellectual Property</h2>
           <p className="mb-3">
-            The DividedView platform, including its design, code, AI models, and analytical methodologies, is owned by DividedView. Your use of the Service does not grant you ownership of any intellectual property.
+            The DividedView platform, including its design, code, AI models, and analytical methodologies, is owned by BrooklynEcho LLC. Your use of the Service does not grant you ownership of any intellectual property.
           </p>
           <p>
             Topics you create and any custom configuration (search queries, classification prompts) are associated with your account. Public topics may be viewed and subscribed to by other users.
@@ -90,14 +90,14 @@ export default function TermsOfService() {
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">9. Limitation of Liability</h2>
           <p>
-            DividedView is provided &ldquo;as is&rdquo; without warranties of any kind, express or implied. To the maximum extent permitted by law, DividedView shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, or reputation, arising from your use of the Service.
+            DividedView is provided &ldquo;as is&rdquo; without warranties of any kind, express or implied. To the maximum extent permitted by law, BrooklynEcho LLC and its officers, directors, employees, and agents shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, or reputation, arising from your use of the Service. In no event shall BrooklynEcho LLC&apos;s total liability exceed the amount you paid to us in the twelve months preceding the claim.
           </p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">10. Indemnification</h2>
           <p>
-            You agree to indemnify and hold harmless DividedView from any claims, damages, or expenses arising from your use of the Service or your violation of these Terms.
+            You agree to indemnify and hold harmless BrooklynEcho LLC and its officers, directors, employees, and agents from any claims, damages, or expenses arising from your use of the Service or your violation of these Terms.
           </p>
         </section>
 
@@ -118,14 +118,14 @@ export default function TermsOfService() {
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">13. Governing Law</h2>
           <p>
-            These Terms are governed by the laws of the United States. Any disputes shall be resolved in the courts of competent jurisdiction.
+            These Terms are governed by and construed in accordance with the laws of the State of New York, without regard to its conflict of law provisions. Any disputes arising under these Terms shall be resolved exclusively in the state or federal courts located in the State of New York, and you consent to the personal jurisdiction of such courts.
           </p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">14. Contact</h2>
           <p>
-            Questions about these Terms? Contact us at <a href="mailto:davidcharlesfield@gmail.com" className="text-blue-400 hover:text-blue-300">davidcharlesfield@gmail.com</a>.
+            Questions about these Terms? Contact us at <a href="mailto:support@dividedview.com" className="text-blue-400 hover:text-blue-300">support@dividedview.com</a>.
           </p>
         </section>
       </div>

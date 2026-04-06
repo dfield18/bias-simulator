@@ -6,16 +6,25 @@ import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 import { fetchMe, UserProfile, apiFetchDirect } from "@/lib/api";
 
+interface UsageStats {
+  topics_created: number;
+  max_topics: number | null;
+  runs_this_month: number;
+  max_runs: number | null;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const { signOut } = useClerk();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [usage, setUsage] = useState<UsageStats | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchMe().then(setUser).catch(() => {});
+    apiFetchDirect("/api/account/usage").then(setUsage).catch(() => {});
   }, []);
 
   const handleExport = async () => {
@@ -65,6 +74,29 @@ export default function SettingsPage() {
             <div className="flex justify-between">
               <span className="text-gray-500">Plan</span>
               <span className="text-gray-300 capitalize">{user.tier}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Usage */}
+      {user && usage && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
+          <h2 className="text-sm font-semibold text-gray-300 mb-3">Usage</h2>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500">Custom Topics</span>
+              <span className="text-gray-300">
+                {usage.topics_created}{usage.max_topics !== null ? ` / ${usage.max_topics}` : ""}
+                {usage.max_topics === null && <span className="text-gray-600 ml-1">(unlimited)</span>}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">Refreshes This Month</span>
+              <span className="text-gray-300">
+                {usage.runs_this_month}{usage.max_runs !== null ? ` / ${usage.max_runs}` : ""}
+                {usage.max_runs === null && <span className="text-gray-600 ml-1">(unlimited)</span>}
+              </span>
             </div>
           </div>
         </div>

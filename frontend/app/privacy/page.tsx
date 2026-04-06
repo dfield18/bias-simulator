@@ -10,13 +10,13 @@ export default function PrivacyPolicy() {
     <main className="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
       <Link href="/" className="text-sm text-gray-500 hover:text-gray-300 mb-8 inline-block">&larr; Back</Link>
       <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>
-      <p className="text-sm text-gray-500 mb-10">Last updated: March 31, 2026</p>
+      <p className="text-sm text-gray-500 mb-10">Last updated: April 6, 2026</p>
 
       <div className="space-y-8 text-sm text-gray-300 leading-relaxed">
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">1. Who We Are</h2>
           <p>
-            DividedView (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) operates the DividedView platform, a service that analyzes public social media posts to visualize political bias and narrative framing. This Privacy Policy explains how we collect, use, and protect your information.
+            DividedView is operated by BrooklynEcho LLC (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;), a limited liability company. DividedView is a platform that analyzes public social media posts to visualize political bias and narrative framing. This Privacy Policy explains how we collect, use, and protect your information.
           </p>
         </section>
 
@@ -68,13 +68,13 @@ export default function PrivacyPolicy() {
             <li>Object to or restrict certain processing</li>
             <li>Export your data in a portable format</li>
           </ul>
-          <p className="mt-3">To exercise any of these rights, contact us at <a href="mailto:davidcharlesfield@gmail.com" className="text-blue-400 hover:text-blue-300">davidcharlesfield@gmail.com</a>.</p>
+          <p className="mt-3">To exercise any of these rights, contact us at <a href="mailto:support@dividedview.com" className="text-blue-400 hover:text-blue-300">support@dividedview.com</a>.</p>
         </section>
 
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">7. Cookies</h2>
           <p>
-            DividedView uses essential cookies for authentication (managed by Clerk). We do not use advertising or tracking cookies. No third-party analytics cookies are set.
+            DividedView uses essential cookies for authentication (managed by Clerk). We also use Google Analytics to collect anonymized usage data (pages visited, session duration, general location) to help us improve the platform. Google Analytics sets cookies such as <code className="text-gray-200">_ga</code> and <code className="text-gray-200">_gid</code> for this purpose. Analytics cookies are only loaded after you accept cookies via the consent banner. We do not use advertising or behavioral targeting cookies.
           </p>
         </section>
 
@@ -102,7 +102,7 @@ export default function PrivacyPolicy() {
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">11. Contact</h2>
           <p>
-            If you have questions about this Privacy Policy, contact us at <a href="mailto:davidcharlesfield@gmail.com" className="text-blue-400 hover:text-blue-300">davidcharlesfield@gmail.com</a>.
+            If you have questions about this Privacy Policy, contact us at <a href="mailto:support@dividedview.com" className="text-blue-400 hover:text-blue-300">support@dividedview.com</a>.
           </p>
         </section>
       </div>

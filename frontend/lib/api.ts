@@ -835,9 +835,19 @@ export interface GeoStateData {
   ratio: number; // 0=all anti, 0.5=even, 1=all pro
 }
 
+export interface GeoCountryData {
+  country: string;
+  anti_count: number;
+  pro_count: number;
+  neutral_count: number;
+  total: number;
+  ratio: number;
+}
+
 export interface GeographyData {
   locations: GeoLocation[];
   us_states: GeoStateData[];
+  countries: GeoCountryData[];
   summary: {
     total_with_location: number;
     total_tweets: number;

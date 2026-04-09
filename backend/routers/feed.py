@@ -3445,9 +3445,48 @@ async def get_geography(
         })
     us_states_map.sort(key=lambda x: -x["total"])
 
+    # Aggregate by country for international map
+    _ALL_COUNTRIES = set(_COUNTRIES.values())
+    _ALL_COUNTRIES.add("USA")
+    country_data = defaultdict(lambda: {"anti": 0, "pro": 0, "neutral": 0, "total": 0})
+    for loc_str, counts in location_data.items():
+        parts = [p.strip() for p in loc_str.split(",")]
+        country_found = None
+        # Check last part first (most likely country position)
+        for part in reversed(parts):
+            part_lower = part.strip().lower()
+            if part_lower in _COUNTRIES:
+                country_found = _COUNTRIES[part_lower]
+                break
+        # If location contains a US state, it's USA
+        if not country_found:
+            for part in parts:
+                part_lower = part.strip().lower()
+                if part_lower in _STATE_NAMES_TO_ABBR or part_lower in _US_STATES:
+                    country_found = "USA"
+                    break
+        if country_found:
+            country_data[country_found]["anti"] += counts["anti"]
+            country_data[country_found]["pro"] += counts["pro"]
+            country_data[country_found]["neutral"] += counts["neutral"]
+            country_data[country_found]["total"] += counts["total"]
+
+    countries_map = []
+    for country, counts in country_data.items():
+        countries_map.append({
+            "country": country,
+            "anti_count": counts["anti"],
+            "pro_count": counts["pro"],
+            "neutral_count": counts["neutral"],
+            "total": counts["total"],
+            "ratio": round(counts["pro"] / max(counts["anti"] + counts["pro"], 1), 2),
+        })
+    countries_map.sort(key=lambda x: -x["total"])
+
     response = {
         "locations": top_locations,
         "us_states": us_states_map,
+        "countries": countries_map,
         "summary": {
             "total_with_location": total_with_location,
             "total_tweets": total_tweets,

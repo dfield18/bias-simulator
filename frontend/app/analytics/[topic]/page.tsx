@@ -1852,10 +1852,11 @@ export default function AnalyticsPage() {
 
           return (
             <>
-              {/* US Sentiment Map */}
-              {geography.us_states.length > 0 && (
+              {/* Sentiment Map */}
+              {(geography.us_states.length > 0 || geography.countries.length > 0) && (
                 <SentimentMap
                   states={geography.us_states}
+                  countries={geography.countries}
                   antiLabel={aL}
                   proLabel={pL}
                   colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}

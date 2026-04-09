@@ -98,6 +98,27 @@ export default function SentimentDistribution({
 }: SentimentDistributionProps) {
   const [yAxisMode, setYAxisMode] = useState<YAxisMode>("reach");
   const distribution = useMemo(() => buildDistribution(items, yAxisMode), [items, yAxisMode]);
+
+  const sentimentSummary = useMemo(() => {
+    let proTotal = 0;
+    let antiTotal = 0;
+    for (const item of items) {
+      const bent = (item.classification.effective_political_bent || "").toLowerCase();
+      const weight = yAxisMode === "reach" ? Math.max(item.tweet.views || 0, 1) : 1;
+      if (bent.includes("pro") || bent === "positive") proTotal += weight;
+      else if (bent.includes("anti") || bent === "negative") antiTotal += weight;
+    }
+    if (proTotal === 0 && antiTotal === 0) return null;
+    const label = yAxisMode === "reach" ? "reach" : "post volume";
+    if (proTotal === 0) return `${antiLabel} dominates — no ${proLabel.toLowerCase()} ${label} detected.`;
+    if (antiTotal === 0) return `${proLabel} dominates — no ${antiLabel.toLowerCase()} ${label} detected.`;
+    const ratio = proTotal > antiTotal ? proTotal / antiTotal : antiTotal / proTotal;
+    const winner = proTotal > antiTotal ? proLabel : antiLabel;
+    const loser = proTotal > antiTotal ? antiLabel : proLabel;
+    if (ratio < 1.2) return `${winner} and ${loser.toLowerCase()} ${label} are roughly equal.`;
+    const ratioStr = ratio >= 10 ? `${Math.round(ratio)}x` : `${ratio.toFixed(1)}x`;
+    return `${winner} ${label} outweighs ${loser.toLowerCase()} by ${ratioStr}.`;
+  }, [items, yAxisMode, proLabel, antiLabel]);
   const maxVal = Math.max(...distribution, 1);
   const svgRef = useRef<SVGSVGElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -358,6 +379,11 @@ export default function SentimentDistribution({
           ({bias > 0 ? "+" : ""}{bias.toFixed(1)})
         </span>
       </div>
+
+      {/* Sentiment ratio summary */}
+      {sentimentSummary && (
+        <p className="text-[10px] sm:text-xs text-gray-500 text-center mt-2">{sentimentSummary}</p>
+      )}
     </div>
   );
 }

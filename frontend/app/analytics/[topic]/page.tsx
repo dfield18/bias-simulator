@@ -305,6 +305,9 @@ export default function AnalyticsPage() {
     return `${intensity} ${side}`;
   }
 
+  // Dynamic colors based on topic type
+  const sc = topic ? getSideColors((topic.color_scheme || "political") as "political" | "neutral") : getSideColors("political");
+
   if (!topic) {
     if (!feedLoading) {
       return (
@@ -905,7 +908,7 @@ export default function AnalyticsPage() {
                   {/* Card 1: Who's Dominating */}
                   <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
                     <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Who's Leading</div>
-                    <div className={`text-base sm:text-lg font-bold ${volDominant === topic.anti_label ? "text-blue-400" : "text-red-400"} leading-tight`}>
+                    <div className={`text-base sm:text-lg font-bold ${volDominant === topic.anti_label ? sc.anti.text : sc.pro.text} leading-tight`}>
                       {volDominant} leads the conversation
                     </div>
                     <div className="text-[10px] text-gray-400 mt-2">
@@ -919,7 +922,7 @@ export default function AnalyticsPage() {
                   {/* Card 2: What Performs Best */}
                   <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
                     <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">What Performs Best</div>
-                    <div className={`text-base sm:text-lg font-bold ${perfDominant === topic.anti_label ? "text-blue-400" : "text-red-400"} leading-tight`}>
+                    <div className={`text-base sm:text-lg font-bold ${perfDominant === topic.anti_label ? sc.anti.text : sc.pro.text} leading-tight`}>
                       {perfDominant} gets {perfRatio}× more engagement
                     </div>
                     <div className="text-[10px] text-gray-400 mt-2">
@@ -964,11 +967,11 @@ export default function AnalyticsPage() {
                     ) : (
                       <div className="space-y-1.5 mt-1">
                         <div>
-                          <div className="text-[10px] text-blue-400 font-medium">{topic.anti_label}</div>
+                          <div className={`text-[10px] ${sc.anti.text} font-medium`}>{topic.anti_label}</div>
                           <div className="text-sm sm:text-base font-bold text-gray-100 leading-tight">{antiTop}</div>
                         </div>
                         <div>
-                          <div className="text-[10px] text-red-400 font-medium">{topic.pro_label}</div>
+                          <div className={`text-[10px] ${sc.pro.text} font-medium`}>{topic.pro_label}</div>
                           <div className="text-sm sm:text-base font-bold text-gray-100 leading-tight">{proTop}</div>
                         </div>
                       </div>
@@ -1016,7 +1019,7 @@ export default function AnalyticsPage() {
                       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {antiStories.length > 0 && (
                           <div className="border border-blue-500/20 rounded-lg p-3 bg-blue-500/5">
-                            <div className="text-[10px] text-blue-400 uppercase tracking-wider font-medium mb-2">{topic.anti_label} is focused on</div>
+                            <div className={`text-[10px] ${sc.anti.text} uppercase tracking-wider font-medium mb-2`}>{topic.anti_label} is focused on</div>
                             <ul className="space-y-1.5">
                               {antiStories.map((s, i) => (
                                 <li key={i} className="text-[11px] text-gray-300 leading-relaxed pl-3 border-l-2 border-blue-500/30">{s}</li>
@@ -1026,7 +1029,7 @@ export default function AnalyticsPage() {
                         )}
                         {proStories.length > 0 && (
                           <div className="border border-red-500/20 rounded-lg p-3 bg-red-500/5">
-                            <div className="text-[10px] text-red-400 uppercase tracking-wider font-medium mb-2">{topic.pro_label} is focused on</div>
+                            <div className={`text-[10px] ${sc.pro.text} uppercase tracking-wider font-medium mb-2`}>{topic.pro_label} is focused on</div>
                             <ul className="space-y-1.5">
                               {proStories.map((s, i) => (
                                 <li key={i} className="text-[11px] text-gray-300 leading-relaxed pl-3 border-l-2 border-red-500/30">{s}</li>
@@ -1075,8 +1078,8 @@ export default function AnalyticsPage() {
                   {(["anti", "pro"] as const).map((side) => {
                     const voices = analytics.voices[side].slice(0, 3);
                     const label = side === "anti" ? analytics.anti_label : analytics.pro_label;
-                    const colorClass = side === "anti" ? "text-blue-400" : "text-red-400";
-                    const borderClass = side === "anti" ? "border-blue-500/20" : "border-red-500/20";
+                    const colorClass = side === "anti" ? sc.anti.text : sc.pro.text;
+                    const borderClass = side === "anti" ? sc.anti.border : sc.pro.border;
                     return (
                       <div key={side}>
                         <div className={`text-xs font-medium ${colorClass} mb-2`}>{label}</div>
@@ -1235,8 +1238,8 @@ export default function AnalyticsPage() {
                     The top posts from each side, ranked by engagement — this is the content shaping each audience
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {renderFeedColumn(sideBySideFeed.anti, aL, "text-blue-400", "border-blue-500/20")}
-                    {renderFeedColumn(sideBySideFeed.pro, pL, "text-red-400", "border-red-500/20")}
+                    {renderFeedColumn(sideBySideFeed.anti, aL, sc.anti.text, sc.anti.border)}
+                    {renderFeedColumn(sideBySideFeed.pro, pL, sc.pro.text, sc.pro.border)}
                   </div>
                 </div>
               );
@@ -1351,8 +1354,8 @@ export default function AnalyticsPage() {
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {([
-                      { tags: hashtags.anti, label: hashtags.anti_label, color: "text-blue-400", bg: "bg-blue-500/15", textColor: "text-blue-300" },
-                      { tags: hashtags.pro, label: hashtags.pro_label, color: "text-red-400", bg: "bg-red-500/15", textColor: "text-red-300" },
+                      { tags: hashtags.anti, label: hashtags.anti_label, color: sc.anti.text, bg: sc.anti.bgLight, textColor: sc.anti.text },
+                      { tags: hashtags.pro, label: hashtags.pro_label, color: sc.pro.text, bg: sc.pro.bgLight, textColor: sc.pro.text },
                     ]).map(({ tags, label, color, bg, textColor }) => (
                       <div key={label}>
                         <div className={`text-[10px] ${color} uppercase tracking-wider font-medium mb-3`}>{label}</div>
@@ -1422,8 +1425,8 @@ export default function AnalyticsPage() {
                   })()}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                     {([
-                      { stats: mediaBreakdown.anti, label: mediaBreakdown.anti_label, headerColor: "text-blue-400" },
-                      { stats: mediaBreakdown.pro, label: mediaBreakdown.pro_label, headerColor: "text-red-400" },
+                      { stats: mediaBreakdown.anti, label: mediaBreakdown.anti_label, headerColor: sc.anti.text },
+                      { stats: mediaBreakdown.pro, label: mediaBreakdown.pro_label, headerColor: sc.pro.text },
                       { stats: mediaBreakdown.overall, label: "Overall", headerColor: "text-gray-400" },
                     ]).map(({ stats, label, headerColor }) => (
                       <div key={label}>
@@ -1477,8 +1480,8 @@ export default function AnalyticsPage() {
                   <Section id="rhetoric" tag="Rhetoric Intensity" title="How aggressively each side argues" subtitle="Measures strong language, hyperbole, name-calling, and urgency">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
                       {([
-                        { side: anti, label: aL, color: "text-blue-400", border: "border-blue-500/20" },
-                        { side: pro, label: pL, color: "text-red-400", border: "border-red-500/20" },
+                        { side: anti, label: aL, color: sc.anti.text, border: sc.anti.border },
+                        { side: pro, label: pL, color: sc.pro.text, border: sc.pro.border },
                       ] as const).map(({ side, label, color, border }) => (
                         <div key={label} className={`border ${border} rounded-xl p-4 bg-gray-800/20`}>
                           <div className={`text-[10px] ${color} uppercase tracking-wider font-medium mb-3`}>{label}</div>
@@ -1552,8 +1555,8 @@ export default function AnalyticsPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
                     {([
-                      { side: anti, label: aL, color: "text-blue-400", border: "border-blue-500/20", barColor: "bg-blue-500/50" },
-                      { side: pro, label: pL, color: "text-red-400", border: "border-red-500/20", barColor: "bg-red-500/50" },
+                      { side: anti, label: aL, color: sc.anti.text, border: sc.anti.border, barColor: sc.anti.bgLight.replace("/20", "/50") },
+                      { side: pro, label: pL, color: sc.pro.text, border: sc.pro.border, barColor: sc.pro.bgLight.replace("/20", "/50") },
                     ] as const).map(({ side, label, color, border, barColor }) => (
                       <div key={label} className={`border ${border} rounded-xl p-4 bg-gray-800/20`}>
                         <div className={`text-[10px] ${color} uppercase tracking-wider font-medium mb-3`}>{label}</div>
@@ -1690,16 +1693,16 @@ export default function AnalyticsPage() {
                               /* Filtered view: show multiple tweets, side by side columns */
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-3">
-                                  <div className="text-[10px] text-blue-400 font-medium uppercase tracking-wider">{aL}</div>
+                                  <div className={`text-[10px] ${sc.anti.text} font-medium uppercase tracking-wider`}>{aL}</div>
                                   {frame.anti_tweets && frame.anti_tweets.length > 0
-                                    ? frame.anti_tweets.map((t) => renderTweet(t, aL, "border-blue-500/30", "text-blue-400"))
+                                    ? frame.anti_tweets.map((t) => renderTweet(t, aL, sc.anti.border, sc.anti.text))
                                     : <div className="border border-gray-800/40 border-dashed rounded-lg px-3 py-2"><span className="text-[10px] text-gray-600 italic">Not used by {aL}</span></div>
                                   }
                                 </div>
                                 <div className="space-y-3">
-                                  <div className="text-[10px] text-red-400 font-medium uppercase tracking-wider">{pL}</div>
+                                  <div className={`text-[10px] ${sc.pro.text} font-medium uppercase tracking-wider`}>{pL}</div>
                                   {frame.pro_tweets && frame.pro_tweets.length > 0
-                                    ? frame.pro_tweets.map((t) => renderTweet(t, pL, "border-red-500/30", "text-red-400"))
+                                    ? frame.pro_tweets.map((t) => renderTweet(t, pL, sc.pro.border, sc.pro.text))
                                     : <div className="border border-gray-800/40 border-dashed rounded-lg px-3 py-2"><span className="text-[10px] text-gray-600 italic">Not used by {pL}</span></div>
                                   }
                                 </div>
@@ -1707,12 +1710,12 @@ export default function AnalyticsPage() {
                             ) : (
                               /* All frames view: show top 1 per side, side by side */
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {renderTweet(frame.anti, aL, "border-blue-500/30", "text-blue-400") || (
+                                {renderTweet(frame.anti, aL, sc.anti.border, sc.anti.text) || (
                                   <div className="border border-gray-800/40 border-dashed rounded-lg px-3 py-2">
                                     <span className="text-[10px] text-gray-600 italic">Not used by {aL}</span>
                                   </div>
                                 )}
-                                {renderTweet(frame.pro, pL, "border-red-500/30", "text-red-400") || (
+                                {renderTweet(frame.pro, pL, sc.pro.border, sc.pro.text) || (
                                   <div className="border border-gray-800/40 border-dashed rounded-lg px-3 py-2">
                                     <span className="text-[10px] text-gray-600 italic">Not used by {pL}</span>
                                   </div>
@@ -1747,9 +1750,9 @@ export default function AnalyticsPage() {
 
           const renderDunk = (dunk: typeof dunks[0], i: number) => {
             const isAntiSide = dunk.side === dunksData.anti_label;
-            const sideColor = isAntiSide ? "border-blue-500/30" : "border-red-500/30";
-            const sideText = isAntiSide ? "text-blue-400" : "text-red-400";
-            const dunkerText = isAntiSide ? "text-red-400" : "text-blue-400";
+            const sideColor = isAntiSide ? sc.anti.border : sc.pro.border;
+            const sideText = isAntiSide ? sc.anti.text : sc.pro.text;
+            const dunkerText = isAntiSide ? sc.pro.text : sc.anti.text;
 
             return (
               <div key={dunk.tweet.id_str} className={`border ${sideColor} rounded-xl p-4 bg-gray-800/20`}>
@@ -1901,9 +1904,9 @@ export default function AnalyticsPage() {
                         <div className="text-[10px] text-gray-500 font-medium mb-3">Shared Topics</div>
                         {/* Header */}
                         <div className="flex items-center mb-2">
-                          <div className="w-[45%] text-right text-[9px] text-blue-400 pr-2">{aL}</div>
+                          <div className={`w-[45%] text-right text-[9px] ${sc.anti.text} pr-2`}>{aL}</div>
                           <div className="w-[10%]" />
-                          <div className="w-[45%] text-left text-[9px] text-red-400 pl-2">{pL}</div>
+                          <div className={`w-[45%] text-left text-[9px] ${sc.pro.text} pl-2`}>{pL}</div>
                         </div>
                         <div className="space-y-2">
                           {sharedNarr.slice(0, 6).map(n => {
@@ -1915,9 +1918,9 @@ export default function AnalyticsPage() {
                             return (
                               <div key={n.frame} className="flex items-center">
                                 <div className="w-[45%] flex items-center justify-end gap-1.5">
-                                  <span className="text-[9px] text-blue-400/70 shrink-0">{antiPct}%</span>
+                                  <span className={`text-[9px] ${sc.anti.text} opacity-70 shrink-0`}>{antiPct}%</span>
                                   <div className="h-4 flex-1 flex justify-end">
-                                    <div className="h-full bg-blue-500/50 rounded-l-sm" style={{ width: `${antiW}%` }} />
+                                    <div className={`h-full ${sc.anti.bg} opacity-50 rounded-l-sm`} style={{ width: `${antiW}%` }} />
                                   </div>
                                 </div>
                                 <div className="w-[10%] text-center">
@@ -1925,9 +1928,9 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div className="w-[45%] flex items-center gap-1.5">
                                   <div className="h-4 flex-1 flex justify-start">
-                                    <div className="h-full bg-red-500/50 rounded-r-sm" style={{ width: `${proW}%` }} />
+                                    <div className={`h-full ${sc.pro.bg} opacity-50 rounded-r-sm`} style={{ width: `${proW}%` }} />
                                   </div>
-                                  <span className="text-[9px] text-red-400/70 shrink-0">{proPct}%</span>
+                                  <span className={`text-[9px] ${sc.pro.text} opacity-70 shrink-0`}>{proPct}%</span>
                                 </div>
                               </div>
                             );
@@ -1953,9 +1956,9 @@ export default function AnalyticsPage() {
                             return (
                               <div key={s.domain} className="flex items-center">
                                 <div className="w-[45%] flex items-center justify-end gap-1.5">
-                                  <span className="text-[9px] text-blue-400/70 shrink-0">{antiPct}%</span>
+                                  <span className={`text-[9px] ${sc.anti.text} opacity-70 shrink-0`}>{antiPct}%</span>
                                   <div className="h-4 flex-1 flex justify-end">
-                                    <div className="h-full bg-blue-500/50 rounded-l-sm" style={{ width: `${antiW}%` }} />
+                                    <div className={`h-full ${sc.anti.bg} opacity-50 rounded-l-sm`} style={{ width: `${antiW}%` }} />
                                   </div>
                                 </div>
                                 <div className="w-[10%] text-center">
@@ -1963,9 +1966,9 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div className="w-[45%] flex items-center gap-1.5">
                                   <div className="h-4 flex-1 flex justify-start">
-                                    <div className="h-full bg-red-500/50 rounded-r-sm" style={{ width: `${proW}%` }} />
+                                    <div className={`h-full ${sc.pro.bg} opacity-50 rounded-r-sm`} style={{ width: `${proW}%` }} />
                                   </div>
-                                  <span className="text-[9px] text-red-400/70 shrink-0">{proPct}%</span>
+                                  <span className={`text-[9px] ${sc.pro.text} opacity-70 shrink-0`}>{proPct}%</span>
                                 </div>
                               </div>
                             );

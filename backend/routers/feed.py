@@ -3240,6 +3240,8 @@ async def get_geography(
             "god", "heaven", "earth", "worldwide", "everywhere", "internet",
             "your mom", "your heart", "the moon", "mars", "hogwarts",
             "maga", "trump", "biden", "resist", "wake up",
+            " to ", " in ", " from ", " and ", " for ", " with ",
+            " since ", " born ", " living ", " moved ",
         ]
         if any(phrase in lower for phrase in reject_phrases):
             return False
@@ -3276,6 +3278,26 @@ async def get_geography(
         "kenya": "Kenya", "ghana": "Ghana", "colombia": "Colombia", "argentina": "Argentina",
     }
 
+    # Well-known cities → country mapping
+    _KNOWN_CITIES = {
+        "london": "UK", "manchester": "UK", "birmingham": "UK", "edinburgh": "UK", "glasgow": "UK",
+        "liverpool": "UK", "leeds": "UK", "bristol": "UK", "cardiff": "UK", "belfast": "UK",
+        "toronto": "Canada", "vancouver": "Canada", "montreal": "Canada", "calgary": "Canada", "ottawa": "Canada",
+        "sydney": "Australia", "melbourne": "Australia", "brisbane": "Australia", "perth": "Australia",
+        "paris": "France", "berlin": "Germany", "munich": "Germany", "tokyo": "Japan", "osaka": "Japan",
+        "mumbai": "India", "delhi": "India", "bangalore": "India", "hyderabad": "India", "chennai": "India",
+        "lagos": "Nigeria", "nairobi": "Kenya", "accra": "Ghana", "johannesburg": "South Africa", "cape town": "South Africa",
+        "dublin": "Ireland", "amsterdam": "Netherlands", "stockholm": "Sweden", "oslo": "Norway",
+        "zurich": "Switzerland", "geneva": "Switzerland", "madrid": "Spain", "barcelona": "Spain",
+        "rome": "Italy", "milan": "Italy", "lisbon": "Portugal", "brussels": "Belgium",
+        "tel aviv": "Israel", "jerusalem": "Israel", "istanbul": "Turkey", "dubai": "UAE", "abu dhabi": "UAE",
+        "singapore": "Singapore", "hong kong": "Hong Kong", "seoul": "South Korea", "taipei": "Taiwan",
+        "beijing": "China", "shanghai": "China", "bangkok": "Thailand", "jakarta": "Indonesia",
+        "mexico city": "Mexico", "bogota": "Colombia", "buenos aires": "Argentina", "sao paulo": "Brazil",
+        "rio de janeiro": "Brazil", "lima": "Peru", "santiago": "Chile",
+        "auckland": "New Zealand", "wellington": "New Zealand",
+    }
+
     def _normalize_location(raw: str) -> str:
         """Normalize Twitter location to 'City, State, Country' format."""
         # Clean up
@@ -3301,6 +3323,10 @@ async def get_geography(
             # Check Canadian provinces
             if lower in _CA_PROVINCES:
                 return f"{_CA_PROVINCES[lower]}, Canada"
+            # Check well-known international cities
+            if lower in _KNOWN_CITIES:
+                city_display = parts[0].title() if parts[0].islower() else parts[0]
+                return f"{city_display}, {_KNOWN_CITIES[lower]}"
             # Return as-is with title case
             return parts[0].title() if parts[0].islower() else parts[0]
 
@@ -3322,6 +3348,10 @@ async def get_geography(
             # Second part is Canadian province
             if second_lower in _CA_PROVINCES:
                 return f"{city}, {_CA_PROVINCES[second_lower]}, Canada"
+            # Check if first part is a known city (e.g. "London, Ontario")
+            city_lower = city.lower().strip()
+            if city_lower in _KNOWN_CITIES and second_lower not in _COUNTRIES:
+                return f"{city}, {second}, {_KNOWN_CITIES[city_lower]}"
             # Return as-is
             return f"{city}, {second}"
 

@@ -549,7 +549,8 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
                     if not isinstance(results, list):
                         results = []
 
-                    valid_types = {"politician", "mainstream_news", "independent_news", "partisan_news", "activist", "general"}
+                    valid_types = {"politician", "mainstream_news", "independent_news", "partisan_news", "activist", "general",
+                                   "consumer", "news_media", "industry_analyst", "influencer_creator", "employee_insider", "investor_finance"}
                     with conn.cursor() as cur:
                         for r in results:
                             sn = (r.get("screen_name") or "").lower().strip().lstrip("@")

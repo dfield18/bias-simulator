@@ -1244,18 +1244,6 @@ export default function AnalyticsPage() {
         {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Arguments</div></div>}
 
         {(activeTab === "narrative" || activeTab === "report") && (() => {
-          /* Section wrapper — always expanded */
-          const Section = ({ tag, title, subtitle, children }: { id?: string; tag: string; title: string; subtitle: string; children: React.ReactNode; defaultOpen?: boolean }) => (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-              <div className="mb-4">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">{tag}</div>
-                <h3 className="text-sm font-semibold text-gray-300">{title}</h3>
-                <p className="text-[10px] text-gray-600 mt-0.5">{subtitle}</p>
-              </div>
-              {children}
-            </div>
-          );
-
           return (
             <>
               {/* 1. Summary — always open, no collapsible wrapper */}
@@ -1849,7 +1837,7 @@ export default function AnalyticsPage() {
             {gapAnalysis && <GapAnalysis data={gapAnalysis} />}
 
             {/* Recommendations */}
-            {recommendations && <Recommendations data={recommendations} />}
+            {recommendations && <Recommendations data={recommendations} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}
 
             {/* Bridge Building — actionable, referencing shared data */}
             {analytics?.overlap && (() => {

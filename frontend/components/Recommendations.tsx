@@ -1,9 +1,11 @@
 "use client";
 
 import { RecommendationsData, Recommendation } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 
 interface RecommendationsProps {
   data: RecommendationsData;
+  colorScheme?: ColorScheme;
 }
 
 function TypeIcon({ type }: { type: string }) {
@@ -55,7 +57,8 @@ function RecCard({ rec, index }: { rec: Recommendation; index: number }) {
   );
 }
 
-export default function Recommendations({ data }: RecommendationsProps) {
+export default function Recommendations({ data, colorScheme }: RecommendationsProps) {
+  const sc = getSideColors(colorScheme || "political");
   if (!data.anti_recommendations?.length && !data.pro_recommendations?.length) return null;
 
   return (
@@ -71,8 +74,8 @@ export default function Recommendations({ data }: RecommendationsProps) {
         {/* Anti / Left side */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-1 h-5 bg-blue-500 rounded-full" />
-            <span className="text-xs font-semibold text-blue-400">
+            <div className={`w-1 h-5 ${sc.anti.bg} rounded-full`} />
+            <span className={`text-xs font-semibold ${sc.anti.text}`}>
               For {data.anti_label}
             </span>
           </div>
@@ -86,8 +89,8 @@ export default function Recommendations({ data }: RecommendationsProps) {
         {/* Pro / Right side */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-1 h-5 bg-red-500 rounded-full" />
-            <span className="text-xs font-semibold text-red-400">
+            <div className={`w-1 h-5 ${sc.pro.bg} rounded-full`} />
+            <span className={`text-xs font-semibold ${sc.pro.text}`}>
               For {data.pro_label}
             </span>
           </div>

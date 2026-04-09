@@ -1,14 +1,19 @@
+import { getSideColors, ColorScheme } from "@/lib/colors";
+
 interface IntensityBarProps {
   score: number;
   proLabel: string;
   antiLabel: string;
+  colorScheme?: ColorScheme;
 }
 
 export default function IntensityBar({
   score,
   proLabel,
   antiLabel,
+  colorScheme = "political",
 }: IntensityBarProps) {
+  const sc = getSideColors(colorScheme);
   const absScore = Math.abs(score);
   const widthPct = (absScore / 10) * 50;
   const isAnti = score < 0;
@@ -25,7 +30,7 @@ export default function IntensityBar({
           {/* Fill bar */}
           <div
             className={`absolute top-0 bottom-0 rounded-full transition-all ${
-              isAnti ? "bg-blue-500" : "bg-red-500"
+              isAnti ? sc.anti.bg : sc.pro.bg
             }`}
             style={{
               left: isAnti ? `${50 - widthPct}%` : "50%",
@@ -38,7 +43,7 @@ export default function IntensityBar({
       <div className="text-center text-xs text-gray-400 mt-1">
         <span
           className={`font-mono font-bold ${
-            isAnti ? "text-blue-400" : "text-red-400"
+            isAnti ? sc.anti.text : sc.pro.text
           }`}
         >
           {score > 0 ? "+" : ""}

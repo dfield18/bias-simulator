@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     default: "DividedView — See How Political Bias Shapes Your Feed",
     template: "%s — DividedView",
   },
-  description: "DividedView uses AI to analyze real posts from X on any political topic, showing how each side frames the same events. Simulated feeds, narrative analysis, and echo chamber detection.",
+  description: "DividedView uses AI to analyze real posts from X on any political topic, showing how each side frames the same events. Simulated feeds, narrative analysis, and blind spot detection.",
   keywords: ["political bias", "media bias", "echo chamber", "narrative analysis", "political feed simulator", "X posts analysis", "AI classification", "divided view", "political media"],
   icons: { icon: "/favicon.svg" },
   metadataBase: new URL("https://www.dividedview.com"),
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "DividedView — See How Political Bias Shapes Your Feed",
-    description: "DividedView uses AI to analyze real posts from X on any political topic, showing how each side frames the same events. Simulated feeds, narrative analysis, and echo chamber detection.",
+    description: "DividedView uses AI to analyze real posts from X on any political topic, showing how each side frames the same events. Simulated feeds, narrative analysis, and blind spot detection.",
     siteName: "DividedView",
     url: "https://www.dividedview.com",
     type: "website",

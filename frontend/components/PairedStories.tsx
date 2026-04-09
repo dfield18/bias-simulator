@@ -246,15 +246,10 @@ export default function PairedStories({ data, colorScheme }: PairedStoriesProps)
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-      <div className="mb-5">
-        <h3 className="text-sm font-semibold text-gray-300">
-          Same Story, Different Lens
-        </h3>
-        <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
-          How each side frames the same real-world events — ranked by contrast
-        </p>
-      </div>
+    <div>
+      <p className="text-[10px] sm:text-xs text-gray-600 mb-4">
+        How each side frames the same real-world events — ranked by contrast
+      </p>
 
       <div className="space-y-3">
         {data.stories.map((story, i) =>

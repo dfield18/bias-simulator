@@ -208,10 +208,31 @@ _NEWS_KEYWORDS = {
 _NATIVE_SOURCES = {"twitter web app", "twitter for iphone", "twitter for android", "x"}
 
 
-def _detect_account_type(bio: str) -> str:
+def _detect_account_type(bio: str, topic_type: str = "political") -> str:
     """Heuristic fallback for account type when AI classification is unavailable."""
     bio_lower = (bio or "").lower()
 
+    if topic_type == "company":
+        # Company-mode heuristics
+        _ANALYST_KW = {"analyst", "research", "advisory", "consulting", "market intelligence", "industry expert", "tech reviewer"}
+        _INFLUENCER_KW = {"influencer", "creator", "youtuber", "blogger", "content creator", "streamer", "podcaster"}
+        _INVESTOR_KW = {"investor", "trader", "portfolio", "hedge fund", "venture capital", "vc", "fintech", "stock", "wall street", "$"}
+        _EMPLOYEE_KW = {"@company", "employee", "engineer at", "work at", "former", "ex-", "insider"}
+        _NEWS_KW = {"journalist", "reporter", "editor", "news", "correspondent", "columnist", "bureau", "newsroom"}
+
+        if any(kw in bio_lower for kw in _NEWS_KW):
+            return "news_media"
+        if any(kw in bio_lower for kw in _ANALYST_KW):
+            return "industry_analyst"
+        if any(kw in bio_lower for kw in _INFLUENCER_KW):
+            return "influencer_creator"
+        if any(kw in bio_lower for kw in _INVESTOR_KW):
+            return "investor_finance"
+        if any(kw in bio_lower for kw in _EMPLOYEE_KW):
+            return "employee_insider"
+        return "consumer"
+
+    # Political-mode heuristics
     # Check politician — phrases + regex patterns for short terms
     if any(kw in bio_lower for kw in _POLITICIAN_PHRASES):
         return "politician"

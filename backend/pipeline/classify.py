@@ -41,7 +41,7 @@ def _call_gemini(prompt: str, model: str = "gemini-2.0-flash") -> tuple[str, flo
     return text, cost
 
 
-def _build_classification_prompt(tweets_batch: list[dict], topic_prompt: str) -> str:
+def _build_classification_prompt(tweets_batch: list[dict], topic_prompt: str, topic_type: str = "political") -> str:
     """Build the full classification prompt for a batch of tweets."""
     tweets_text = ""
     for i, t in enumerate(tweets_batch):
@@ -64,7 +64,7 @@ Return a JSON array where each element has these fields:
 - id_str: the tweet ID
 - about_subject: boolean, is this tweet about the topic?
 - political_bent: one of the valid categories from the prompt above
-- author_type: one of "politician", "mainstream_news", "independent_news", "partisan_news", "activist", "general"
+- author_type: one of {'"consumer", "news_media", "industry_analyst", "influencer_creator", "employee_insider", "investor_finance", "general"' if topic_type == "company" else '"politician", "mainstream_news", "independent_news", "partisan_news", "activist", "general"'}
 - intensity_score: integer from -10 to 10. Negative = anti/left intensity, positive = pro/right intensity. 0 if neutral/unclear. Higher absolute value = more extreme position.
 - classification_basis: 1-sentence explanation
 - confidence: float 0.0-1.0

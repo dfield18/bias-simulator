@@ -63,7 +63,8 @@ def load_topic(conn, topic_slug: str) -> dict | None:
     with conn.cursor() as cur:
         cur.execute(
             "SELECT slug, name, description, classification_prompt, intensity_prompt, "
-            "pro_label, anti_label, search_query, target_language, target_country, account_rules "
+            "pro_label, anti_label, search_query, target_language, target_country, account_rules, "
+            "COALESCE(topic_type, 'political') "
             "FROM topics WHERE slug = %s AND is_active = TRUE",
             (topic_slug,),
         )
@@ -82,6 +83,7 @@ def load_topic(conn, topic_slug: str) -> dict | None:
             "target_language": row[8] or "en",
             "target_country": row[9],
             "account_rules": row[10] or {},
+            "topic_type": row[11] or "political",
         }
 
 
@@ -384,7 +386,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classifi
                 batch_cost = 0.0
                 batch_results = []
                 batch_intensity = []
-                prompt = _build_classification_prompt(batch, class_prompt)
+                prompt = _build_classification_prompt(batch, class_prompt, topic.get("topic_type", "political"))
 
                 gemini_model = MODEL_MAP.get(classification_model, "gemini-2.0-flash-lite")
                 try:
@@ -509,7 +511,22 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classifi
                     f"- @{row[0]}: {(row[1] or 'no bio')[:150]}"
                     for row in uncached
                 )
-                prompt = f"""Classify each Twitter account into exactly one category based on their bio:
+                if topic.get("topic_type") == "company":
+                    prompt = f"""Classify each Twitter account into exactly one category based on their bio:
+- "consumer" = regular customers, users, shoppers, everyday people sharing opinions or experiences
+- "news_media" = news outlets and their journalists covering the company
+- "industry_analyst" = market analysts, tech reviewers, industry commentators, research firms
+- "influencer_creator" = social media influencers, content creators, YouTubers, bloggers
+- "employee_insider" = current or former employees, executives, company insiders
+- "investor_finance" = stock traders, financial advisors, investment accounts, hedge funds
+- "general" = everyone else that doesn't fit the above categories
+
+Accounts:
+{accounts_text}
+
+Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]"""
+                else:
+                    prompt = f"""Classify each Twitter account into exactly one category based on their bio:
 - "politician" = elected officials, candidates, government accounts
 - "mainstream_news" = major established outlets and their journalists (NYT, CNN, BBC, Reuters, AP, Fox News, etc.)
 - "independent_news" = smaller outlets, freelance journalists, substacks, podcasts

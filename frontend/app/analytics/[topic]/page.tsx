@@ -635,12 +635,26 @@ export default function AnalyticsPage() {
                   className="px-2.5 py-1 bg-gray-800 border border-gray-700 rounded-md text-xs text-gray-300"
                 >
                   <option value="all">All accounts</option>
-                  <option value="politician">Politicians</option>
-                  <option value="mainstream_news">Mainstream News</option>
-                  <option value="independent_news">Independent Media</option>
-                  <option value="partisan_news">Partisan Media</option>
-                  <option value="activist">Activists &amp; Orgs</option>
-                  <option value="general">General</option>
+                  {topic.topic_type === "company" ? (
+                    <>
+                      <option value="consumer">Consumers &amp; Customers</option>
+                      <option value="news_media">News &amp; Media</option>
+                      <option value="industry_analyst">Industry Analysts</option>
+                      <option value="influencer_creator">Influencers &amp; Creators</option>
+                      <option value="employee_insider">Employees &amp; Insiders</option>
+                      <option value="investor_finance">Investors &amp; Finance</option>
+                      <option value="general">General</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="politician">Politicians</option>
+                      <option value="mainstream_news">Mainstream News</option>
+                      <option value="independent_news">Independent Media</option>
+                      <option value="partisan_news">Partisan Media</option>
+                      <option value="activist">Activists &amp; Orgs</option>
+                      <option value="general">General</option>
+                    </>
+                  )}
                 </select>
               <div className="flex items-center gap-1 bg-gray-800 rounded-md p-0.5">
                 <button

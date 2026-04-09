@@ -53,6 +53,8 @@ import {
   fetchDunks,
   fetchMyTopics,
   SmartFeedItem,
+  GeographyData,
+  fetchGeography,
 } from "@/lib/api";
 import SummaryTabs from "@/components/SummaryTabs";
 import NarrativeFrames from "@/components/NarrativeFrames";
@@ -72,6 +74,7 @@ const tabs = [
   { id: "feed", label: "Simulated Feed", subtitle: "The conversation" },
   { id: "narrative", label: "The Divide", subtitle: "Arguments, overlap, and blind spots" },
   { id: "voices", label: "Key Voices", subtitle: "Who's saying what" },
+  { id: "geography", label: "Geography", subtitle: "Where posts come from" },
   { id: "strategy", label: "Insights & Action", subtitle: "Key findings and next steps" },
   { id: "report", label: "Full Report", subtitle: "All tabs in one view" },
 ];
@@ -118,6 +121,7 @@ export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState("pulse");
   const [selectedFrame, setSelectedFrame] = useState<string>("all");
   const [flashpointsExpanded, setFlashpointsExpanded] = useState(false);
+  const [geography, setGeography] = useState<GeographyData | null>(null);
 
   // Essential data — loaded once on mount
   useEffect(() => {
@@ -191,6 +195,9 @@ export default function AnalyticsPage() {
       cachedFetch(`${s}:narrativeDepth`, () => fetchNarrativeDepth(s)).then((d) => d && setNarrativeDepth(d)).catch(console.error);
       cachedFetch(`${s}:analytics`, () => fetchAnalytics(s)).then((d) => d && setAnalytics(d)).catch(console.error);
       cachedFetch(`${s}:dunks`, () => fetchDunks(s)).then((d) => d && setDunksData(d)).catch(console.error);
+    }
+    if (activeTab === "geography" || activeTab === "report") {
+      cachedFetch(`${s}:geography`, () => fetchGeography(s)).then((d) => d && setGeography(d)).catch(console.error);
     }
     if (activeTab === "strategy" || activeTab === "report") {
       cachedFetch(`${s}:gapAnalysis`, () => fetchGapAnalysis(s)).then((d) => d && setGapAnalysis(d)).catch(console.error);
@@ -1827,6 +1834,146 @@ export default function AnalyticsPage() {
                 </div>
               );
             })()}
+
+        {/* ============ TAB: Geography ============ */}
+        {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Geography</div></div>}
+
+        {(activeTab === "geography" || activeTab === "report") && geography && (() => {
+          const { locations, summary } = geography;
+          const aL = geography.anti_label;
+          const pL = geography.pro_label;
+          const fmt = (n: number) => n >= 1000000 ? `${(n / 1000000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+          const maxTotal = Math.max(...locations.slice(0, 20).map(l => l.total), 1);
+
+          return (
+            <>
+              {/* Summary stats */}
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Geographic Reach</div>
+                <h3 className="text-sm font-semibold text-gray-300 mb-3">Where the conversation is happening</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-gray-200">{summary.coverage_pct}%</div>
+                    <div className="text-[10px] text-gray-500">of posts have location</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-gray-200">{fmt(summary.unique_locations)}</div>
+                    <div className="text-[10px] text-gray-500">unique locations</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-xl font-bold ${sc.anti.text}`}>{fmt(summary.anti_total)}</div>
+                    <div className="text-[10px] text-gray-500">{aL} posts</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-xl font-bold ${sc.pro.text}`}>{fmt(summary.pro_total)}</div>
+                    <div className="text-[10px] text-gray-500">{pL} posts</div>
+                  </div>
+                </div>
+                {summary.coverage_pct < 30 && (
+                  <p className="text-[10px] text-gray-600">Note: Only {summary.coverage_pct}% of authors set a public location. This data represents a subset of the full conversation.</p>
+                )}
+              </div>
+
+              {/* Top locations bar chart */}
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Top Locations</div>
+                <h3 className="text-sm font-semibold text-gray-300 mb-1">Where authors are located</h3>
+                <p className="text-[10px] text-gray-600 mb-4">Based on user-set profile locations — sorted by post volume</p>
+
+                <div className="space-y-2">
+                  {locations.slice(0, 20).map((loc) => {
+                    const antiPct = loc.total > 0 ? Math.round((loc.anti_count / loc.total) * 100) : 0;
+                    const proPct = loc.total > 0 ? Math.round((loc.pro_count / loc.total) * 100) : 0;
+                    const barW = (loc.total / maxTotal) * 100;
+
+                    return (
+                      <div key={loc.location} className="flex items-center gap-3">
+                        <div className="w-32 sm:w-40 text-xs text-gray-300 truncate shrink-0" title={loc.location}>
+                          {loc.location}
+                        </div>
+                        <div className="flex-1 h-5 bg-gray-800 rounded overflow-hidden relative" style={{ width: `${barW}%` }}>
+                          <div className="h-full flex">
+                            {loc.anti_count > 0 && (
+                              <div className={`h-full ${sc.anti.bg} opacity-60`} style={{ width: `${antiPct}%` }} />
+                            )}
+                            {loc.neutral_count > 0 && (
+                              <div className="h-full bg-gray-500 opacity-40" style={{ width: `${100 - antiPct - proPct}%` }} />
+                            )}
+                            {loc.pro_count > 0 && (
+                              <div className={`h-full ${sc.pro.bg} opacity-60`} style={{ width: `${proPct}%` }} />
+                            )}
+                          </div>
+                        </div>
+                        <div className="w-10 text-right text-[10px] text-gray-500 shrink-0">{loc.total}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center gap-4 mt-4">
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-3 h-3 rounded-sm ${sc.anti.bg} opacity-60`} />
+                    <span className="text-[10px] text-gray-400">{aL}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-3 h-3 rounded-sm ${sc.pro.bg} opacity-60`} />
+                    <span className="text-[10px] text-gray-400">{pL}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-sm bg-gray-500 opacity-40" />
+                    <span className="text-[10px] text-gray-400">Neutral</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sentiment by location — top 10 with split bars */}
+              {locations.length > 0 && (
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Sentiment by Location</div>
+                  <h3 className="text-sm font-semibold text-gray-300 mb-1">How sentiment varies by geography</h3>
+                  <p className="text-[10px] text-gray-600 mb-4">Locations with the strongest tilt toward one side</p>
+
+                  {(() => {
+                    // Sort by most skewed sentiment
+                    const skewed = [...locations]
+                      .filter(l => l.total >= 3)
+                      .map(l => ({
+                        ...l,
+                        skew: Math.abs(l.anti_count - l.pro_count) / l.total,
+                        dominant: l.anti_count > l.pro_count ? "anti" : "pro",
+                      }))
+                      .sort((a, b) => b.skew - a.skew)
+                      .slice(0, 10);
+
+                    return (
+                      <div className="space-y-2">
+                        {skewed.map((loc) => {
+                          const antiPct = loc.total > 0 ? Math.round((loc.anti_count / loc.total) * 100) : 0;
+                          const proPct = loc.total > 0 ? Math.round((loc.pro_count / loc.total) * 100) : 0;
+                          return (
+                            <div key={loc.location} className="flex items-center gap-3">
+                              <div className="w-32 sm:w-40 text-xs text-gray-300 truncate shrink-0" title={loc.location}>
+                                {loc.location}
+                              </div>
+                              <div className="flex-1 h-5 rounded overflow-hidden flex">
+                                <div className={`h-full ${sc.anti.bg} opacity-60`} style={{ width: `${antiPct}%` }} />
+                                <div className={`h-full ${sc.pro.bg} opacity-60`} style={{ width: `${proPct}%` }} />
+                              </div>
+                              <div className="w-20 text-right text-[10px] text-gray-500 shrink-0">
+                                {antiPct}% / {proPct}%
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {/* ============ TAB 4: Strategy ============ */}
         {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Insights & Action</div></div>}

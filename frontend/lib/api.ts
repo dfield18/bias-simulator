@@ -815,6 +815,37 @@ export async function fetchPulseExtras(topic: string): Promise<PulseExtrasData |
   return res.json();
 }
 
+// Geography
+export interface GeoLocation {
+  location: string;
+  anti_count: number;
+  pro_count: number;
+  neutral_count: number;
+  total: number;
+  views: number;
+  engagement: number;
+}
+
+export interface GeographyData {
+  locations: GeoLocation[];
+  summary: {
+    total_with_location: number;
+    total_tweets: number;
+    coverage_pct: number;
+    unique_locations: number;
+    anti_total: number;
+    pro_total: number;
+  };
+  anti_label: string;
+  pro_label: string;
+}
+
+export async function fetchGeography(topic: string): Promise<GeographyData | null> {
+  const res = await apiFetch(`${API_URL}/api/geography?topic=${encodeURIComponent(topic)}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
 export interface SummaryData {
   summary: string;
   tweet_count: number;

@@ -3170,3 +3170,126 @@ async def get_dunks(
         "pro_label": pL,
         "total_analyzed": len(rows),
     }
+
+
+@router.get("/geography")
+async def get_geography(
+    topic: str,
+    hours: int = Query(default=720),
+    db: AsyncSession = Depends(get_db),
+    user: dict = Depends(get_current_user),
+):
+    """Geographic distribution of tweet authors by location."""
+    await _check_feed_topic_access(topic, user, db)
+
+    cache_key = f"{topic}:geography:{hours}"
+    cached = get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+
+    # Load topic labels
+    topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
+    t = topic_result.scalar_one_or_none()
+    if not t:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    aL = t.anti_label
+    pL = t.pro_label
+    anti_bent = aL.lower().replace(" ", "-")
+    pro_bent = pL.lower().replace(" ", "-")
+
+    # Query tweets with location from raw_json
+    stmt = (
+        select(
+            Tweet.raw_json["user"]["location"].astext.label("location"),
+            Classification.effective_political_bent,
+            func.count().label("cnt"),
+            func.sum(Tweet.views).label("total_views"),
+            func.sum(Tweet.engagement).label("total_engagement"),
+        )
+        .join(Classification, Tweet.id_str == Classification.id_str)
+        .where(
+            Tweet.topic_slug == topic,
+            Tweet.created_at >= since,
+            Classification.about_subject == True,
+            Tweet.raw_json["user"]["location"].astext != "",
+            Tweet.raw_json["user"]["location"].astext.isnot(None),
+        )
+        .group_by(
+            Tweet.raw_json["user"]["location"].astext,
+            Classification.effective_political_bent,
+        )
+    )
+
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    # Aggregate locations — normalize common variations
+    location_data = defaultdict(lambda: {"anti": 0, "pro": 0, "neutral": 0, "total": 0, "views": 0, "engagement": 0})
+    for loc, bent, cnt, views, eng in rows:
+        if not loc or not loc.strip():
+            continue
+        # Normalize: strip whitespace, title case
+        clean_loc = loc.strip()
+        bent_lower = (bent or "").lower()
+        side = "anti" if bent_lower == anti_bent or "anti" in bent_lower or bent_lower == "negative" else \
+               "pro" if bent_lower == pro_bent or "pro" in bent_lower or bent_lower == "positive" else "neutral"
+        location_data[clean_loc][side] += cnt
+        location_data[clean_loc]["total"] += cnt
+        location_data[clean_loc]["views"] += views or 0
+        location_data[clean_loc]["engagement"] += eng or 0
+
+    # Sort by total count, take top locations
+    sorted_locs = sorted(location_data.items(), key=lambda x: -x[1]["total"])
+
+    # Build top locations list
+    top_locations = []
+    for loc, counts in sorted_locs[:50]:
+        top_locations.append({
+            "location": loc,
+            "anti_count": counts["anti"],
+            "pro_count": counts["pro"],
+            "neutral_count": counts["neutral"],
+            "total": counts["total"],
+            "views": counts["views"],
+            "engagement": counts["engagement"],
+        })
+
+    # Summary stats
+    total_with_location = sum(d["total"] for d in location_data.values())
+    total_anti = sum(d["anti"] for d in location_data.values())
+    total_pro = sum(d["pro"] for d in location_data.values())
+    unique_locations = len(location_data)
+
+    # Count tweets without location for coverage stat
+    no_loc_stmt = (
+        select(func.count())
+        .select_from(Tweet)
+        .join(Classification, Tweet.id_str == Classification.id_str)
+        .where(
+            Tweet.topic_slug == topic,
+            Tweet.created_at >= since,
+            Classification.about_subject == True,
+        )
+    )
+    total_result = await db.execute(no_loc_stmt)
+    total_tweets = total_result.scalar() or 0
+    coverage_pct = round(total_with_location / max(total_tweets, 1) * 100)
+
+    response = {
+        "locations": top_locations,
+        "summary": {
+            "total_with_location": total_with_location,
+            "total_tweets": total_tweets,
+            "coverage_pct": coverage_pct,
+            "unique_locations": unique_locations,
+            "anti_total": total_anti,
+            "pro_total": total_pro,
+        },
+        "anti_label": aL,
+        "pro_label": pL,
+    }
+
+    set_cache(cache_key, response, ttl=600)
+    return response

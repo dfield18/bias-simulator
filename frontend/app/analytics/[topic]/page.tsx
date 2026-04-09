@@ -118,6 +118,7 @@ export default function AnalyticsPage() {
   const [feedVisibleCount, setFeedVisibleCount] = useState(50);
   const [activeTab, setActiveTab] = useState("feed");
   const [selectedFrame, setSelectedFrame] = useState<string>("all");
+  const [flashpointsExpanded, setFlashpointsExpanded] = useState(false);
 
   // Essential data — loaded once on mount
   useEffect(() => {
@@ -1817,8 +1818,17 @@ export default function AnalyticsPage() {
               </p>
 
               <div className="space-y-4">
-                {dunks.slice(0, 10).map((dunk, i) => renderDunk(dunk, i))}
+                {dunks.slice(0, flashpointsExpanded ? 10 : 3).map((dunk, i) => renderDunk(dunk, i))}
               </div>
+
+              {dunks.length > 3 && !flashpointsExpanded && (
+                <button
+                  onClick={() => setFlashpointsExpanded(true)}
+                  className="w-full mt-4 py-2 text-xs text-gray-400 hover:text-gray-200 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  Show all {Math.min(dunks.length, 10)} flashpoints ({dunks.length - 3} more)
+                </button>
+              )}
 
               {dunks.length > 0 && (
                 <p className="text-[10px] text-gray-500 mt-5">

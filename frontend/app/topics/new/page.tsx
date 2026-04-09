@@ -33,6 +33,7 @@ export default function NewTopicPage() {
       }
     }).catch(() => {});
   }, [router]);
+  const [topicType, setTopicType] = useState<"political" | "company">("political");
   const [topicInput, setTopicInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<TopicSuggestion | null>(null);
@@ -53,7 +54,7 @@ export default function NewTopicPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await suggestTopic(topicInput.trim());
+      const data = await suggestTopic(topicInput.trim(), topicType);
       setSuggestion(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "An error occurred");
@@ -78,6 +79,7 @@ export default function NewTopicPage() {
         ...suggestion,
         target_language: targetLanguage,
         target_country: targetCountry || undefined,
+        topic_type: topicType,
         color_scheme: colorScheme,
       });
       topicCreated = true;
@@ -185,18 +187,44 @@ export default function NewTopicPage() {
       {/* Step 1: Enter topic */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold mb-1">
-          What topic do you want to analyze?
+          What do you want to analyze?
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          Enter a political topic and DividedView will suggest how to define the two sides.
+          {topicType === "political"
+            ? "Enter a political topic or public policy issue and DividedView will suggest how to define the two sides."
+            : "Enter a company or brand name and DividedView will analyze public sentiment."}
         </p>
+
+        {/* Topic type toggle */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => { setTopicType("political"); setColorScheme("political"); setSuggestion(null); }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              topicType === "political"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-800 text-gray-400 hover:text-gray-200"
+            }`}
+          >
+            Public Policy / Political
+          </button>
+          <button
+            onClick={() => { setTopicType("company"); setColorScheme("neutral"); setSuggestion(null); }}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              topicType === "company"
+                ? "bg-purple-600 text-white"
+                : "bg-gray-800 text-gray-400 hover:text-gray-200"
+            }`}
+          >
+            Company / Brand
+          </button>
+        </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
             value={topicInput}
             onChange={(e) => setTopicInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSuggest()}
-            placeholder='e.g. "US Immigration", "AI Regulation"'
+            placeholder={topicType === "political" ? 'e.g. "US Immigration", "AI Regulation"' : 'e.g. "Tesla", "Nike", "Meta"'}
             className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:border-blue-500 focus:outline-none"
           />
           <button
@@ -217,7 +245,7 @@ export default function NewTopicPage() {
               </div>
             </div>
             <p className="text-sm text-gray-300">
-              Analyzing &quot;{topicInput}&quot; &mdash; defining the two sides, generating search queries, and building classification prompts. This usually takes 10-15 seconds.
+              Analyzing &quot;{topicInput}&quot; &mdash; {topicType === "company" ? "defining sentiment categories, generating search queries, and building classification prompts" : "defining the two sides, generating search queries, and building classification prompts"}. This usually takes 10-15 seconds.
             </p>
           </div>
         )}
@@ -233,7 +261,9 @@ export default function NewTopicPage() {
       {suggestion && (
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-6">
           <p className="text-sm text-blue-300">
-            We&apos;ve generated a suggested definition based on your topic. All fields below are fully editable &mdash; adjust the side labels, definitions, search queries, and classification prompts to match your specific research needs.
+            {topicType === "company"
+            ? "We've generated a sentiment analysis configuration for this company. All fields below are fully editable — adjust the labels, definitions, search queries, and classification prompts to match your needs."
+            : "We've generated a suggested definition based on your topic. All fields below are fully editable — adjust the side labels, definitions, search queries, and classification prompts to match your specific research needs."}
           </p>
         </div>
       )}
@@ -419,7 +449,7 @@ export default function NewTopicPage() {
           {/* Pro/Anti definitions */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <label className="text-xs text-gray-500">How DividedView will define each side</label>
+              <label className="text-xs text-gray-500">{topicType === "company" ? "Sentiment definitions" : "How DividedView will define each side"}</label>
               <button
                 onClick={() => setEditingDefs(!editingDefs)}
                 className="text-[10px] text-blue-400 hover:text-blue-300"

@@ -48,6 +48,7 @@ class Topic(Base):
     custom_emotions = Column(JSONB)  # e.g. [{"key": "nationalist-anger", "label": "Nationalist Anger"}, ...]
     target_language = Column(Text, default="en")  # ISO lang code for tweet fetching
     target_country = Column(Text)  # e.g. "United States", "United Kingdom" — for audience relevance filtering
+    topic_type = Column(Text, default="political")  # "political" or "company"
     color_scheme = Column(Text, default="political")  # "political" (blue/red) or "neutral" (purple/green)
     account_rules = Column(JSONB)  # e.g. {"foxnews": "pro-bent", "maborosi": "anti-bent"} — override classification for specific accounts
     visibility = Column(Text, default="public")  # "public" or "private"
@@ -179,6 +180,7 @@ class TopicResponse(BaseModel):
     search_query: Optional[str] = None
     target_language: Optional[str] = "en"
     target_country: Optional[str] = None
+    topic_type: Optional[str] = "political"
     color_scheme: Optional[str] = "political"
     account_rules: Optional[dict] = None
     visibility: Optional[str] = "public"
@@ -199,6 +201,7 @@ class TopicDetailResponse(BaseModel):
     intensity_prompt: Optional[str] = None
     target_language: Optional[str] = "en"
     target_country: Optional[str] = None
+    topic_type: Optional[str] = "political"
     color_scheme: Optional[str] = "political"
     account_rules: Optional[dict] = None
     is_active: Optional[bool] = True

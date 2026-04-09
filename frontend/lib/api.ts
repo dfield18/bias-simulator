@@ -54,6 +54,7 @@ export interface TopicData {
   anti_label: string;
   target_language?: string;
   target_country?: string;
+  topic_type?: string;
   color_scheme?: string;
   visibility?: string;
   created_by?: string | null;
@@ -180,11 +181,11 @@ export interface TopicSuggestion {
   color_scheme?: string;
 }
 
-export async function suggestTopic(topicName: string): Promise<TopicSuggestion> {
+export async function suggestTopic(topicName: string, topicType: string = "political"): Promise<TopicSuggestion> {
   const res = await apiFetch(`${API_URL}/api/topics/suggest`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ topic_name: topicName }),
+    body: JSON.stringify({ topic_name: topicName, topic_type: topicType }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

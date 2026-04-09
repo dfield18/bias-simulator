@@ -56,6 +56,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 class SuggestRequest(BaseModel):
     topic_name: str
+    topic_type: str = "political"  # "political" or "company"
 
 
 class FrameItem(BaseModel):
@@ -93,6 +94,7 @@ class CreateTopicRequest(BaseModel):
     custom_emotions: list[FrameItem] = []
     target_language: str = "en"
     target_country: str | None = None
+    topic_type: str = "political"
     color_scheme: str = "political"
     visibility: str = "private"
 
@@ -132,7 +134,52 @@ async def suggest_topic(body: SuggestRequest, user: dict = Depends(get_current_u
 
     client = genai.Client(api_key=GEMINI_API_KEY)
 
-    prompt = f"""You are helping set up a political tweet classifier for the topic: "{body.topic_name}"
+    if body.topic_type == "company":
+        prompt = f"""You are helping set up a brand/company sentiment classifier for: "{body.topic_name}"
+
+Generate a complete configuration for analyzing public sentiment about this company or brand on Twitter/X.
+
+IMPORTANT: The "anti" side (left side of the UI) represents NEGATIVE sentiment. The "pro" side (right side of the UI) represents POSITIVE sentiment. Use negative intensity scores for negative sentiment and positive scores for positive sentiment.
+
+Return a JSON object with these exact fields:
+- topic_name: a clean display name (the company/brand name)
+- slug: a URL-friendly slug (lowercase, hyphens, e.g. "tesla", "meta-platforms")
+- description: 1-2 sentence description of the company and what makes public opinion about it divided
+- anti_label: "Negative" (this appears on the LEFT of the UI — represents critical/negative sentiment)
+- pro_label: "Positive" (this appears on the RIGHT of the UI — represents supportive/positive sentiment)
+- anti_definition: 2-3 sentence definition of what negative sentiment about this company looks like — common criticisms, controversies, complaints
+- pro_definition: 2-3 sentence definition of what positive sentiment about this company looks like — praise, advocacy, brand loyalty
+- search_query: a Twitter search query designed to MAXIMIZE relevant tweet capture about this company. Follow these rules:
+  1. Include the company name, common abbreviations, ticker symbols, product names
+  2. Include the CEO/founder name if they are a public figure
+  3. Include hashtags people use about the company
+  4. Include common competitor comparisons
+  5. Use 10-15 OR-separated terms to cast a wide net
+  6. Do NOT over-quote — use quotes only for multi-word phrases
+  7. Example for Tesla: Tesla OR @Tesla OR #Tesla OR $TSLA OR "Elon Musk" OR Cybertruck OR "Model Y" OR "Model 3" OR Autopilot OR "Full Self-Driving" OR #TSLA OR "Tesla stock"
+- classification_prompt: a complete prompt for classifying tweets about this company by SENTIMENT. Include:
+  - Clear description of what "positive" and "negative" mean for this company
+  - The exact category names: "positive" and "negative" (lowercase)
+  - Instructions to also classify as "neutral" or "unclear"
+  - Guidance on handling sarcasm, news reporting vs opinion, competitor comparisons
+  - The output should classify each tweet's political_bent (use "positive"/"negative"), about_subject, author_lean, classification_basis, confidence
+- intensity_prompt: a complete prompt for scoring sentiment intensity (-10 to +10). Include:
+  - What mild vs extreme negative sentiment looks like (complaints vs boycott calls)
+  - What mild vs extreme positive sentiment looks like (casual praise vs brand evangelism)
+  - Scoring: -10 to -1 for negative intensity, 1 to 10 for positive intensity
+- custom_frames: an array of 6-8 narrative frames specific to discourse about THIS company. Each frame is an object with:
+  - "key": a lowercase-hyphenated identifier (e.g. "product-quality", "customer-service")
+  - "label": a human-readable display label (e.g. "Product Quality", "Customer Service")
+  Think about what specific topics people discuss about this company: products, leadership, pricing, ethics, innovation, competition, etc.
+- custom_emotions: an array of 5-7 emotional tones specific to discourse about THIS company. Each emotion is an object with:
+  - "key": a lowercase-hyphenated identifier (e.g. "brand-loyalty", "consumer-frustration")
+  - "label": a human-readable display label (e.g. "Brand Loyalty", "Consumer Frustration")
+  Capture the dominant emotional registers in public discourse about this company.
+
+Make the classification_prompt and intensity_prompt detailed and specific to this company — not generic.
+"""
+    else:
+        prompt = f"""You are helping set up a political tweet classifier for the topic: "{body.topic_name}"
 
 Generate a complete configuration for this topic. Think carefully about what the two opposing political sides would be.
 
@@ -250,6 +297,7 @@ async def create_topic(
         custom_emotions=[e.model_dump() for e in body.custom_emotions] if body.custom_emotions else None,
         target_language=body.target_language,
         target_country=body.target_country,
+        topic_type=body.topic_type,
         color_scheme=body.color_scheme,
         visibility=body.visibility,
         created_by=user["id"],

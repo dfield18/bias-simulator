@@ -96,7 +96,7 @@ export default function SentimentDistribution({
   onChange,
   hideTitle = false,
 }: SentimentDistributionProps) {
-  const [yAxisMode, setYAxisMode] = useState<YAxisMode>("volume");
+  const [yAxisMode, setYAxisMode] = useState<YAxisMode>("reach");
   const distribution = useMemo(() => buildDistribution(items, yAxisMode), [items, yAxisMode]);
   const maxVal = Math.max(...distribution, 1);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -226,16 +226,6 @@ export default function SentimentDistribution({
           </div>
           <div className="flex items-center gap-1 shrink-0 mt-0.5">
             <button
-              onClick={() => setYAxisMode("volume")}
-              className={`px-2 py-0.5 rounded text-[10px] sm:text-xs transition-colors ${
-                yAxisMode === "volume"
-                  ? "bg-gray-700 text-gray-200"
-                  : "text-gray-600 hover:text-gray-400"
-              }`}
-            >
-              Volume
-            </button>
-            <button
               onClick={() => setYAxisMode("reach")}
               className={`px-2 py-0.5 rounded text-[10px] sm:text-xs transition-colors ${
                 yAxisMode === "reach"
@@ -244,6 +234,16 @@ export default function SentimentDistribution({
               }`}
             >
               Reach
+            </button>
+            <button
+              onClick={() => setYAxisMode("volume")}
+              className={`px-2 py-0.5 rounded text-[10px] sm:text-xs transition-colors ${
+                yAxisMode === "volume"
+                  ? "bg-gray-700 text-gray-200"
+                  : "text-gray-600 hover:text-gray-400"
+              }`}
+            >
+              Volume
             </button>
           </div>
         </div>

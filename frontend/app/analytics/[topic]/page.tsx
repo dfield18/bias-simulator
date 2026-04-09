@@ -67,7 +67,7 @@ import BlindSpots from "@/components/BlindSpots";
 import NarrativeMix from "@/components/NarrativeMix";
 
 const tabs = [
-  { id: "feed", label: "Feed", subtitle: "The conversation" },
+  { id: "feed", label: "Simulated Feed", subtitle: "The conversation" },
   { id: "pulse", label: "Overview", subtitle: "The big picture" },
   { id: "narrative", label: "Arguments", subtitle: "How each side frames it" },
   { id: "voices", label: "Key Voices", subtitle: "Who's saying what" },
@@ -621,7 +621,7 @@ export default function AnalyticsPage() {
               />
             )}
             <p className="text-[11px] text-gray-500 leading-relaxed">
-              This feed is built from real tweets pulled from Twitter and classified by AI. Drag the slider to simulate how a feed algorithm would prioritize content based on political leaning. Classifications are estimates and may occasionally be inaccurate.
+              This simulated feed is built from real tweets pulled from Twitter and classified by AI. Drag the slider to simulate how a feed algorithm would prioritize content based on political leaning. Classifications are estimates and may occasionally be inaccurate.
             </p>
 
             {/* Feed header with sort toggle + account filter */}

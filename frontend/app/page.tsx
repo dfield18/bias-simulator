@@ -141,7 +141,7 @@ export default function LandingPage() {
             Two different realities.
           </h1>
           <p className="text-base sm:text-lg text-gray-400 mb-8 leading-relaxed max-w-lg">
-            DividedView pulls real posts from X on any political topic and rebuilds the feed from both perspectives.
+            DividedView pulls real posts from X on any political topic and rebuilds a simulated feed from both perspectives.
           </p>
           <Link
             href="/sign-up"
@@ -152,7 +152,7 @@ export default function LandingPage() {
         </div>
 
         <p className="text-sm text-gray-500 mt-10 sm:mt-14 mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
-        <p className="text-base sm:text-lg text-gray-300 mb-6 font-medium">Slide to see how a user&apos;s political bias reshapes their feed.</p>
+        <p className="text-base sm:text-lg text-gray-300 mb-6 font-medium">Slide to see how a user&apos;s political bias reshapes their simulated feed.</p>
 
         {/* Interactive demo — Iran War feed */}
         {(() => {

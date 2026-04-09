@@ -416,7 +416,7 @@ export default function FeedPage() {
               <span className="text-gray-300 font-medium">
                 {getBiasDescription(bias, topic.anti_label, topic.pro_label)}
               </span>{" "}
-              feed &middot; {feed.length} tweets
+              simulated feed &middot; {feed.length} tweets
             </div>
             <div className="flex items-center gap-1 bg-gray-800 rounded-md p-0.5">
               <button

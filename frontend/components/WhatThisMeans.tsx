@@ -125,7 +125,7 @@ function generateImplications(inputs: ExecutiveInsightInputs) {
   if (exposureOverlapScore !== null && exposureOverlapScore <= 15) {
     candidates.push({ text: "Most stories are not shared across sides — each audience sees a different reality.", priority: 100 });
   } else if (exposureOverlapScore !== null && exposureOverlapScore <= 35) {
-    candidates.push({ text: "Limited story overlap — most of what each side sees is unique to their feed.", priority: 90 });
+    candidates.push({ text: "Limited story overlap — most of what each side sees is unique to their simulated feed.", priority: 90 });
   } else if (exposureOverlapScore !== null && exposureOverlapScore > 60) {
     candidates.push({ text: "Both sides see many of the same stories — framing is the key battleground, not reach.", priority: 70 });
   }

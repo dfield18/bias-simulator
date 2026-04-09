@@ -1284,272 +1284,129 @@ export default function AnalyticsPage() {
                 />
               )}
 
-              {/* Deep Dive — expandable section for detailed metrics */}
-              <details className="bg-gray-900 border border-gray-800 rounded-xl">
-                <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
-                  <div className="inline">
-                    <span className="text-sm font-semibold text-gray-300">Deep Dive</span>
-                    <span className="text-[10px] text-gray-500 ml-2">Engagement metrics, trending phrases, hashtags, content format, rhetoric intensity</span>
-                  </div>
-                </summary>
-                <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-6 -mt-2">
+              {/* ── The Full Picture — 2x2 expandable card grid ── */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-              {/* 5. Engagement by Frame */}
-              {narrativeStrategy && narrativeStrategy.frame_performance.length > 0 && (() => {
-                const topFrames = narrativeStrategy.frame_performance.slice(0, 6);
-                const maxEng = Math.max(...topFrames.map(f => f.avg_engagement), 1);
-                const maxVol = Math.max(...topFrames.map(f => f.tweet_count), 1);
-                const fmt = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
-
-                return (
-                  <Section id="engagement" tag="Engagement by Frame" title="Which narratives get the most traction" subtitle="Average engagement (likes + retweets + replies) and tweet volume for each frame">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded-sm bg-yellow-500/50" />
-                        <span className="text-[10px] text-gray-400">Avg Engagement (likes + retweets + replies)</span>
+                {/* Card 1: Same Story, Different Lens */}
+                {pairedStories && pairedStories.stories.length > 0 && (
+                  <details className="bg-gray-900 border border-gray-800 rounded-xl col-span-1 sm:col-span-2">
+                    <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
+                      <div className="inline">
+                        <span className="text-sm font-semibold text-gray-300">Same Story, Different Lens</span>
+                        <span className="text-[10px] text-gray-500 ml-2">{pairedStories.stories.length} paired {pairedStories.stories.length === 1 ? "story" : "stories"} — same event, two framings</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-3 h-3 rounded-sm bg-blue-500/40" />
-                        <span className="text-[10px] text-gray-400">Tweet Volume</span>
-                      </div>
+                    </summary>
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 -mt-2">
+                      <PairedStories data={pairedStories} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />
                     </div>
-                    <div className="space-y-4">
-                      {topFrames.map((f) => (
-                        <div key={f.frame}>
-                          <div className="text-xs text-gray-300 mb-1.5 truncate">{f.label}</div>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 h-5 bg-gray-800 rounded overflow-hidden relative">
-                                <div className="h-full bg-yellow-500/50 rounded" style={{ width: `${(f.avg_engagement / maxEng) * 100}%` }} />
-                                <span className="absolute inset-y-0 left-2 flex items-center text-[10px] text-white font-medium">{fmt(f.avg_engagement)} engagements</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1 h-5 bg-gray-800 rounded overflow-hidden relative">
-                                <div className="h-full bg-blue-500/40 rounded" style={{ width: `${(f.tweet_count / maxVol) * 100}%` }} />
-                                <span className="absolute inset-y-0 left-2 flex items-center text-[10px] text-white font-medium">{f.tweet_count} posts</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                  </details>
+                )}
+
+                {/* Card 2: Blind Spots */}
+                {analytics && (
+                  <details className="bg-gray-900 border border-gray-800 rounded-xl">
+                    <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
+                      <div className="inline">
+                        <span className="text-sm font-semibold text-gray-300">Blind Spots</span>
+                        <span className="text-[10px] text-gray-500 ml-2">What each side misses</span>
+                      </div>
+                    </summary>
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 -mt-2">
+                      <BlindSpots
+                        analytics={analytics}
+                        narrativeGaps={summaries.narrative_gaps || null}
+                        frameGaps={narrativeStrategy?.gaps}
+                        frameGapLabels={narrativeStrategy ? { anti: narrativeStrategy.anti_label, pro: narrativeStrategy.pro_label } : undefined}
+                        colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}
+                      />
                     </div>
-                    {topFrames.length > 0 && (
-                      <p className="text-[10px] text-gray-500 mt-4">
-                        {topFrames[0].label} performs best overall with {fmt(topFrames[0].avg_engagement)} avg engagement across {topFrames[0].tweet_count} posts.
-                      </p>
-                    )}
-                  </Section>
-                );
-              })()}
+                  </details>
+                )}
 
-              {/* Trending Phrases */}
-              {analytics && <TrendingPhrases data={analytics} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}
-
-              {/* Hashtags */}
-              {hashtags && (hashtags.anti.length > 0 || hashtags.pro.length > 0) && (
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Hashtags</div>
-                  <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
-                    How each side tags the conversation
-                  </h3>
-                  <p className="text-[10px] text-gray-600 mb-5">
-                    The most-used hashtags on each side — shared hashtags appear on both
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {([
-                      { tags: hashtags.anti, label: hashtags.anti_label, color: sc.anti.text, bg: sc.anti.bgLight, textColor: sc.anti.text },
-                      { tags: hashtags.pro, label: hashtags.pro_label, color: sc.pro.text, bg: sc.pro.bgLight, textColor: sc.pro.text },
-                    ]).map(({ tags, label, color, bg, textColor }) => (
-                      <div key={label}>
-                        <div className={`text-[10px] ${color} uppercase tracking-wider font-medium mb-3`}>{label}</div>
-                        {tags.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {tags.slice(0, 15).map((h) => (
-                              <span key={h.tag} className={`text-xs ${bg} ${textColor} px-2.5 py-1 rounded-md`}>
-                                #{h.tag}
-                                <span className="opacity-50 ml-1.5 text-[10px] font-mono">{h.count}</span>
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-[10px] text-gray-600">No hashtags found</p>
-                        )}
+                {/* Card 3: Top Sources */}
+                {analytics && (
+                  <details className="bg-gray-900 border border-gray-800 rounded-xl">
+                    <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
+                      <div className="inline">
+                        <span className="text-sm font-semibold text-gray-300">Top Sources & Media</span>
+                        <span className="text-[10px] text-gray-500 ml-2">Where each side gets its information</span>
                       </div>
-                    ))}
-                  </div>
-                  {(hashtags.shared_count > 0 || hashtags.anti_only_count > 0 || hashtags.pro_only_count > 0) && (
-                    <p className="text-[10px] text-gray-500 mt-4">
-                      {hashtags.shared_count} hashtag{hashtags.shared_count !== 1 ? "s" : ""} used by both sides,{" "}
-                      {hashtags.anti_only_count} unique to {hashtags.anti_label},{" "}
-                      {hashtags.pro_only_count} unique to {hashtags.pro_label}.
-                    </p>
-                  )}
-                </div>
-              )}
+                    </summary>
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5 -mt-2">
+                      <TopSources data={analytics} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />
+                    </div>
+                  </details>
+                )}
 
-              {/* Content Format */}
-              {mediaBreakdown && (
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Content Format</div>
-                  <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
-                    How each side shares content
-                  </h3>
-                  <p className="text-[10px] text-gray-600 mb-3">
-                    The mix of videos, photos, links, and text-only posts
-                  </p>
-                  {(() => {
-                    const anti = mediaBreakdown.anti;
-                    const pro = mediaBreakdown.pro;
-                    const aL = mediaBreakdown.anti_label;
-                    const pL = mediaBreakdown.pro_label;
-                    // Find dominant format for each side
-                    const formats = ["video", "photo", "link", "text_only"] as const;
-                    const formatLabels: Record<string, string> = { video: "video", photo: "photos", link: "links", text_only: "text-only posts" };
-                    const antiTop = formats.reduce((a, b) => anti.pct[a] > anti.pct[b] ? a : b);
-                    const proTop = formats.reduce((a, b) => pro.pct[a] > pro.pct[b] ? a : b);
-                    const parts: string[] = [];
-                    if (antiTop === proTop) {
-                      parts.push(`Both sides rely most on ${formatLabels[antiTop]}`);
-                      // Find biggest difference
-                      const diffs = formats.map(f => ({ f, diff: Math.abs(anti.pct[f] - pro.pct[f]) })).sort((a, b) => b.diff - a.diff);
-                      if (diffs[0].diff >= 5) {
-                        const d = diffs[0];
-                        const higher = anti.pct[d.f] > pro.pct[d.f] ? aL : pL;
-                        parts.push(`but ${higher} uses ${formatLabels[d.f]} ${d.diff} points more`);
-                      }
-                    } else {
-                      parts.push(`${aL} leans toward ${formatLabels[antiTop]} (${anti.pct[antiTop]}%) while ${pL} favors ${formatLabels[proTop]} (${pro.pct[proTop]}%)`);
-                    }
-                    return (
-                      <div className="bg-gray-800/40 rounded-lg px-3 py-2 mb-5">
-                        <p className="text-xs text-gray-300">{parts.join(", ")}.</p>
-                      </div>
-                    );
-                  })()}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                    {([
-                      { stats: mediaBreakdown.anti, label: mediaBreakdown.anti_label, headerColor: sc.anti.text },
-                      { stats: mediaBreakdown.pro, label: mediaBreakdown.pro_label, headerColor: sc.pro.text },
-                      { stats: mediaBreakdown.overall, label: "Overall", headerColor: "text-gray-400" },
-                    ]).map(({ stats, label, headerColor }) => (
-                      <div key={label}>
-                        <div className={`text-[10px] ${headerColor} uppercase tracking-wider font-medium mb-3`}>{label}</div>
-                        <div className="h-6 rounded-lg overflow-hidden flex mb-2">
+                {/* Card 4: Deep Dive */}
+                <details className="bg-gray-900 border border-gray-800 rounded-xl">
+                  <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
+                    <div className="inline">
+                      <span className="text-sm font-semibold text-gray-300">Deep Dive</span>
+                      <span className="text-[10px] text-gray-500 ml-2">Engagement, hashtags, rhetoric</span>
+                    </div>
+                  </summary>
+                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-6 -mt-2">
+                    {/* Trending Phrases */}
+                    {analytics && <TrendingPhrases data={analytics} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}
+
+                    {/* Hashtags */}
+                    {hashtags && (hashtags.anti.length > 0 || hashtags.pro.length > 0) && (
+                      <div>
+                        <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Hashtags</div>
+                        <h3 className="text-sm font-semibold text-gray-300 mb-3">How each side tags the conversation</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                           {([
-                            { key: "video" as const, color: "bg-purple-500/60" },
-                            { key: "photo" as const, color: "bg-blue-500/60" },
-                            { key: "link" as const, color: "bg-green-500/60" },
-                            { key: "text_only" as const, color: "bg-gray-500/60" },
-                          ]).map(({ key, color }) => {
-                            const pct = stats.pct[key];
-                            return pct > 0 ? (
-                              <div key={key} className={`h-full ${color} flex items-center justify-center`} style={{ width: `${pct}%` }}>
-                                {pct >= 12 && <span className="text-[9px] text-white font-medium">{pct}%</span>}
-                              </div>
-                            ) : null;
-                          })}
-                        </div>
-                        <div className="space-y-1">
-                          {([
-                            { key: "video" as const, label: "Video", color: "bg-purple-500/60" },
-                            { key: "photo" as const, label: "Photo", color: "bg-blue-500/60" },
-                            { key: "link" as const, label: "Link", color: "bg-green-500/60" },
-                            { key: "text_only" as const, label: "Text Only", color: "bg-gray-500/60" },
-                          ]).map(({ key, label: catLabel, color }) => (
-                            <div key={key} className="flex items-center gap-2 text-[10px]">
-                              <div className={`w-2.5 h-2.5 rounded-sm ${color} shrink-0`} />
-                              <span className="text-gray-400">{catLabel}</span>
-                              <span className="text-gray-500 ml-auto">{stats[key]} ({stats.pct[key]}%)</span>
+                            { tags: hashtags.anti, label: hashtags.anti_label, color: sc.anti.text, bg: sc.anti.bgLight, textColor: sc.anti.text },
+                            { tags: hashtags.pro, label: hashtags.pro_label, color: sc.pro.text, bg: sc.pro.bgLight, textColor: sc.pro.text },
+                          ]).map(({ tags, label, color, bg, textColor }) => (
+                            <div key={label}>
+                              <div className={`text-[10px] ${color} uppercase tracking-wider font-medium mb-3`}>{label}</div>
+                              {tags.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {tags.slice(0, 10).map((h) => (
+                                    <span key={h.tag} className={`text-xs ${bg} ${textColor} px-2.5 py-1 rounded-md`}>
+                                      #{h.tag} <span className="opacity-50 ml-1 text-[10px] font-mono">{h.count}</span>
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-[10px] text-gray-600">No hashtags found</p>
+                              )}
                             </div>
                           ))}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 6. Rhetoric Intensity — collapsed by default */}
-              {narrativeDepth && narrativeDepth.rhetoric && (() => {
-                const { anti, pro } = narrativeDepth.rhetoric;
-                const aL = narrativeDepth.anti_label;
-                const pL = narrativeDepth.pro_label;
-                const buckets = ["mild", "moderate", "aggressive", "extreme"] as const;
-                const bucketColors = { mild: "bg-green-500/60", moderate: "bg-yellow-500/60", aggressive: "bg-orange-500/60", extreme: "bg-red-500/60" };
-                const bucketLabels = { mild: "Mild (1-3)", moderate: "Moderate (4-6)", aggressive: "Aggressive (7-8)", extreme: "Extreme (9-10)" };
-                const intensityLabel = (avg: number) => avg <= 3 ? "Measured" : avg <= 5 ? "Heated" : avg <= 7 ? "Aggressive" : "Extreme";
-
-                return (
-                  <Section id="rhetoric" tag="Rhetoric Intensity" title="How aggressively each side argues" subtitle="Measures strong language, hyperbole, name-calling, and urgency">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                      {([
-                        { side: anti, label: aL, color: sc.anti.text, border: sc.anti.border },
-                        { side: pro, label: pL, color: sc.pro.text, border: sc.pro.border },
-                      ] as const).map(({ side, label, color, border }) => (
-                        <div key={label} className={`border ${border} rounded-xl p-4 bg-gray-800/20`}>
-                          <div className={`text-[10px] ${color} uppercase tracking-wider font-medium mb-3`}>{label}</div>
-                          <div className="flex items-baseline gap-2 mb-3">
-                            <span className={`text-2xl font-bold ${color}`}>{side.avg_intensity}</span>
-                            <span className="text-xs text-gray-400">/10 avg — {intensityLabel(side.avg_intensity)}</span>
-                          </div>
-                          <div className="space-y-2">
-                            {buckets.map((b) => {
-                              const pct = side.distribution[b];
-                              return (
-                                <div key={b} className="flex items-center gap-2">
-                                  <div className="w-20 text-[10px] text-gray-400 shrink-0">{bucketLabels[b]}</div>
-                                  <div className="flex-1 h-4 bg-gray-800 rounded overflow-hidden relative">
-                                    <div className={`h-full ${bucketColors[b]} rounded`} style={{ width: `${pct}%` }} />
-                                    {pct > 0 && <span className="absolute inset-y-0 left-2 flex items-center text-[9px] text-white font-medium">{pct}%</span>}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="text-[9px] text-gray-600 mt-2">{side.total_scored} tweets scored</div>
-                        </div>
-                      ))}
-                    </div>
-                    {anti.avg_intensity > 0 && pro.avg_intensity > 0 && (
-                      <p className="text-[10px] text-gray-500">
-                        {anti.avg_intensity > pro.avg_intensity
-                          ? `${aL} rhetoric runs hotter on average (${anti.avg_intensity} vs ${pro.avg_intensity}).`
-                          : anti.avg_intensity < pro.avg_intensity
-                          ? `${pL} rhetoric runs hotter on average (${pro.avg_intensity} vs ${anti.avg_intensity}).`
-                          : `Both sides show similar rhetorical intensity (${anti.avg_intensity}).`}
-                        {" "}
-                        {(anti.distribution.extreme + anti.distribution.aggressive > 40 || pro.distribution.extreme + pro.distribution.aggressive > 40)
-                          ? "A significant share of posts use aggressive or extreme language."
-                          : "Most posts stay in the mild-to-moderate range."}
-                      </p>
                     )}
-                  </Section>
-                );
-              })()}
-                </div>
-              </details>
 
-              {/* ── Echo Chamber section (merged into The Divide) ── */}
-
-              {/* Same Story, Different Lens */}
-              {pairedStories && pairedStories.stories.length > 0 && (
-                <PairedStories data={pairedStories} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />
-              )}
-
-              {/* Blind Spots */}
-              {analytics && (
-                <BlindSpots
-                  analytics={analytics}
-                  narrativeGaps={summaries.narrative_gaps || null}
-                  frameGaps={narrativeStrategy?.gaps}
-                  frameGapLabels={narrativeStrategy ? { anti: narrativeStrategy.anti_label, pro: narrativeStrategy.pro_label } : undefined}
-                  colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}
-                />
-              )}
-
-              {/* Top Sources & Media */}
-              {analytics && <TopSources data={analytics} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}
+                    {/* Rhetoric Intensity */}
+                    {narrativeDepth && narrativeDepth.rhetoric && (() => {
+                      const { anti, pro } = narrativeDepth.rhetoric;
+                      const aL = narrativeDepth.anti_label;
+                      const pL = narrativeDepth.pro_label;
+                      const intensityLabel = (avg: number) => avg <= 3 ? "Measured" : avg <= 5 ? "Heated" : avg <= 7 ? "Aggressive" : "Extreme";
+                      return (
+                        <div>
+                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Rhetoric Intensity</div>
+                          <h3 className="text-sm font-semibold text-gray-300 mb-3">How aggressively each side argues</h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            {([
+                              { side: anti, label: aL, color: sc.anti.text },
+                              { side: pro, label: pL, color: sc.pro.text },
+                            ] as const).map(({ side, label, color }) => (
+                              <div key={label} className="text-center">
+                                <div className={`text-[10px] ${color} uppercase tracking-wider font-medium mb-1`}>{label}</div>
+                                <div className={`text-2xl font-bold ${color}`}>{side.avg_intensity}</div>
+                                <div className="text-[10px] text-gray-500">/10 — {intensityLabel(side.avg_intensity)}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </details>
+              </div>
 
             </>
           );

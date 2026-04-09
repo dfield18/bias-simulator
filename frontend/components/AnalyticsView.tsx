@@ -324,7 +324,7 @@ export function TrendingPhrases({ data, colorScheme }: AnalyticsViewProps) {
 function TopSources({ data, colorScheme }: AnalyticsViewProps) {
   const sc = getSideColors(colorScheme || "political");
   const [viewMode, setViewMode] = useState<"publishers" | "urls">("publishers");
-  const [sideFilter, setSideFilter] = useState<"overall" | "anti" | "pro">("overall");
+  const [sideFilter, setSideFilter] = useState<"overall" | "anti" | "pro" | "shared">("overall");
 
   const sources = data.sources;
   if (!sources) return null;
@@ -332,20 +332,27 @@ function TopSources({ data, colorScheme }: AnalyticsViewProps) {
   const hasAnti = sources.anti?.domains?.length > 0 || sources.anti?.urls?.length > 0;
   const hasPro = sources.pro?.domains?.length > 0 || sources.pro?.urls?.length > 0;
   const hasOverall = sources.overall?.domains?.length > 0 || sources.overall?.urls?.length > 0;
+  const hasShared = data.overlap?.shared_sources?.length > 0 || data.overlap?.shared_urls?.length > 0;
 
   if (!hasAnti && !hasPro && !hasOverall) return null;
+
+  // Build shared sources/urls from overlap data
+  const sharedDomains = (data.overlap?.shared_sources || []).map(s => ({ domain: s.domain, count: s.total }));
+  const sharedUrls = (data.overlap?.shared_urls || []).map(u => ({ url: u.url, display: u.display, count: u.total }));
 
   // Pick data based on side filter
   const activeSources = sideFilter === "anti" ? sources.anti
     : sideFilter === "pro" ? sources.pro
+    : sideFilter === "shared" ? null
     : sources.overall;
 
   const barColor = sideFilter === "anti" ? sc.anti.border.replace("border-", "bg-")
     : sideFilter === "pro" ? sc.pro.border.replace("border-", "bg-")
+    : sideFilter === "shared" ? "bg-yellow-500/40"
     : "bg-gray-400/40";
 
-  const activeDomains = activeSources?.domains || [];
-  const activeUrls = activeSources?.urls || [];
+  const activeDomains = sideFilter === "shared" ? sharedDomains : (activeSources?.domains || []);
+  const activeUrls = sideFilter === "shared" ? sharedUrls : (activeSources?.urls || []);
 
   const renderDomainList = (
     domains: { domain: string; count: number }[],
@@ -475,6 +482,7 @@ function TopSources({ data, colorScheme }: AnalyticsViewProps) {
                 { id: "overall" as const, label: "Overall" },
                 { id: "anti" as const, label: data.anti_label },
                 { id: "pro" as const, label: data.pro_label },
+                ...(hasShared ? [{ id: "shared" as const, label: "Shared" }] : []),
               ]).map((tab) => (
                 <button
                   key={tab.id}
@@ -518,6 +526,11 @@ function TopSources({ data, colorScheme }: AnalyticsViewProps) {
       {sideFilter === "overall" && (
         <p className="text-[10px] text-gray-600 mb-3">
           Overall combines both sides. If one side has significantly more posts, its sources will dominate this view — use the side toggles to compare.
+        </p>
+      )}
+      {sideFilter === "shared" && (
+        <p className="text-[10px] text-gray-600 mb-3">
+          Sources referenced by both sides — these are the common ground where both audiences get their information.
         </p>
       )}
 

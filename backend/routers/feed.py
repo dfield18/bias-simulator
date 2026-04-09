@@ -3200,43 +3200,41 @@ async def get_geography(
     pro_bent = pL.lower().replace(" ", "-")
 
     # Query tweets with location from raw_json
+    location_expr = Tweet.raw_json["user"]["location"].astext
+
     stmt = (
         select(
-            Tweet.raw_json["user"]["location"].astext.label("location"),
+            location_expr.label("location"),
             Classification.effective_political_bent,
-            func.count().label("cnt"),
-            func.sum(Tweet.views).label("total_views"),
-            func.sum(Tweet.engagement).label("total_engagement"),
+            Tweet.screen_name,
+            func.coalesce(Tweet.views, 0).label("views"),
+            func.coalesce(Tweet.engagement, 0).label("eng"),
         )
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
             Tweet.created_at >= since,
             Classification.about_subject == True,
-            Tweet.raw_json["user"]["location"].astext != "",
-            Tweet.raw_json["user"]["location"].astext.isnot(None),
-        )
-        .group_by(
-            Tweet.raw_json["user"]["location"].astext,
-            Classification.effective_political_bent,
+            Tweet.raw_json.isnot(None),
         )
     )
 
     result = await db.execute(stmt)
-    rows = result.all()
+    all_rows = result.all()
+
+    # Filter to rows with non-empty location and aggregate in Python
+    rows = [(loc, bent, sn, v, e) for loc, bent, sn, v, e in all_rows
+            if loc and loc.strip() and loc.strip().lower() not in ("null", "none")]
 
     # Aggregate locations — normalize common variations
     location_data = defaultdict(lambda: {"anti": 0, "pro": 0, "neutral": 0, "total": 0, "views": 0, "engagement": 0})
-    for loc, bent, cnt, views, eng in rows:
-        if not loc or not loc.strip():
-            continue
-        # Normalize: strip whitespace, title case
+    for loc, bent, sn, views, eng in rows:
         clean_loc = loc.strip()
         bent_lower = (bent or "").lower()
         side = "anti" if bent_lower == anti_bent or "anti" in bent_lower or bent_lower == "negative" else \
                "pro" if bent_lower == pro_bent or "pro" in bent_lower or bent_lower == "positive" else "neutral"
-        location_data[clean_loc][side] += cnt
-        location_data[clean_loc]["total"] += cnt
+        location_data[clean_loc][side] += 1
+        location_data[clean_loc]["total"] += 1
         location_data[clean_loc]["views"] += views or 0
         location_data[clean_loc]["engagement"] += eng or 0
 

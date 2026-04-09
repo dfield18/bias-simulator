@@ -1838,6 +1838,10 @@ export default function AnalyticsPage() {
         {/* ============ TAB: Geography ============ */}
         {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Geography</div></div>}
 
+        {activeTab === "geography" && !geography && (
+          <div className="text-center py-12 text-gray-500 text-sm">Loading geographic data...</div>
+        )}
+
         {(activeTab === "geography" || activeTab === "report") && geography && (() => {
           const { locations, summary } = geography;
           const aL = geography.anti_label;

@@ -3281,5 +3281,5 @@ async def get_geography(
         "pro_label": pL,
     }
 
-    set_cache(cache_key, response, ttl=600)
+    set_cache(cache_key, response)
     return response

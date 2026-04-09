@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useCallback, useState, useEffect } from "react";
 import { RawFeedItem } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 
 type YAxisMode = "volume" | "reach";
 
@@ -12,6 +13,7 @@ interface SentimentDistributionProps {
   bias: number;
   onChange: (value: number) => void;
   hideTitle?: boolean;
+  colorScheme?: ColorScheme;
 }
 
 function buildDistribution(items: RawFeedItem[], mode: YAxisMode = "volume"): number[] {
@@ -82,9 +84,10 @@ function getBiasLabel(value: number, antiLabel: string, proLabel: string): strin
   return `${intensity} ${side}`;
 }
 
-function getBiasColor(value: number): string {
-  if (value < -1) return "rgb(59, 130, 246)";
-  if (value > 1) return "rgb(239, 68, 68)";
+function getBiasColor(value: number, scheme: ColorScheme = "political"): string {
+  const colors = getSideColors(scheme);
+  if (value < -1) return colors.anti.fill;
+  if (value > 1) return colors.pro.fill;
   return "rgb(107, 114, 128)";
 }
 
@@ -95,9 +98,11 @@ export default function SentimentDistribution({
   bias,
   onChange,
   hideTitle = false,
+  colorScheme = "political",
 }: SentimentDistributionProps) {
   const [yAxisMode, setYAxisMode] = useState<YAxisMode>("reach");
   const distribution = useMemo(() => buildDistribution(items, yAxisMode), [items, yAxisMode]);
+  const sideColors = useMemo(() => getSideColors(colorScheme), [colorScheme]);
 
   const sentimentSummary = useMemo(() => {
     let proTotal = 0;
@@ -283,16 +288,16 @@ export default function SentimentDistribution({
       >
         <defs>
           <linearGradient id="sentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgb(59, 130, 246)" stopOpacity="0.4" />
+            <stop offset="0%" stopColor={sideColors.anti.fill} stopOpacity="0.4" />
             <stop offset="45%" stopColor="rgb(107, 114, 128)" stopOpacity="0.15" />
             <stop offset="55%" stopColor="rgb(107, 114, 128)" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="rgb(239, 68, 68)" stopOpacity="0.4" />
+            <stop offset="100%" stopColor={sideColors.pro.fill} stopOpacity="0.4" />
           </linearGradient>
           <linearGradient id="strokeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="rgb(59, 130, 246)" stopOpacity="0.9" />
+            <stop offset="0%" stopColor={sideColors.anti.fill} stopOpacity="0.9" />
             <stop offset="45%" stopColor="rgb(156, 163, 175)" stopOpacity="0.5" />
             <stop offset="55%" stopColor="rgb(156, 163, 175)" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="rgb(239, 68, 68)" stopOpacity="0.9" />
+            <stop offset="100%" stopColor={sideColors.pro.fill} stopOpacity="0.9" />
           </linearGradient>
         </defs>
 
@@ -339,8 +344,8 @@ export default function SentimentDistribution({
         className="flex justify-between mt-1"
         style={{ marginLeft: `${(padX / width) * 100}%`, marginRight: `${(padX / width) * 100}%` }}
       >
-        <span className="text-xs sm:text-sm font-semibold text-blue-400">{antiLabel}</span>
-        <span className="text-xs sm:text-sm font-semibold text-red-400">{proLabel}</span>
+        <span className={`text-xs sm:text-sm font-semibold ${sideColors.anti.text}`}>{antiLabel}</span>
+        <span className={`text-xs sm:text-sm font-semibold ${sideColors.pro.text}`}>{proLabel}</span>
       </div>
 
       {/* Slider bar — draggable, below the chart, padded to match SVG chart area */}
@@ -353,11 +358,11 @@ export default function SentimentDistribution({
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       >
-        {/* Gradient track: blue → red */}
+        {/* Gradient track */}
         <div
           className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-2 sm:h-1.5 rounded-full"
           style={{
-            background: "linear-gradient(to right, rgb(59, 130, 246), rgb(107, 114, 128) 45%, rgb(107, 114, 128) 55%, rgb(239, 68, 68))",
+            background: `linear-gradient(to right, ${sideColors.anti.fill}, rgb(107, 114, 128) 45%, rgb(107, 114, 128) 55%, ${sideColors.pro.fill})`,
           }}
         />
         {/* Thumb */}
@@ -365,14 +370,14 @@ export default function SentimentDistribution({
           className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 sm:w-4 sm:h-4 rounded-full border-2 border-white shadow-lg"
           style={{
             left: `${biasPct}%`,
-            backgroundColor: getBiasColor(bias),
+            backgroundColor: getBiasColor(bias, colorScheme),
           }}
         />
       </div>
 
       {/* Bias label — below slider */}
       <div className="text-center mt-1">
-        <span className="text-xs sm:text-sm font-medium" style={{ color: getBiasColor(bias) }}>
+        <span className="text-xs sm:text-sm font-medium" style={{ color: getBiasColor(bias, colorScheme) }}>
           {getBiasLabel(bias, antiLabel, proLabel)}
         </span>
         <span className="text-[10px] sm:text-xs text-gray-500 ml-1.5">

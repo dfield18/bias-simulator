@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cachedFetch, invalidateCache } from "@/lib/cache";
+import { getSideColors } from "@/lib/colors";
 
 function decodeHtml(text: string): string {
   return text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&apos;/g, "'");
@@ -577,11 +578,11 @@ export default function AnalyticsPage() {
             <div className="fixed left-0 right-0 bg-gray-950 border-b border-gray-800/30" style={{ top: `${headerHeight + 12}px`, zIndex: 15 }}>
               <div className="max-w-5xl mx-auto px-4 pt-6 pb-3">
                 <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-sm font-semibold text-blue-400">{topic.anti_label}</span>
+                  <span className={`text-sm font-semibold ${getSideColors((topic.color_scheme || "political") as "political" | "neutral").anti.text}`}>{topic.anti_label}</span>
                   <span className="text-xs text-gray-500">
                     {getBiasDescription(bias)} <span className="text-gray-600">({bias > 0 ? "+" : ""}{bias.toFixed(1)})</span>
                   </span>
-                  <span className="text-sm font-semibold text-red-400">{topic.pro_label}</span>
+                  <span className={`text-sm font-semibold ${getSideColors((topic.color_scheme || "political") as "political" | "neutral").pro.text}`}>{topic.pro_label}</span>
                 </div>
                 <input
                   type="range"
@@ -594,7 +595,7 @@ export default function AnalyticsPage() {
                   onTouchEnd={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, rgb(59,130,246), rgb(107,114,128) 45%, rgb(107,114,128) 55%, rgb(239,68,68))`,
+                    background: `linear-gradient(to right, ${getSideColors((topic.color_scheme || "political") as "political" | "neutral").anti.fill}, rgb(107,114,128) 45%, rgb(107,114,128) 55%, ${getSideColors((topic.color_scheme || "political") as "political" | "neutral").pro.fill})`,
                   }}
                 />
               </div>
@@ -618,6 +619,7 @@ export default function AnalyticsPage() {
                 proLabel={topic.pro_label}
                 bias={bias}
                 onChange={setBias}
+                colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}
               />
             )}
             <p className="text-[11px] text-gray-500 leading-relaxed">

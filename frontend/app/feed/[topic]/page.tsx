@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { getSideColors } from "@/lib/colors";
 import {
   TopicData,
   RawFeedItem,
@@ -261,7 +262,7 @@ export default function FeedPage() {
           {!chartVisible && (
             <div className="mt-2">
               <div className="flex items-center gap-3">
-                <span className="text-xs sm:text-sm font-semibold text-blue-400 shrink-0 hidden sm:block">
+                <span className={`text-xs sm:text-sm font-semibold ${getSideColors((topic.color_scheme || "political") as "political" | "neutral").anti.text} shrink-0 hidden sm:block`}>
                   {topic.anti_label}
                 </span>
                 <div className="flex-1 relative h-8 sm:h-7 cursor-pointer select-none touch-none"
@@ -285,7 +286,7 @@ export default function FeedPage() {
                   <div
                     className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-2 sm:h-1.5 rounded-full"
                     style={{
-                      background: "linear-gradient(to right, rgb(59, 130, 246), rgb(107, 114, 128) 45%, rgb(107, 114, 128) 55%, rgb(239, 68, 68))",
+                      background: `linear-gradient(to right, ${getSideColors((topic.color_scheme || "political") as "political" | "neutral").anti.fill}, rgb(107, 114, 128) 45%, rgb(107, 114, 128) 55%, ${getSideColors((topic.color_scheme || "political") as "political" | "neutral").pro.fill})`,
                     }}
                   />
                   <div className="absolute top-1/2 -translate-y-1/2 left-1/2 w-px h-3 bg-gray-600" />
@@ -293,11 +294,11 @@ export default function FeedPage() {
                     className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 sm:w-4 sm:h-4 rounded-full border-2 border-white shadow-lg"
                     style={{
                       left: `${((bias + 10) / 20) * 100}%`,
-                      backgroundColor: bias < -1 ? "rgb(59, 130, 246)" : bias > 1 ? "rgb(239, 68, 68)" : "rgb(107, 114, 128)",
+                      backgroundColor: bias < -1 ? getSideColors((topic.color_scheme || "political") as "political" | "neutral").anti.fill : bias > 1 ? getSideColors((topic.color_scheme || "political") as "political" | "neutral").pro.fill : "rgb(107, 114, 128)",
                     }}
                   />
                 </div>
-                <span className="text-xs sm:text-sm font-semibold text-red-400 shrink-0 hidden sm:block">
+                <span className={`text-xs sm:text-sm font-semibold ${getSideColors((topic.color_scheme || "political") as "political" | "neutral").pro.text} shrink-0 hidden sm:block`}>
                   {topic.pro_label}
                 </span>
               </div>
@@ -305,7 +306,7 @@ export default function FeedPage() {
                 <span
                   className="text-xs sm:text-sm font-medium"
                   style={{
-                    color: bias < -1 ? "rgb(59, 130, 246)" : bias > 1 ? "rgb(239, 68, 68)" : "rgb(107, 114, 128)",
+                    color: bias < -1 ? getSideColors((topic.color_scheme || "political") as "political" | "neutral").anti.fill : bias > 1 ? getSideColors((topic.color_scheme || "political") as "political" | "neutral").pro.fill : "rgb(107, 114, 128)",
                   }}
                 >
                   {getBiasDescription(bias, topic.anti_label, topic.pro_label)}

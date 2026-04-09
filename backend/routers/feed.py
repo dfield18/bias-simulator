@@ -3245,12 +3245,96 @@ async def get_geography(
             return False
         return True
 
-    # Aggregate locations — normalize common variations
+    # US state abbreviation → full name
+    _US_STATES = {
+        "al": "Alabama", "ak": "Alaska", "az": "Arizona", "ar": "Arkansas", "ca": "California",
+        "co": "Colorado", "ct": "Connecticut", "de": "Delaware", "fl": "Florida", "ga": "Georgia",
+        "hi": "Hawaii", "id": "Idaho", "il": "Illinois", "in": "Indiana", "ia": "Iowa",
+        "ks": "Kansas", "ky": "Kentucky", "la": "Louisiana", "me": "Maine", "md": "Maryland",
+        "ma": "Massachusetts", "mi": "Michigan", "mn": "Minnesota", "ms": "Mississippi", "mo": "Missouri",
+        "mt": "Montana", "ne": "Nebraska", "nv": "Nevada", "nh": "New Hampshire", "nj": "New Jersey",
+        "nm": "New Mexico", "ny": "New York", "nc": "North Carolina", "nd": "North Dakota", "oh": "Ohio",
+        "ok": "Oklahoma", "or": "Oregon", "pa": "Pennsylvania", "ri": "Rhode Island", "sc": "South Carolina",
+        "sd": "South Dakota", "tn": "Tennessee", "tx": "Texas", "ut": "Utah", "vt": "Vermont",
+        "va": "Virginia", "wa": "Washington", "wv": "West Virginia", "wi": "Wisconsin", "wy": "Wyoming",
+        "dc": "Washington, D.C.",
+    }
+    _US_STATE_NAMES = {v.lower(): v for v in _US_STATES.values()}
+    _CA_PROVINCES = {
+        "on": "Ontario", "qc": "Quebec", "bc": "British Columbia", "ab": "Alberta",
+        "mb": "Manitoba", "sk": "Saskatchewan", "ns": "Nova Scotia", "nb": "New Brunswick",
+    }
+    _COUNTRIES = {
+        "us": "USA", "usa": "USA", "united states": "USA", "united states of america": "USA", "america": "USA",
+        "uk": "UK", "united kingdom": "UK", "england": "UK", "britain": "UK", "great britain": "UK",
+        "canada": "Canada", "australia": "Australia", "india": "India", "germany": "Germany",
+        "france": "France", "brazil": "Brazil", "japan": "Japan", "mexico": "Mexico",
+        "spain": "Spain", "italy": "Italy", "nigeria": "Nigeria", "south africa": "South Africa",
+        "israel": "Israel", "ireland": "Ireland", "netherlands": "Netherlands", "sweden": "Sweden",
+        "norway": "Norway", "switzerland": "Switzerland", "new zealand": "New Zealand",
+        "philippines": "Philippines", "pakistan": "Pakistan", "indonesia": "Indonesia",
+        "kenya": "Kenya", "ghana": "Ghana", "colombia": "Colombia", "argentina": "Argentina",
+    }
+
+    def _normalize_location(raw: str) -> str:
+        """Normalize Twitter location to 'City, State, Country' format."""
+        # Clean up
+        loc = raw.strip().rstrip(".")
+        # Split by comma or common separators
+        parts = [p.strip() for p in _re.split(r'[,/|·•]', loc) if p.strip()]
+
+        if not parts:
+            return loc
+
+        # Single part — check if it's a state, country, or city
+        if len(parts) == 1:
+            lower = parts[0].lower()
+            # Check if it's a US state abbreviation
+            if lower in _US_STATES:
+                return f"{_US_STATES[lower]}, USA"
+            # Check if it's a full US state name
+            if lower in _US_STATE_NAMES:
+                return f"{_US_STATE_NAMES[lower]}, USA"
+            # Check if it's a country
+            if lower in _COUNTRIES:
+                return _COUNTRIES[lower]
+            # Check Canadian provinces
+            if lower in _CA_PROVINCES:
+                return f"{_CA_PROVINCES[lower]}, Canada"
+            # Return as-is with title case
+            return parts[0].title() if parts[0].islower() else parts[0]
+
+        # Two parts — likely "City, State" or "City, Country"
+        if len(parts) == 2:
+            city = parts[0]
+            second = parts[1].strip()
+            second_lower = second.lower()
+
+            # Second part is US state abbreviation
+            if second_lower in _US_STATES:
+                return f"{city}, {_US_STATES[second_lower]}, USA"
+            # Second part is full US state name
+            if second_lower in _US_STATE_NAMES:
+                return f"{city}, {_US_STATE_NAMES[second_lower]}, USA"
+            # Second part is a country
+            if second_lower in _COUNTRIES:
+                return f"{city}, {_COUNTRIES[second_lower]}"
+            # Second part is Canadian province
+            if second_lower in _CA_PROVINCES:
+                return f"{city}, {_CA_PROVINCES[second_lower]}, Canada"
+            # Return as-is
+            return f"{city}, {second}"
+
+        # Three+ parts — likely "City, State, Country" already
+        return ", ".join(parts[:3])
+
+    # Aggregate locations
     location_data = defaultdict(lambda: {"anti": 0, "pro": 0, "neutral": 0, "total": 0, "views": 0, "engagement": 0})
     for loc, bent, views, eng in rows:
         clean_loc = loc.strip()
         if not _is_valid_location(clean_loc):
             continue
+        clean_loc = _normalize_location(clean_loc)
         bent_lower = (bent or "").lower()
         side = "anti" if bent_lower == anti_bent or "anti" in bent_lower or bent_lower == "negative" else \
                "pro" if bent_lower == pro_bent or "pro" in bent_lower or bent_lower == "positive" else "neutral"

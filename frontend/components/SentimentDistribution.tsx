@@ -3,6 +3,8 @@
 import { useMemo, useRef, useCallback, useState, useEffect } from "react";
 import { RawFeedItem } from "@/lib/api";
 
+type YAxisMode = "volume" | "reach";
+
 interface SentimentDistributionProps {
   items: RawFeedItem[];
   antiLabel: string;
@@ -12,16 +14,17 @@ interface SentimentDistributionProps {
   hideTitle?: boolean;
 }
 
-function buildDistribution(items: RawFeedItem[]): number[] {
+function buildDistribution(items: RawFeedItem[], mode: YAxisMode = "volume"): number[] {
   const raw = new Array(21).fill(0);
 
   for (const item of items) {
     const score = item.classification.effective_intensity_score;
     const bent = (item.classification.effective_political_bent || "unclear").toLowerCase();
+    const weight = mode === "reach" ? Math.max(item.tweet.views || 0, 1) : 1;
 
     if (score != null) {
       const idx = Math.round(score + 10);
-      if (idx >= 0 && idx <= 20) raw[idx]++;
+      if (idx >= 0 && idx <= 20) raw[idx] += weight;
     } else if (bent.includes("anti")) {
       const center = 6;
       const sigma = 1.8;
@@ -33,7 +36,7 @@ function buildDistribution(items: RawFeedItem[]): number[] {
         total += w;
       }
       for (let i = 0; i <= 9; i++) {
-        raw[i] += weights[i] / total;
+        raw[i] += (weights[i] / total) * weight;
       }
     } else if (bent.includes("pro")) {
       const center = 14;
@@ -46,10 +49,10 @@ function buildDistribution(items: RawFeedItem[]): number[] {
         total += w;
       }
       for (let i = 11; i <= 20; i++) {
-        raw[i] += weights[i - 11] / total;
+        raw[i] += (weights[i - 11] / total) * weight;
       }
     } else if (bent === "neutral") {
-      raw[10] += 1;
+      raw[10] += weight;
     }
   }
 
@@ -60,9 +63,9 @@ function buildDistribution(items: RawFeedItem[]): number[] {
     let weightSum = 0;
     for (let j = 0; j <= 20; j++) {
       const dist = i - j;
-      const weight = Math.exp(-(dist * dist) / (2 * sigma * sigma));
-      sum += raw[j] * weight;
-      weightSum += weight;
+      const w = Math.exp(-(dist * dist) / (2 * sigma * sigma));
+      sum += raw[j] * w;
+      weightSum += w;
     }
     smoothed[i] = sum / weightSum;
   }
@@ -93,7 +96,8 @@ export default function SentimentDistribution({
   onChange,
   hideTitle = false,
 }: SentimentDistributionProps) {
-  const distribution = useMemo(() => buildDistribution(items), [items]);
+  const [yAxisMode, setYAxisMode] = useState<YAxisMode>("volume");
+  const distribution = useMemo(() => buildDistribution(items, yAxisMode), [items, yAxisMode]);
   const maxVal = Math.max(...distribution, 1);
   const svgRef = useRef<SVGSVGElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -214,15 +218,34 @@ export default function SentimentDistribution({
         <div className="flex items-start justify-between mb-1">
           <div>
             <div className="text-xs sm:text-sm text-gray-400 font-semibold">
-              Tweet Volume by Sentiment
+              {yAxisMode === "volume" ? "Tweet Volume" : "Tweet Reach"} by Sentiment
             </div>
             <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
-              Height = relative number of tweets at each intensity level. Slide the scale to simulate political bias.
+              Height = {yAxisMode === "volume" ? "number of tweets" : "total views"} at each intensity level. Slide to simulate bias.
             </p>
           </div>
-          <span className="text-[10px] sm:text-xs text-gray-600 shrink-0 mt-0.5">
-            Drag to adjust bias
-          </span>
+          <div className="flex items-center gap-1 shrink-0 mt-0.5">
+            <button
+              onClick={() => setYAxisMode("volume")}
+              className={`px-2 py-0.5 rounded text-[10px] sm:text-xs transition-colors ${
+                yAxisMode === "volume"
+                  ? "bg-gray-700 text-gray-200"
+                  : "text-gray-600 hover:text-gray-400"
+              }`}
+            >
+              Volume
+            </button>
+            <button
+              onClick={() => setYAxisMode("reach")}
+              className={`px-2 py-0.5 rounded text-[10px] sm:text-xs transition-colors ${
+                yAxisMode === "reach"
+                  ? "bg-gray-700 text-gray-200"
+                  : "text-gray-600 hover:text-gray-400"
+              }`}
+            >
+              Reach
+            </button>
+          </div>
         </div>
       )}
 

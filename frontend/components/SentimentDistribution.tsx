@@ -218,7 +218,7 @@ export default function SentimentDistribution({
         <div className="flex items-start justify-between mb-1">
           <div>
             <div className="text-xs sm:text-sm text-gray-400 font-semibold">
-              {yAxisMode === "volume" ? "Tweet Volume" : "Tweet Reach"} by Sentiment
+              {yAxisMode === "volume" ? "Post Volume" : "Tweet Reach"} by Sentiment
             </div>
             <p className="text-[10px] sm:text-xs text-gray-600 mt-0.5">
               Height = {yAxisMode === "volume" ? "number of tweets" : "total views"} at each intensity level. Slide to simulate bias.
@@ -243,7 +243,7 @@ export default function SentimentDistribution({
                   : "text-gray-600 hover:text-gray-400"
               }`}
             >
-              Volume
+              Post Volume
             </button>
           </div>
         </div>

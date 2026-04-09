@@ -178,6 +178,7 @@ export interface TopicSuggestion {
   custom_emotions?: FrameItem[];
   target_language?: string;
   target_country?: string;
+  topic_type?: string;
   color_scheme?: string;
 }
 

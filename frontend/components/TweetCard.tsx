@@ -247,6 +247,7 @@ export default function TweetCard({
             score={classification.effective_intensity_score}
             proLabel={proLabel}
             antiLabel={antiLabel}
+            colorScheme={colorScheme as "political" | "neutral"}
           />
         </div>
       )}

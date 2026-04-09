@@ -68,8 +68,8 @@ import BlindSpots from "@/components/BlindSpots";
 import NarrativeMix from "@/components/NarrativeMix";
 
 const tabs = [
-  { id: "feed", label: "Simulated Feed", subtitle: "The conversation" },
   { id: "pulse", label: "Overview", subtitle: "The big picture" },
+  { id: "feed", label: "Simulated Feed", subtitle: "The conversation" },
   { id: "narrative", label: "The Divide", subtitle: "Arguments, overlap, and blind spots" },
   { id: "voices", label: "Key Voices", subtitle: "Who's saying what" },
   { id: "strategy", label: "Insights & Action", subtitle: "Key findings and next steps" },
@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
   const [headerHeight, setHeaderHeight] = useState(88);
   const [feedLoading, setFeedLoading] = useState(true);
   const [feedVisibleCount, setFeedVisibleCount] = useState(50);
-  const [activeTab, setActiveTab] = useState("feed");
+  const [activeTab, setActiveTab] = useState("pulse");
   const [selectedFrame, setSelectedFrame] = useState<string>("all");
   const [flashpointsExpanded, setFlashpointsExpanded] = useState(false);
 

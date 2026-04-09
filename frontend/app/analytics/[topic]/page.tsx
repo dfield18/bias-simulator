@@ -1170,7 +1170,13 @@ export default function AnalyticsPage() {
                       <p className={`text-xs leading-relaxed ${
                         alert.severity === "high" ? "text-red-300/80" : "text-yellow-300/80"
                       }`}>
-                        {alert.message}
+                        {alert.tweet_url && alert.screen_name ? (
+                          <>
+                            {alert.message.split(`@${alert.screen_name}`)[0]}
+                            <a href={alert.tweet_url} target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">@{alert.screen_name}</a>
+                            {alert.message.split(`@${alert.screen_name}`).slice(1).join(`@${alert.screen_name}`)}
+                          </>
+                        ) : alert.message}
                       </p>
                     </div>
                   ))}

@@ -514,6 +514,8 @@ export interface AlertFlag {
   type: string;
   severity: "high" | "medium";
   message: string;
+  tweet_url?: string;
+  screen_name?: string;
 }
 
 export interface FramePerformance {

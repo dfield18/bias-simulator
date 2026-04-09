@@ -2374,6 +2374,8 @@ async def get_pulse_extras(
                 "type": "viral_outlier",
                 "severity": "medium",
                 "message": f"One {side} post by @{t.screen_name} has {top_eng:,} engagements — {round(top_eng / max(avg_eng, 1))}x the average.",
+                "tweet_url": t.url,
+                "screen_name": t.screen_name,
             })
 
     # 3. High-intensity rhetoric spike

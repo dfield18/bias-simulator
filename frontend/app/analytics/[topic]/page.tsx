@@ -72,7 +72,7 @@ import NarrativeMix from "@/components/NarrativeMix";
 const tabs = [
   { id: "pulse", label: "Overview", subtitle: "The big picture" },
   { id: "feed", label: "Simulated Feed", subtitle: "The conversation" },
-  { id: "narrative", label: "The Divide", subtitle: "Arguments, overlap, and blind spots" },
+  { id: "narrative", label: "Narratives", subtitle: "Arguments, overlap, and blind spots" },
   { id: "voices", label: "Key Voices", subtitle: "Who's saying what" },
   { id: "geography", label: "Geography", subtitle: "Where posts come from" },
   { id: "strategy", label: "Insights & Action", subtitle: "Key findings and next steps" },
@@ -1141,7 +1141,7 @@ export default function AnalyticsPage() {
                     onClick={() => setActiveTab("narrative")}
                     className="text-[10px] text-gray-500 hover:text-gray-300 mt-3 transition-colors"
                   >
-                    View full analysis in The Divide &rarr;
+                    View full analysis in Narratives &rarr;
                   </button>
                 </div>
               );

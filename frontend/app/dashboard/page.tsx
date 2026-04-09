@@ -39,6 +39,11 @@ export default function Home() {
   const myTopicsList = topics.filter((t) => t.slug in myTopics);
   const publicTopics = topics.filter((t) => !(t.slug in myTopics));
 
+  const myPolitical = myTopicsList.filter((t) => t.topic_type !== "company");
+  const myCompany = myTopicsList.filter((t) => t.topic_type === "company");
+  const publicPolitical = publicTopics.filter((t) => t.topic_type !== "company");
+  const publicCompany = publicTopics.filter((t) => t.topic_type === "company");
+
   const handleSubscribe = async (slug: string) => {
     setMyTopics((prev) => ({ ...prev, [slug]: "subscriber" }));
     try {
@@ -67,8 +72,8 @@ export default function Home() {
   };
 
   function TopicCard({ topic }: { topic: TopicData }) {
-    const role = myTopics[topic.slug]; // "creator", "subscriber", or undefined
-    const isSubscribed = !!role;
+    const role = myTopics[topic.slug];
+    const isCompany = topic.topic_type === "company";
 
     return (
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 hover:border-gray-600 transition-colors">
@@ -85,10 +90,10 @@ export default function Home() {
             <p className="text-gray-400 text-sm mb-3">{topic.description}</p>
           )}
           <div className="flex gap-2 text-xs">
-            <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
+            <span className={`px-2 py-1 rounded ${isCompany ? "bg-purple-500/20 text-purple-400" : "bg-blue-500/20 text-blue-400"}`}>
               {topic.anti_label}
             </span>
-            <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded">
+            <span className={`px-2 py-1 rounded ${isCompany ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
               {topic.pro_label}
             </span>
           </div>
@@ -187,71 +192,111 @@ export default function Home() {
       {/* My Topics / Featured Topics */}
       {!loading && (
         <>
-          {user && myTopicsList.length > 0 && (
-            <>
-              <h2 className="text-lg font-semibold text-gray-300 mb-4">My Topics</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <Link
-                  href="/topics/new"
-                  className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <div className="text-2xl text-gray-600 mb-1">+</div>
-                    <h2 className="text-base font-semibold text-gray-400">Add New Topic</h2>
-                    <p className="text-gray-600 text-xs mt-1">Create a custom topic</p>
-                  </div>
-                </Link>
-                {myTopicsList.map((topic) => (
-                  <TopicCard key={topic.slug} topic={topic} />
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* Featured topics for free users (or all users as explore section) */}
+          {/* Public Policy / Political section */}
           {(() => {
-            const featured = topics.filter((t) => t.featured);
+            const featured = topics.filter((t) => t.featured && t.topic_type !== "company");
             const isFree = user && user.tier === "free";
-            if (isFree && featured.length > 0) {
-              return (
-                <>
-                  <h2 className="text-lg font-semibold text-gray-300 mb-4">Free Topics</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                    {myTopicsList.length === 0 && (
-                      <Link
-                        href="/topics/new"
-                        className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
-                      >
-                        <div className="text-center">
-                          <div className="text-2xl text-gray-600 mb-1">+</div>
-                          <h2 className="text-base font-semibold text-gray-400">Add New Topic</h2>
-                          <p className="text-gray-600 text-xs mt-1">1 free custom topic</p>
-                        </div>
-                      </Link>
-                    )}
-                    {featured.map((topic) => (
+            const hasPolitical = myPolitical.length > 0 || (isFree && featured.length > 0) || (!isFree && publicPolitical.length > 0);
+            if (!hasPolitical) return null;
+            return (
+              <>
+                <h2 className="text-lg font-semibold text-gray-300 mb-4">Public Policy / Political</h2>
+                {/* My political topics */}
+                {user && myPolitical.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {myPolitical.map((topic) => (
                       <TopicCard key={topic.slug} topic={topic} />
                     ))}
                   </div>
-                </>
-              );
-            }
-            return null;
+                )}
+                {/* Featured political topics for free users */}
+                {isFree && featured.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {featured.filter((t) => !myTopics[t.slug]).map((topic) => (
+                      <TopicCard key={topic.slug} topic={topic} />
+                    ))}
+                  </div>
+                )}
+                {/* Public political topics for paid users */}
+                {!isFree && publicPolitical.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {publicPolitical.map((topic) => (
+                      <TopicCard key={topic.slug} topic={topic} />
+                    ))}
+                  </div>
+                )}
+                <div className="mb-8" />
+              </>
+            );
           })()}
-        </>
-      )}
 
-      {/* Public Topics (not yet subscribed) — hidden for free users */}
-      {publicTopics.length > 0 && user && user.tier !== "free" && (
-        <>
-          <h2 className="text-lg font-semibold text-gray-300 mb-3">
-            {myTopicsList.length > 0 ? "Explore Topics" : "Topics"}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            {publicTopics.map((topic) => (
-              <TopicCard key={topic.slug} topic={topic} />
-            ))}
-          </div>
+          {/* Company / Brand section */}
+          {(() => {
+            const featuredCompany = topics.filter((t) => t.featured && t.topic_type === "company");
+            const isFree = user && user.tier === "free";
+            const hasCompany = myCompany.length > 0 || (isFree && featuredCompany.length > 0) || (!isFree && publicCompany.length > 0);
+            if (!hasCompany) return null;
+            return (
+              <>
+                <h2 className="text-lg font-semibold text-gray-300 mb-4">Company / Brand</h2>
+                {/* My company topics */}
+                {user && myCompany.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {myCompany.map((topic) => (
+                      <TopicCard key={topic.slug} topic={topic} />
+                    ))}
+                  </div>
+                )}
+                {/* Featured company topics for free users */}
+                {isFree && featuredCompany.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {featuredCompany.filter((t) => !myTopics[t.slug]).map((topic) => (
+                      <TopicCard key={topic.slug} topic={topic} />
+                    ))}
+                  </div>
+                )}
+                {/* Public company topics for paid users */}
+                {!isFree && publicCompany.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    {publicCompany.map((topic) => (
+                      <TopicCard key={topic.slug} topic={topic} />
+                    ))}
+                  </div>
+                )}
+                <div className="mb-8" />
+              </>
+            );
+          })()}
+
+          {/* Add New Topic card — show when user has no topics */}
+          {user && myTopicsList.length === 0 && user.tier !== "free" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <Link
+                href="/topics/new"
+                className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
+              >
+                <div className="text-center">
+                  <div className="text-2xl text-gray-600 mb-1">+</div>
+                  <h2 className="text-base font-semibold text-gray-400">Add New Topic</h2>
+                  <p className="text-gray-600 text-xs mt-1">Create a custom topic</p>
+                </div>
+              </Link>
+            </div>
+          )}
+          {user && myTopicsList.length === 0 && user.tier === "free" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <Link
+                href="/topics/new"
+                className="block bg-gray-900 border border-dashed border-gray-700 rounded-xl p-4 sm:p-6 hover:border-gray-500 transition-colors flex items-center justify-center"
+              >
+                <div className="text-center">
+                  <div className="text-2xl text-gray-600 mb-1">+</div>
+                  <h2 className="text-base font-semibold text-gray-400">Add New Topic</h2>
+                  <p className="text-gray-600 text-xs mt-1">1 free custom topic</p>
+                </div>
+              </Link>
+            </div>
+          )}
         </>
       )}
 

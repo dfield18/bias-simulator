@@ -3078,8 +3078,12 @@ async def get_dunks(
         # Signal 4: Raw engagement (needs to be visible enough to matter)
         visibility = math.log10(max(views, 1)) / 6.0
 
-        # Combined dunk score
-        dunk_score = (ratio_score * 0.3 + cross_score * 0.35 + quote_score * 0.15 + visibility * 0.2)
+        # Signal 5: Absolute reply + quote volume (prioritize high-volume controversy)
+        reply_quote_total = replies + quotes
+        reaction_volume = min(math.log10(max(reply_quote_total, 1)) / 2.5, 2.0)  # log10(300) ≈ 2.5
+
+        # Combined dunk score — reaction volume weighted heavily
+        dunk_score = (ratio_score * 0.20 + cross_score * 0.25 + quote_score * 0.10 + visibility * 0.15 + reaction_volume * 0.30)
 
         if dunk_score < 0.1:
             continue

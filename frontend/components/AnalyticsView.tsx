@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { AnalyticsData } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 
 interface AnalyticsViewProps {
   data: AnalyticsData;
+  colorScheme?: ColorScheme;
 }
 
 interface DonutSlice {
@@ -97,7 +99,8 @@ function formatNumber(n: number): string {
   return String(Math.round(n));
 }
 
-export function EngagementComparison({ data }: AnalyticsViewProps) {
+export function EngagementComparison({ data, colorScheme }: AnalyticsViewProps) {
+  const sc = getSideColors(colorScheme || "political");
   const { anti, pro } = data.engagement;
   const metrics = [
     { label: "Tweets", anti: anti.count, pro: pro.count, icon: "#" },
@@ -132,12 +135,12 @@ export function EngagementComparison({ data }: AnalyticsViewProps) {
                 <div className="text-center flex-1">
                   <div
                     className={`text-lg sm:text-xl font-bold font-mono ${
-                      antiWins ? "text-blue-400" : "text-gray-500"
+                      antiWins ? sc.anti.text : "text-gray-500"
                     }`}
                   >
                     {formatNumber(m.anti)}
                   </div>
-                  <div className="text-[10px] text-blue-400/60 mt-0.5">
+                  <div className={`text-[10px] ${sc.anti.text} opacity-60 mt-0.5`}>
                     {data.anti_label}
                   </div>
                 </div>
@@ -146,7 +149,7 @@ export function EngagementComparison({ data }: AnalyticsViewProps) {
                 <div className="flex flex-col items-center pb-3">
                   <div
                     className={`text-[10px] font-bold ${
-                      tie ? "text-gray-500" : antiWins ? "text-blue-400" : "text-red-400"
+                      tie ? "text-gray-500" : antiWins ? sc.anti.text : sc.pro.text
                     }`}
                   >
                     {tie ? "=" : antiWins ? "\u25C0" : "\u25B6"}
@@ -157,12 +160,12 @@ export function EngagementComparison({ data }: AnalyticsViewProps) {
                 <div className="text-center flex-1">
                   <div
                     className={`text-lg sm:text-xl font-bold font-mono ${
-                      proWins ? "text-red-400" : "text-gray-500"
+                      proWins ? sc.pro.text : "text-gray-500"
                     }`}
                   >
                     {formatNumber(m.pro)}
                   </div>
-                  <div className="text-[10px] text-red-400/60 mt-0.5">
+                  <div className={`text-[10px] ${sc.pro.text} opacity-60 mt-0.5`}>
                     {data.pro_label}
                   </div>
                 </div>
@@ -266,7 +269,8 @@ function PhraseCloud({
   );
 }
 
-function VoicesAndPhrases({ data }: AnalyticsViewProps) {
+function VoicesAndPhrases({ data, colorScheme }: AnalyticsViewProps) {
+  const sc = getSideColors(colorScheme || "political");
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
       <h3 className="text-sm font-semibold text-gray-300 mb-4">
@@ -276,19 +280,20 @@ function VoicesAndPhrases({ data }: AnalyticsViewProps) {
         <VoiceList
           voices={data.voices.anti}
           label={data.anti_label}
-          colorClass="text-blue-400"
+          colorClass={sc.anti.text}
         />
         <VoiceList
           voices={data.voices.pro}
           label={data.pro_label}
-          colorClass="text-red-400"
+          colorClass={sc.pro.text}
         />
       </div>
     </div>
   );
 }
 
-export function TrendingPhrases({ data }: AnalyticsViewProps) {
+export function TrendingPhrases({ data, colorScheme }: AnalyticsViewProps) {
+  const sc = getSideColors(colorScheme || "political");
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
       <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Language</div>
@@ -302,21 +307,22 @@ export function TrendingPhrases({ data }: AnalyticsViewProps) {
         <PhraseCloud
           phrases={data.phrases.anti}
           label={data.anti_label}
-          colorClass="text-blue-300"
-          bgClass="bg-blue-500/15"
+          colorClass={sc.anti.text}
+          bgClass={sc.anti.bgLight}
         />
         <PhraseCloud
           phrases={data.phrases.pro}
           label={data.pro_label}
-          colorClass="text-red-300"
-          bgClass="bg-red-500/15"
+          colorClass={sc.pro.text}
+          bgClass={sc.pro.bgLight}
         />
       </div>
     </div>
   );
 }
 
-function TopSources({ data }: AnalyticsViewProps) {
+function TopSources({ data, colorScheme }: AnalyticsViewProps) {
+  const sc = getSideColors(colorScheme || "political");
   const [viewMode, setViewMode] = useState<"publishers" | "urls">("publishers");
   const [sideFilter, setSideFilter] = useState<"overall" | "anti" | "pro">("overall");
 
@@ -334,8 +340,8 @@ function TopSources({ data }: AnalyticsViewProps) {
     : sideFilter === "pro" ? sources.pro
     : sources.overall;
 
-  const barColor = sideFilter === "anti" ? "bg-blue-500/30"
-    : sideFilter === "pro" ? "bg-red-500/30"
+  const barColor = sideFilter === "anti" ? sc.anti.border.replace("border-", "bg-")
+    : sideFilter === "pro" ? sc.pro.border.replace("border-", "bg-")
     : "bg-gray-400/40";
 
   const activeDomains = activeSources?.domains || [];
@@ -537,7 +543,8 @@ function TopSources({ data }: AnalyticsViewProps) {
   );
 }
 
-export function OverlapSection({ data }: AnalyticsViewProps) {
+export function OverlapSection({ data, colorScheme }: AnalyticsViewProps) {
+  const sc = getSideColors(colorScheme || "political");
   const [overlapView, setOverlapView] = useState<"sources" | "urls" | "narratives">("sources");
 
   const overlap = data.overlap;
@@ -597,22 +604,22 @@ export function OverlapSection({ data }: AnalyticsViewProps) {
                     <div key={s.domain}>
                       <div className="text-xs text-gray-300 mb-0.5">{s.domain}</div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-blue-400 font-mono w-10 text-right shrink-0">{antiPct}%</span>
+                        <span className={`text-[10px] ${sc.anti.text} font-mono w-10 text-right shrink-0`}>{antiPct}%</span>
                         <div className="flex-1 h-3 bg-gray-800 rounded-full overflow-hidden flex justify-end">
-                          <div className="h-full bg-blue-500/50 rounded-full" style={{ width: `${(antiPct / maxPct) * 100}%` }} />
+                          <div className={`h-full ${sc.anti.bg}/50 rounded-full`} style={{ width: `${(antiPct / maxPct) * 100}%` }} />
                         </div>
                         <div className="w-px h-3 bg-gray-700 shrink-0" />
                         <div className="flex-1 h-3 bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-red-500/50 rounded-full" style={{ width: `${(proPct / maxPct) * 100}%` }} />
+                          <div className={`h-full ${sc.pro.bg}/50 rounded-full`} style={{ width: `${(proPct / maxPct) * 100}%` }} />
                         </div>
-                        <span className="text-[10px] text-red-400 font-mono w-10 shrink-0">{proPct}%</span>
+                        <span className={`text-[10px] ${sc.pro.text} font-mono w-10 shrink-0`}>{proPct}%</span>
                       </div>
                     </div>
                   );
                 })}
                 <div className="flex justify-center gap-4 mt-2 text-[10px] text-gray-500">
-                  <span className="text-blue-400">{data.anti_label} (% of their tweets)</span>
-                  <span className="text-red-400">{data.pro_label} (% of their tweets)</span>
+                  <span className={sc.anti.text}>{data.anti_label} (% of their tweets)</span>
+                  <span className={sc.pro.text}>{data.pro_label} (% of their tweets)</span>
                 </div>
               </div>
             )}
@@ -632,15 +639,15 @@ export function OverlapSection({ data }: AnalyticsViewProps) {
                       >
                         {u.display}
                       </a>
-                      <span className="text-[10px] text-blue-400 font-mono shrink-0">{antiPct}%</span>
+                      <span className={`text-[10px] ${sc.anti.text} font-mono shrink-0`}>{antiPct}%</span>
                       <span className="text-[10px] text-gray-600 shrink-0">/</span>
-                      <span className="text-[10px] text-red-400 font-mono shrink-0">{proPct}%</span>
+                      <span className={`text-[10px] ${sc.pro.text} font-mono shrink-0`}>{proPct}%</span>
                     </div>
                   );
                 })}
                 <div className="flex justify-center gap-4 mt-2 text-[10px] text-gray-500">
-                  <span className="text-blue-400">{data.anti_label} %</span>
-                  <span className="text-red-400">{data.pro_label} %</span>
+                  <span className={sc.anti.text}>{data.anti_label} %</span>
+                  <span className={sc.pro.text}>{data.pro_label} %</span>
                 </div>
               </div>
             )}
@@ -655,22 +662,22 @@ export function OverlapSection({ data }: AnalyticsViewProps) {
                     <div key={n.frame}>
                       <div className="text-xs text-gray-300 mb-0.5">{n.label}</div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-blue-400 font-mono w-10 text-right shrink-0">{antiPct}%</span>
+                        <span className={`text-[10px] ${sc.anti.text} font-mono w-10 text-right shrink-0`}>{antiPct}%</span>
                         <div className="flex-1 h-3 bg-gray-800 rounded-full overflow-hidden flex justify-end">
-                          <div className="h-full bg-blue-500/50 rounded-full" style={{ width: `${(antiPct / maxPct) * 100}%` }} />
+                          <div className={`h-full ${sc.anti.bg}/50 rounded-full`} style={{ width: `${(antiPct / maxPct) * 100}%` }} />
                         </div>
                         <div className="w-px h-3 bg-gray-700 shrink-0" />
                         <div className="flex-1 h-3 bg-gray-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-red-500/50 rounded-full" style={{ width: `${(proPct / maxPct) * 100}%` }} />
+                          <div className={`h-full ${sc.pro.bg}/50 rounded-full`} style={{ width: `${(proPct / maxPct) * 100}%` }} />
                         </div>
-                        <span className="text-[10px] text-red-400 font-mono w-10 shrink-0">{proPct}%</span>
+                        <span className={`text-[10px] ${sc.pro.text} font-mono w-10 shrink-0`}>{proPct}%</span>
                       </div>
                     </div>
                   );
                 })}
                 <div className="flex justify-center gap-4 mt-2 text-[10px] text-gray-500">
-                  <span className="text-blue-400">{data.anti_label} (% of their tweets)</span>
-                  <span className="text-red-400">{data.pro_label} (% of their tweets)</span>
+                  <span className={sc.anti.text}>{data.anti_label} (% of their tweets)</span>
+                  <span className={sc.pro.text}>{data.pro_label} (% of their tweets)</span>
                 </div>
               </div>
             )}
@@ -683,10 +690,10 @@ export function OverlapSection({ data }: AnalyticsViewProps) {
 
 export { TopSources };
 
-export default function AnalyticsView({ data }: AnalyticsViewProps) {
+export default function AnalyticsView({ data, colorScheme }: AnalyticsViewProps) {
   return (
     <div className="space-y-4">
-      <div id="voices"><VoicesAndPhrases data={data} /></div>
+      <div id="voices"><VoicesAndPhrases data={data} colorScheme={colorScheme} /></div>
     </div>
   );
 }

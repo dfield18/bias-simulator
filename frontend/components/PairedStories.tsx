@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { PairedStoriesData, PairedStory, PairedSide } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 
 interface PairedStoriesProps {
   data: PairedStoriesData;
+  colorScheme?: ColorScheme;
 }
 
 function formatNumber(n: number): string {
@@ -39,11 +41,13 @@ function ExpandedStory({
   antiLabel,
   proLabel,
   onCollapse,
+  sc,
 }: {
   story: PairedStory;
   antiLabel: string;
   proLabel: string;
   onCollapse: () => void;
+  sc: ReturnType<typeof getSideColors>;
 }) {
   const [showFullText, setShowFullText] = useState(false);
 
@@ -82,9 +86,9 @@ function ExpandedStory({
           href={story.anti.url || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="block p-4 sm:p-5 border-b sm:border-b-0 sm:border-r border-gray-800 bg-blue-500/[0.03] hover:bg-blue-500/[0.06] transition-colors"
+          className={`block p-4 sm:p-5 border-b sm:border-b-0 sm:border-r border-gray-800 ${sc.anti.bgFaint} hover:opacity-80 transition-colors`}
         >
-          <div className="text-[10px] text-blue-400 font-semibold uppercase tracking-wider mb-2">
+          <div className={`text-[10px] ${sc.anti.text} font-semibold uppercase tracking-wider mb-2`}>
             {antiLabel}
           </div>
           <p className="text-base sm:text-lg font-semibold text-gray-100 leading-snug mb-3">
@@ -107,9 +111,9 @@ function ExpandedStory({
           href={story.pro.url || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="block p-4 sm:p-5 bg-red-500/[0.03] hover:bg-red-500/[0.06] transition-colors"
+          className={`block p-4 sm:p-5 ${sc.pro.bgFaint} hover:opacity-80 transition-colors`}
         >
-          <div className="text-[10px] text-red-400 font-semibold uppercase tracking-wider mb-2">
+          <div className={`text-[10px] ${sc.pro.text} font-semibold uppercase tracking-wider mb-2`}>
             {proLabel}
           </div>
           <p className="text-base sm:text-lg font-semibold text-gray-100 leading-snug mb-3">
@@ -160,11 +164,11 @@ function ExpandedStory({
             </button>
             {story.anti.url && (
               <a href={story.anti.url} target="_blank" rel="noopener noreferrer"
-                className="text-[10px] text-blue-400 hover:text-blue-300">View {antiLabel} tweet</a>
+                className={`text-[10px] ${sc.anti.text} hover:opacity-80`}>View {antiLabel} tweet</a>
             )}
             {story.pro.url && (
               <a href={story.pro.url} target="_blank" rel="noopener noreferrer"
-                className="text-[10px] text-red-400 hover:text-red-300">View {proLabel} tweet</a>
+                className={`text-[10px] ${sc.pro.text} hover:opacity-80`}>View {proLabel} tweet</a>
             )}
           </div>
         </div>
@@ -190,11 +194,13 @@ function CollapsedStory({
   antiLabel,
   proLabel,
   onExpand,
+  sc,
 }: {
   story: PairedStory;
   antiLabel: string;
   proLabel: string;
   onExpand: () => void;
+  sc: ReturnType<typeof getSideColors>;
 }) {
   return (
     <button
@@ -210,11 +216,11 @@ function CollapsedStory({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2 text-[11px]">
             <div>
-              <span className="text-blue-400 font-medium">{antiLabel}:</span>
+              <span className={`${sc.anti.text} font-medium`}>{antiLabel}:</span>
               <span className="text-gray-400 ml-1">{story.anti.headline}</span>
             </div>
             <div>
-              <span className="text-red-400 font-medium">{proLabel}:</span>
+              <span className={`${sc.pro.text} font-medium`}>{proLabel}:</span>
               <span className="text-gray-400 ml-1">{story.pro.headline}</span>
             </div>
           </div>
@@ -224,7 +230,8 @@ function CollapsedStory({
   );
 }
 
-export default function PairedStories({ data }: PairedStoriesProps) {
+export default function PairedStories({ data, colorScheme }: PairedStoriesProps) {
+  const sc = getSideColors(colorScheme || "political");
   const [expanded, setExpanded] = useState<Set<number>>(new Set([0, 1]));
 
   if (!data.stories || data.stories.length === 0) return null;
@@ -252,7 +259,7 @@ export default function PairedStories({ data }: PairedStoriesProps) {
       <div className="space-y-3">
         {data.stories.map((story, i) =>
           expanded.has(i) ? (
-            <ExpandedStory key={i} story={story} antiLabel={data.anti_label} proLabel={data.pro_label} onCollapse={() => toggle(i)} />
+            <ExpandedStory key={i} story={story} antiLabel={data.anti_label} proLabel={data.pro_label} onCollapse={() => toggle(i)} sc={sc} />
           ) : (
             <CollapsedStory
               key={i}
@@ -260,6 +267,7 @@ export default function PairedStories({ data }: PairedStoriesProps) {
               antiLabel={data.anti_label}
               proLabel={data.pro_label}
               onExpand={() => toggle(i)}
+              sc={sc}
             />
           )
         )}

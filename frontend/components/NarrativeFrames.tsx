@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { NarrativeData, ExposureOverlapData, PlaybookEntry } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 
 interface NarrativeFramesProps {
   data: NarrativeData;
@@ -10,6 +11,7 @@ interface NarrativeFramesProps {
   playbook?: { anti: PlaybookEntry[]; pro: PlaybookEntry[] } | null;
   strategyLabels?: { anti: string; pro: string } | null;
   onViewTweets?: (frameKey: string) => void;
+  colorScheme?: ColorScheme;
 }
 
 function StoryList({
@@ -19,6 +21,7 @@ function StoryList({
   proLabel,
   isUrl,
   showPct,
+  sc,
 }: {
   items: { name: string; anti_count: number; pro_count: number; total: number; side: string }[];
   filter: string;
@@ -26,6 +29,7 @@ function StoryList({
   proLabel: string;
   isUrl: boolean;
   showPct?: boolean;
+  sc: ReturnType<typeof getSideColors>;
 }) {
   const filtered = filter === "all" ? items
     : filter === "shared" ? items.filter((i) => i.side === "shared")
@@ -52,8 +56,8 @@ function StoryList({
             item.side === "shared"
               ? "border-gray-500"
               : item.side === "anti"
-              ? "border-blue-500/40"
-              : "border-red-500/40"
+              ? sc.anti.border
+              : sc.pro.border
           }`}
         >
           {/* Background bar for themes */}
@@ -63,8 +67,8 @@ function StoryList({
                 item.side === "shared"
                   ? "bg-gray-700/30"
                   : item.side === "anti"
-                  ? "bg-blue-500/10"
-                  : "bg-red-500/10"
+                  ? sc.anti.bgLight
+                  : sc.pro.bgLight
               }`}
               style={{ width: `${barWidth}%` }}
             />
@@ -74,8 +78,8 @@ function StoryList({
               item.side === "shared"
                 ? "bg-gray-800/30"
                 : item.side === "anti"
-                ? "bg-blue-500/5"
-                : "bg-red-500/5"
+                ? sc.anti.bgFaint
+                : sc.pro.bgFaint
             }`} />
           )}
           <div className="relative flex-1 min-w-0 mr-2">
@@ -99,11 +103,12 @@ function StoryList({
 }
 
 function ExposureOverlapCard({
-  eo, antiLabel, proLabel,
+  eo, antiLabel, proLabel, sc,
 }: {
   eo: ExposureOverlapData;
   antiLabel: string;
   proLabel: string;
+  sc: ReturnType<typeof getSideColors>;
 }) {
   const [sideFilter, setSideFilter] = useState("all");
 
@@ -171,6 +176,7 @@ function ExposureOverlapCard({
             proLabel={proLabel}
             isUrl={false}
             showPct={true}
+            sc={sc}
           />
         </div>
 
@@ -185,6 +191,7 @@ function ExposureOverlapCard({
             antiLabel={antiLabel}
             proLabel={proLabel}
             isUrl={true}
+            sc={sc}
           />
         </div>
       </div>
@@ -192,13 +199,14 @@ function ExposureOverlapCard({
   );
 }
 
-function RadarChart({ keys, labels, antiValues, proValues, antiLabel, proLabel }: {
+function RadarChart({ keys, labels, antiValues, proValues, antiLabel, proLabel, sc }: {
   keys: string[];
   labels: Record<string, string>;
   antiValues: Record<string, { pct: number }>;
   proValues: Record<string, { pct: number }>;
   antiLabel: string;
   proLabel: string;
+  sc: ReturnType<typeof getSideColors>;
 }) {
   const n = keys.length;
   if (n < 3) return null;
@@ -235,10 +243,10 @@ function RadarChart({ keys, labels, antiValues, proValues, antiLabel, proLabel }
           const p = getPoint(i, 100);
           return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgb(55, 65, 81)" strokeWidth="0.5" />;
         })}
-        <polygon points={antiPoints.map((p) => `${p.x},${p.y}`).join(" ")} fill="rgba(59, 130, 246, 0.15)" stroke="rgb(59, 130, 246)" strokeWidth="1.5" />
-        <polygon points={proPoints.map((p) => `${p.x},${p.y}`).join(" ")} fill="rgba(239, 68, 68, 0.15)" stroke="rgb(239, 68, 68)" strokeWidth="1.5" />
-        {antiPoints.map((p, i) => <circle key={`a${i}`} cx={p.x} cy={p.y} r="2.5" fill="rgb(59, 130, 246)" />)}
-        {proPoints.map((p, i) => <circle key={`p${i}`} cx={p.x} cy={p.y} r="2.5" fill="rgb(239, 68, 68)" />)}
+        <polygon points={antiPoints.map((p) => `${p.x},${p.y}`).join(" ")} fill={sc.anti.fillLight} stroke={sc.anti.fill} strokeWidth="1.5" />
+        <polygon points={proPoints.map((p) => `${p.x},${p.y}`).join(" ")} fill={sc.pro.fillLight} stroke={sc.pro.fill} strokeWidth="1.5" />
+        {antiPoints.map((p, i) => <circle key={`a${i}`} cx={p.x} cy={p.y} r="2.5" fill={sc.anti.fill} />)}
+        {proPoints.map((p, i) => <circle key={`p${i}`} cx={p.x} cy={p.y} r="2.5" fill={sc.pro.fill} />)}
         {keys.map((key, i) => {
           const angle = angleStep * i - Math.PI / 2;
           const labelR = maxR + 32;
@@ -251,19 +259,20 @@ function RadarChart({ keys, labels, antiValues, proValues, antiLabel, proLabel }
       </svg>
       <div className="flex justify-center gap-6 mt-2 text-xs">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-          <span className="text-blue-400 font-medium">{antiLabel}</span>
+          <div className={`w-2.5 h-2.5 rounded-full ${sc.anti.bg}`} />
+          <span className={`${sc.anti.text} font-medium`}>{antiLabel}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-          <span className="text-red-400 font-medium">{proLabel}</span>
+          <div className={`w-2.5 h-2.5 rounded-full ${sc.pro.bg}`} />
+          <span className={`${sc.pro.text} font-medium`}>{proLabel}</span>
         </div>
       </div>
     </div>
   );
 }
 
-export default function NarrativeFrames({ data, exposureOverlap, hideFraming, playbook, strategyLabels, onViewTweets }: NarrativeFramesProps) {
+export default function NarrativeFrames({ data, exposureOverlap, hideFraming, playbook, strategyLabels, onViewTweets, colorScheme }: NarrativeFramesProps) {
+  const sc = getSideColors(colorScheme || "political");
   const { frames, emotions, frame_gaps, emotion_gaps, frame_labels, emotion_labels } = data;
   const antiLabel = data.anti_label;
   const proLabel = data.pro_label;
@@ -334,7 +343,7 @@ export default function NarrativeFrames({ data, exposureOverlap, hideFraming, pl
 
   if (hideFraming) {
     return exposureOverlap ? (
-      <ExposureOverlapCard eo={exposureOverlap} antiLabel={antiLabel} proLabel={proLabel} />
+      <ExposureOverlapCard eo={exposureOverlap} antiLabel={antiLabel} proLabel={proLabel} sc={sc} />
     ) : null;
   }
 
@@ -351,7 +360,7 @@ export default function NarrativeFrames({ data, exposureOverlap, hideFraming, pl
 
   return (
     <div className="space-y-4">
-      {exposureOverlap && <ExposureOverlapCard eo={exposureOverlap} antiLabel={antiLabel} proLabel={proLabel} />}
+      {exposureOverlap && <ExposureOverlapCard eo={exposureOverlap} antiLabel={antiLabel} proLabel={proLabel} sc={sc} />}
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-1">
@@ -387,6 +396,7 @@ export default function NarrativeFrames({ data, exposureOverlap, hideFraming, pl
               proValues={frames.pro}
               antiLabel={antiLabel}
               proLabel={proLabel}
+              sc={sc}
             />
             <div className="text-[10px] text-gray-600 mt-3">
               Based on {data.total_framed.anti} {antiLabel} and {data.total_framed.pro} {proLabel} tweets
@@ -407,9 +417,9 @@ export default function NarrativeFrames({ data, exposureOverlap, hideFraming, pl
                     {(["anti", "pro"] as const).map((side) => {
                       const entries = playbook[side];
                       const label = side === "anti" ? aL : pL;
-                      const colorClass = side === "anti" ? "text-blue-400" : "text-red-400";
-                      const borderClass = side === "anti" ? "border-blue-500/20" : "border-red-500/20";
-                      const barColor = side === "anti" ? "bg-blue-500/50" : "bg-red-500/50";
+                      const colorClass = side === "anti" ? sc.anti.text : sc.pro.text;
+                      const borderClass = side === "anti" ? sc.anti.borderLight : sc.pro.borderLight;
+                      const barColor = side === "anti" ? `${sc.anti.bg}/50` : `${sc.pro.bg}/50`;
                       const maxShare = entries.length > 0 ? entries[0].share : 1;
                       return (
                         <div key={side} className={`border ${borderClass} rounded-xl p-4 bg-gray-800/20`}>
@@ -458,6 +468,7 @@ export default function NarrativeFrames({ data, exposureOverlap, hideFraming, pl
               proValues={emotions.pro}
               antiLabel={antiLabel}
               proLabel={proLabel}
+              sc={sc}
             />
             {antiTopEmotion && proTopEmotion && (
               <p className="text-[10px] text-gray-500 mt-4">
@@ -495,8 +506,8 @@ export default function NarrativeFrames({ data, exposureOverlap, hideFraming, pl
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {([
-                      { entries: antiEmotionRanked, label: antiLabel, colorClass: "text-blue-400", borderClass: "border-blue-500/20", barColor: "bg-blue-500/50" },
-                      { entries: proEmotionRanked, label: proLabel, colorClass: "text-red-400", borderClass: "border-red-500/20", barColor: "bg-red-500/50" },
+                      { entries: antiEmotionRanked, label: antiLabel, colorClass: sc.anti.text, borderClass: sc.anti.borderLight, barColor: `${sc.anti.bg}/50` },
+                      { entries: proEmotionRanked, label: proLabel, colorClass: sc.pro.text, borderClass: sc.pro.borderLight, barColor: `${sc.pro.bg}/50` },
                     ]).map(({ entries, label, colorClass, borderClass, barColor }) => {
                       const maxPctLocal = entries.length > 0 ? entries[0].pct : 1;
                       return (

@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { AnalyticsData, SummaryData, GapEntry } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 
 interface BlindSpotsProps {
   analytics: AnalyticsData;
   narrativeGaps: SummaryData | null;
   frameGaps?: { anti: GapEntry[]; pro: GapEntry[] } | null;
   frameGapLabels?: { anti: string; pro: string };
+  colorScheme?: ColorScheme;
 }
 
 function NarrativeSection({ points }: { points: string[] }) {
@@ -51,7 +53,8 @@ function NarrativeSection({ points }: { points: string[] }) {
   );
 }
 
-export default function BlindSpots({ analytics, narrativeGaps, frameGaps, frameGapLabels }: BlindSpotsProps) {
+export default function BlindSpots({ analytics, narrativeGaps, frameGaps, frameGapLabels, colorScheme }: BlindSpotsProps) {
+  const sc = getSideColors(colorScheme || "political");
   const antiLabel = analytics.anti_label;
   const proLabel = analytics.pro_label;
   const exclusive = analytics.exclusive_stories;
@@ -104,33 +107,24 @@ export default function BlindSpots({ analytics, narrativeGaps, frameGaps, frameG
 
   const renderSide = (
     label: string,
-    color: "blue" | "red",
+    side: "anti" | "pro",
     keywordData: { word: string; side_count: number; other_count: number; ratio: number | null }[] | undefined,
     exclusiveData: { url: string; display: string; count: number }[] | undefined,
     narrativeData: string[] | undefined,
     otherLabel: string,
     frameGapData?: GapEntry[],
   ) => {
+    const mySide = side === "anti" ? sc.anti : sc.pro;
+    const otherSide = side === "anti" ? sc.pro : sc.anti;
     const colorClasses = {
-      blue: {
-        title: "text-blue-400",
-        tagBg: "bg-red-500/15",
-        tagText: "text-red-300",
-        tagCount: "text-red-500/60",
-        linkCount: "text-red-400/60",
-        border: "border-blue-500/20",
-        sectionBg: "bg-blue-500/5",
-      },
-      red: {
-        title: "text-red-400",
-        tagBg: "bg-blue-500/15",
-        tagText: "text-blue-300",
-        tagCount: "text-blue-500/60",
-        linkCount: "text-blue-400/60",
-        border: "border-red-500/20",
-        sectionBg: "bg-red-500/5",
-      },
-    }[color];
+      title: mySide.text,
+      tagBg: otherSide.bgLight,
+      tagText: otherSide.text,
+      tagCount: otherSide.text,
+      linkCount: otherSide.text,
+      border: mySide.borderLight,
+      sectionBg: mySide.bgFaint,
+    };
 
     return (
       <div className={`rounded-lg border ${colorClasses.border} overflow-hidden`}>
@@ -229,7 +223,7 @@ export default function BlindSpots({ analytics, narrativeGaps, frameGaps, frameG
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {renderSide(
-          antiLabel, "blue",
+          antiLabel, "anti",
           keywords?.anti_misses,
           exclusive?.pro_only,
           narrative?.antiMisses,
@@ -237,7 +231,7 @@ export default function BlindSpots({ analytics, narrativeGaps, frameGaps, frameG
           frameGaps?.anti,
         )}
         {renderSide(
-          proLabel, "red",
+          proLabel, "pro",
           keywords?.pro_misses,
           exclusive?.anti_only,
           narrative?.proMisses,

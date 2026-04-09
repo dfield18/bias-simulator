@@ -1,14 +1,16 @@
 import { BreakdownData } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 
 interface BreakdownChartProps {
   data: BreakdownData;
   proLabel: string;
   antiLabel: string;
+  colorScheme?: ColorScheme;
 }
 
-function getCategoryColor(key: string, antiBent: string, proBent: string): string {
-  if (key === antiBent) return "bg-blue-500";
-  if (key === proBent) return "bg-red-500";
+function getCategoryColor(key: string, antiBent: string, proBent: string, sc: ReturnType<typeof getSideColors>): string {
+  if (key === antiBent) return sc.anti.bg;
+  if (key === proBent) return sc.pro.bg;
   if (key === "neutral") return "bg-gray-500";
   return "bg-gray-700";
 }
@@ -23,7 +25,9 @@ export default function BreakdownChart({
   data,
   proLabel,
   antiLabel,
+  colorScheme,
 }: BreakdownChartProps) {
+  const sc = getSideColors(colorScheme || "political");
   const labels: Record<string, string> = {
     "anti-war": antiLabel,
     "pro-war": proLabel,
@@ -41,7 +45,7 @@ export default function BreakdownChart({
       <div className="space-y-2">
         {categories.map(([key, cat]) => {
           const label = labels[key] || key;
-          const color = getCategoryColor(key, antiBent, proBent);
+          const color = getCategoryColor(key, antiBent, proBent, sc);
           return (
             <div key={key}>
               <div className="flex justify-between text-xs text-gray-400 mb-1">
@@ -67,12 +71,12 @@ export default function BreakdownChart({
           </div>
           <div className="flex gap-4 text-sm">
             {data.intensity.anti_avg != null && (
-              <span className="text-blue-400">
+              <span className={sc.anti.text}>
                 {antiLabel}: {data.intensity.anti_avg > 0 ? "+" : ""}{data.intensity.anti_avg.toFixed(1)}
               </span>
             )}
             {data.intensity.pro_avg != null && (
-              <span className="text-red-400">
+              <span className={sc.pro.text}>
                 {proLabel}: {data.intensity.pro_avg > 0 ? "+" : ""}{data.intensity.pro_avg.toFixed(1)}
               </span>
             )}

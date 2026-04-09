@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { SummaryData } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 
 interface SummaryTabsProps {
   summaries: Record<string, SummaryData>;
   antiLabel: string;
   proLabel: string;
+  colorScheme?: ColorScheme;
 }
 
 function timeAgo(dateStr: string | null): string {
@@ -25,13 +27,15 @@ export default function SummaryTabs({
   summaries,
   antiLabel,
   proLabel,
+  colorScheme,
 }: SummaryTabsProps) {
+  const sc = getSideColors(colorScheme || "political");
   const [activeTab, setActiveTab] = useState<"overall" | "anti" | "pro">("overall");
 
   const tabs = [
     { key: "overall" as const, label: "Overall", color: "text-gray-300", borderColor: "border-gray-400", bgColor: "bg-gray-500/10" },
-    { key: "anti" as const, label: antiLabel, color: "text-blue-400", borderColor: "border-blue-400", bgColor: "bg-blue-500/10" },
-    { key: "pro" as const, label: proLabel, color: "text-red-400", borderColor: "border-red-400", bgColor: "bg-red-500/10" },
+    { key: "anti" as const, label: antiLabel, color: sc.anti.text, borderColor: sc.anti.text.replace("text-", "border-"), bgColor: sc.anti.bgLight },
+    { key: "pro" as const, label: proLabel, color: sc.pro.text, borderColor: sc.pro.text.replace("text-", "border-"), bgColor: sc.pro.bgLight },
   ];
 
   const activeSummary = summaries[activeTab];

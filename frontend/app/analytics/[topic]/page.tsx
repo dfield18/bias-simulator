@@ -751,7 +751,7 @@ export default function AnalyticsPage() {
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sticky top-44">
                   <h2 className="text-sm font-semibold text-gray-300 mb-3">Breakdown</h2>
                   {breakdown ? (
-                    <BreakdownChart data={breakdown} proLabel={topic.pro_label} antiLabel={topic.anti_label} />
+                    <BreakdownChart data={breakdown} proLabel={topic.pro_label} antiLabel={topic.anti_label} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />
                   ) : (
                     <p className="text-xs text-gray-600">Loading stats...</p>
                   )}
@@ -1010,21 +1010,21 @@ export default function AnalyticsPage() {
                     return (
                       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {antiStories.length > 0 && (
-                          <div className="border border-blue-500/20 rounded-lg p-3 bg-blue-500/5">
+                          <div className={`border ${sc.anti.border} rounded-lg p-3 ${sc.anti.bgFaint}`}>
                             <div className={`text-[10px] ${sc.anti.text} uppercase tracking-wider font-medium mb-2`}>{topic.anti_label} is focused on</div>
                             <ul className="space-y-1.5">
                               {antiStories.map((s, i) => (
-                                <li key={i} className="text-[11px] text-gray-300 leading-relaxed pl-3 border-l-2 border-blue-500/30">{s}</li>
+                                <li key={i} className={`text-[11px] text-gray-300 leading-relaxed pl-3 border-l-2 ${sc.anti.border}`}>{s}</li>
                               ))}
                             </ul>
                           </div>
                         )}
                         {proStories.length > 0 && (
-                          <div className="border border-red-500/20 rounded-lg p-3 bg-red-500/5">
+                          <div className={`border ${sc.pro.border} rounded-lg p-3 ${sc.pro.bgFaint}`}>
                             <div className={`text-[10px] ${sc.pro.text} uppercase tracking-wider font-medium mb-2`}>{topic.pro_label} is focused on</div>
                             <ul className="space-y-1.5">
                               {proStories.map((s, i) => (
-                                <li key={i} className="text-[11px] text-gray-300 leading-relaxed pl-3 border-l-2 border-red-500/30">{s}</li>
+                                <li key={i} className={`text-[11px] text-gray-300 leading-relaxed pl-3 border-l-2 ${sc.pro.border}`}>{s}</li>
                               ))}
                             </ul>
                           </div>
@@ -1057,7 +1057,7 @@ export default function AnalyticsPage() {
             })()}
 
             {/* Narrative Mix */}
-            {narrative && <NarrativeMix data={narrative} />}
+            {narrative && <NarrativeMix data={narrative} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}
 
             {/* Top Voices — compact */}
             {analytics && (
@@ -1264,6 +1264,7 @@ export default function AnalyticsPage() {
                   summaries={summaries}
                   antiLabel={topic.anti_label}
                   proLabel={topic.pro_label}
+                  colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}
                 />
               )}
 
@@ -1274,6 +1275,7 @@ export default function AnalyticsPage() {
                   exposureOverlap={null}
                   playbook={narrativeStrategy?.playbook}
                   strategyLabels={narrativeStrategy ? { anti: narrativeStrategy.anti_label, pro: narrativeStrategy.pro_label } : null}
+                  colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}
                   onViewTweets={(frameKey) => {
                     setSelectedFrame(frameKey);
                     setActiveTab("voices");
@@ -1342,7 +1344,7 @@ export default function AnalyticsPage() {
               })()}
 
               {/* Trending Phrases */}
-              {analytics && <TrendingPhrases data={analytics} />}
+              {analytics && <TrendingPhrases data={analytics} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}
 
               {/* Hashtags */}
               {hashtags && (hashtags.anti.length > 0 || hashtags.pro.length > 0) && (
@@ -1532,7 +1534,7 @@ export default function AnalyticsPage() {
 
               {/* Same Story, Different Lens */}
               {pairedStories && pairedStories.stories.length > 0 && (
-                <PairedStories data={pairedStories} />
+                <PairedStories data={pairedStories} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />
               )}
 
               {/* Blind Spots */}
@@ -1542,11 +1544,12 @@ export default function AnalyticsPage() {
                   narrativeGaps={summaries.narrative_gaps || null}
                   frameGaps={narrativeStrategy?.gaps}
                   frameGapLabels={narrativeStrategy ? { anti: narrativeStrategy.anti_label, pro: narrativeStrategy.pro_label } : undefined}
+                  colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}
                 />
               )}
 
               {/* Top Sources & Media */}
-              {analytics && <TopSources data={analytics} />}
+              {analytics && <TopSources data={analytics} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}
 
             </>
           );
@@ -1639,7 +1642,7 @@ export default function AnalyticsPage() {
             })()}
 
             {/* Top Voices & Sources */}
-            {analytics && <AnalyticsView data={analytics} />}
+            {analytics && <AnalyticsView data={analytics} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}
 
             {/* In Their Own Words — top tweets per frame with dropdown */}
             {narrativeDepth && narrativeDepth.example_tweets.length > 0 && (() => {

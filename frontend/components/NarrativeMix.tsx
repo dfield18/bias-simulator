@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { NarrativeData } from "@/lib/api";
+import { getSideColors, ColorScheme } from "@/lib/colors";
 
 interface NarrativeMixProps {
   data: NarrativeData;
+  colorScheme?: ColorScheme;
 }
 
 const TOP_N = 4;
@@ -45,7 +47,8 @@ interface BarSegment {
   otherFrames?: string[];
 }
 
-export default function NarrativeMix({ data }: NarrativeMixProps) {
+export default function NarrativeMix({ data, colorScheme }: NarrativeMixProps) {
+  const sc = getSideColors(colorScheme || "political");
   const { frames, frame_labels } = data;
   const antiLabel = data.anti_label;
   const proLabel = data.pro_label;
@@ -169,9 +172,9 @@ export default function NarrativeMix({ data }: NarrativeMixProps) {
       <div className="text-[10px] text-gray-400 mt-1 min-h-[18px]">
         <span className="font-medium text-gray-300">{label}</span>
         {" — "}
-        <span className="text-blue-400">{antiSeg?.share.toFixed(1) || "0"}% {antiLabel}</span>
+        <span className={sc.anti.text}>{antiSeg?.share.toFixed(1) || "0"}% {antiLabel}</span>
         {" · "}
-        <span className="text-red-400">{proSeg?.share.toFixed(1) || "0"}% {proLabel}</span>
+        <span className={sc.pro.text}>{proSeg?.share.toFixed(1) || "0"}% {proLabel}</span>
         {otherList && otherList.length > 0 && (
           <span className="text-gray-600 ml-1">
             (Includes: {otherList.join(", ")})
@@ -196,14 +199,14 @@ export default function NarrativeMix({ data }: NarrativeMixProps) {
         <StackedBar
           segments={antiBar}
           sideLabel={antiLabel}
-          sideColor="text-blue-400"
+          sideColor={sc.anti.text}
           hoveredFrame={hoveredFrame}
           onHover={setHoveredFrame}
         />
         <StackedBar
           segments={proBar}
           sideLabel={proLabel}
-          sideColor="text-red-400"
+          sideColor={sc.pro.text}
           hoveredFrame={hoveredFrame}
           onHover={setHoveredFrame}
         />
@@ -242,7 +245,7 @@ export default function NarrativeMix({ data }: NarrativeMixProps) {
       {/* Top frame callouts */}
       <div className="grid grid-cols-2 gap-4 mt-6">
         <div className="bg-gray-800/50 rounded-xl px-5 py-4">
-          <div className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">
+          <div className={`text-[10px] ${sc.anti.text} uppercase tracking-wider font-medium`}>
             {antiLabel}
           </div>
           <div className="text-lg text-gray-100 font-bold mt-1.5 leading-tight">
@@ -253,7 +256,7 @@ export default function NarrativeMix({ data }: NarrativeMixProps) {
           </div>
         </div>
         <div className="bg-gray-800/50 rounded-xl px-5 py-4">
-          <div className="text-[10px] text-red-400 uppercase tracking-wider font-medium">
+          <div className={`text-[10px] ${sc.pro.text} uppercase tracking-wider font-medium`}>
             {proLabel}
           </div>
           <div className="text-lg text-gray-100 font-bold mt-1.5 leading-tight">

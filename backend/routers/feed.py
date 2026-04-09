@@ -3199,36 +3199,28 @@ async def get_geography(
     anti_bent = aL.lower().replace(" ", "-")
     pro_bent = pL.lower().replace(" ", "-")
 
-    # Query tweets with location from raw_json
-    location_expr = Tweet.raw_json["user"]["location"].astext
+    # Query tweets with location from raw_json using raw SQL for JSONB access
+    raw_stmt = text("""
+        SELECT t.raw_json->'user'->>'location' AS location,
+               c.effective_political_bent,
+               COALESCE(t.views, 0) AS views,
+               COALESCE(t.engagement, 0) AS eng
+        FROM tweets t
+        JOIN classifications c ON t.id_str = c.id_str
+        WHERE t.topic_slug = :topic
+          AND t.created_at >= :since
+          AND c.about_subject = TRUE
+          AND t.raw_json IS NOT NULL
+          AND t.raw_json->'user'->>'location' IS NOT NULL
+          AND TRIM(t.raw_json->'user'->>'location') != ''
+    """)
 
-    stmt = (
-        select(
-            location_expr.label("location"),
-            Classification.effective_political_bent,
-            Tweet.screen_name,
-            func.coalesce(Tweet.views, 0).label("views"),
-            func.coalesce(Tweet.engagement, 0).label("eng"),
-        )
-        .join(Classification, Tweet.id_str == Classification.id_str)
-        .where(
-            Tweet.topic_slug == topic,
-            Tweet.created_at >= since,
-            Classification.about_subject == True,
-            Tweet.raw_json.isnot(None),
-        )
-    )
-
-    result = await db.execute(stmt)
-    all_rows = result.all()
-
-    # Filter to rows with non-empty location and aggregate in Python
-    rows = [(loc, bent, sn, v, e) for loc, bent, sn, v, e in all_rows
-            if loc and loc.strip() and loc.strip().lower() not in ("null", "none")]
+    result = await db.execute(raw_stmt, {"topic": topic, "since": since})
+    rows = result.all()
 
     # Aggregate locations — normalize common variations
     location_data = defaultdict(lambda: {"anti": 0, "pro": 0, "neutral": 0, "total": 0, "views": 0, "engagement": 0})
-    for loc, bent, sn, views, eng in rows:
+    for loc, bent, views, eng in rows:
         clean_loc = loc.strip()
         bent_lower = (bent or "").lower()
         side = "anti" if bent_lower == anti_bent or "anti" in bent_lower or bent_lower == "negative" else \

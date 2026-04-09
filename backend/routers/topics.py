@@ -135,48 +135,63 @@ async def suggest_topic(body: SuggestRequest, user: dict = Depends(get_current_u
     client = genai.Client(api_key=GEMINI_API_KEY)
 
     if body.topic_type == "company":
-        prompt = f"""You are helping set up a brand/company sentiment classifier for: "{body.topic_name}"
+        prompt = f"""You are helping set up a CONSUMER SENTIMENT classifier for: "{body.topic_name}"
 
-Generate a complete configuration for analyzing public sentiment about this company or brand on Twitter/X.
+Generate a complete configuration for analyzing general public and consumer sentiment about this company or brand on Twitter/X.
 
-IMPORTANT: The "anti" side (left side of the UI) represents NEGATIVE sentiment. The "pro" side (right side of the UI) represents POSITIVE sentiment. Use negative intensity scores for negative sentiment and positive scores for positive sentiment.
+IMPORTANT: This is NOT about politics or public policy. This is about CONSUMER SENTIMENT — what everyday people, customers, and the public think and feel about this company. Focus on:
+- Product/service quality and experiences
+- Customer service and support
+- Brand perception and reputation
+- Value and pricing
+- Company culture and leadership
+- Innovation and competition
+- Consumer complaints and praise
+
+The "anti" side (left side of the UI) represents NEGATIVE consumer sentiment. The "pro" side (right side of the UI) represents POSITIVE consumer sentiment. Use negative intensity scores for negative sentiment and positive scores for positive sentiment.
 
 Return a JSON object with these exact fields:
 - topic_name: a clean display name (the company/brand name)
-- slug: a URL-friendly slug (lowercase, hyphens, e.g. "tesla", "meta-platforms")
-- description: 1-2 sentence description of the company and what makes public opinion about it divided
-- anti_label: "Negative" (this appears on the LEFT of the UI — represents critical/negative sentiment)
-- pro_label: "Positive" (this appears on the RIGHT of the UI — represents supportive/positive sentiment)
-- anti_definition: 2-3 sentence definition of what negative sentiment about this company looks like — common criticisms, controversies, complaints
-- pro_definition: 2-3 sentence definition of what positive sentiment about this company looks like — praise, advocacy, brand loyalty
+- slug: a URL-friendly slug (lowercase, hyphens, e.g. "tesla", "nike", "meta-platforms")
+- description: 1-2 sentence description of the company and why public sentiment about it is notable or divided
+- anti_label: "Negative" (this appears on the LEFT of the UI — represents critical/negative consumer sentiment)
+- pro_label: "Positive" (this appears on the RIGHT of the UI — represents supportive/positive consumer sentiment)
+- anti_definition: 2-3 sentence definition of what negative consumer sentiment about this company looks like — common complaints, frustrations, criticisms from customers and the public
+- pro_definition: 2-3 sentence definition of what positive consumer sentiment about this company looks like — praise, satisfaction, brand loyalty, advocacy from customers and the public
 - search_query: a Twitter search query designed to MAXIMIZE relevant tweet capture about this company. Follow these rules:
   1. Include the company name, common abbreviations, ticker symbols, product names
-  2. Include the CEO/founder name if they are a public figure
+  2. Include the CEO/founder name if they are a well-known public figure
   3. Include hashtags people use about the company
-  4. Include common competitor comparisons
+  4. Include key product or service names
   5. Use 10-15 OR-separated terms to cast a wide net
   6. Do NOT over-quote — use quotes only for multi-word phrases
-  7. Example for Tesla: Tesla OR @Tesla OR #Tesla OR $TSLA OR "Elon Musk" OR Cybertruck OR "Model Y" OR "Model 3" OR Autopilot OR "Full Self-Driving" OR #TSLA OR "Tesla stock"
-- classification_prompt: a complete prompt for classifying tweets about this company by SENTIMENT. Include:
-  - Clear description of what "positive" and "negative" mean for this company
+  7. Example for Nike: Nike OR @Nike OR #Nike OR #JustDoIt OR "Air Jordan" OR "Nike shoes" OR "Nike app" OR #NikeRunning OR "Nike stock" OR $NKE OR "Nike quality" OR "Nike sale"
+- classification_prompt: a complete prompt for classifying tweets about this company by CONSUMER SENTIMENT (NOT politics). Include:
+  - Clear description: "positive" = the person expresses approval, satisfaction, praise, excitement, or support for the company/products. "negative" = the person expresses criticism, complaints, disappointment, frustration, or opposition to the company/products.
   - The exact category names: "positive" and "negative" (lowercase)
-  - Instructions to also classify as "neutral" or "unclear"
-  - Guidance on handling sarcasm, news reporting vs opinion, competitor comparisons
-  - The output should classify each tweet's political_bent (use "positive"/"negative"), about_subject, author_lean, classification_basis, confidence
-- intensity_prompt: a complete prompt for scoring sentiment intensity (-10 to +10). Include:
-  - What mild vs extreme negative sentiment looks like (complaints vs boycott calls)
-  - What mild vs extreme positive sentiment looks like (casual praise vs brand evangelism)
+  - Instructions to also classify as "neutral" (factual news, objective statements) or "unclear"
+  - Guidance on: sarcasm detection, distinguishing personal opinion from news reporting, competitor comparisons (mentioning competitor favorably = negative for this company), separating product reviews from stock/investor commentary
+  - The output should classify each tweet's political_bent (use "positive"/"negative" — this field name is reused for sentiment), about_subject, author_lean, classification_basis, confidence
+- intensity_prompt: a complete prompt for scoring consumer sentiment intensity (-10 to +10). Include:
+  - What mild negative sentiment looks like: minor complaint, slight disappointment (-1 to -3)
+  - What moderate negative sentiment looks like: frustrated review, public complaint (-4 to -6)
+  - What extreme negative sentiment looks like: boycott calls, viral outrage, legal threats (-7 to -10)
+  - What mild positive sentiment looks like: casual mention, general approval (+1 to +3)
+  - What moderate positive sentiment looks like: product recommendation, brand praise (+4 to +6)
+  - What extreme positive sentiment looks like: brand evangelism, viral praise, emotional loyalty (+7 to +10)
   - Scoring: -10 to -1 for negative intensity, 1 to 10 for positive intensity
-- custom_frames: an array of 6-8 narrative frames specific to discourse about THIS company. Each frame is an object with:
+- custom_frames: an array of 6-8 narrative frames specific to consumer discourse about THIS company. Each frame is an object with:
   - "key": a lowercase-hyphenated identifier (e.g. "product-quality", "customer-service")
   - "label": a human-readable display label (e.g. "Product Quality", "Customer Service")
-  Think about what specific topics people discuss about this company: products, leadership, pricing, ethics, innovation, competition, etc.
-- custom_emotions: an array of 5-7 emotional tones specific to discourse about THIS company. Each emotion is an object with:
+  Think about what specific topics consumers discuss about this company: product quality, pricing, customer service, innovation, brand image, leadership, sustainability, competition, etc.
+  Examples for Nike: "product-quality", "pricing-value", "athlete-endorsements", "brand-image", "sustainability", "customer-service", "design-innovation", "competitor-comparison"
+- custom_emotions: an array of 5-7 emotional tones specific to consumer discourse about THIS company. Each emotion is an object with:
   - "key": a lowercase-hyphenated identifier (e.g. "brand-loyalty", "consumer-frustration")
   - "label": a human-readable display label (e.g. "Brand Loyalty", "Consumer Frustration")
-  Capture the dominant emotional registers in public discourse about this company.
+  Capture the dominant consumer emotional registers: loyalty, frustration, excitement, disappointment, nostalgia, outrage, satisfaction, etc.
+  Examples for Nike: "brand-loyalty", "consumer-frustration", "hype-excitement", "price-outrage", "nostalgic-attachment", "quality-disappointment"
 
-Make the classification_prompt and intensity_prompt detailed and specific to this company — not generic.
+Make the classification_prompt and intensity_prompt detailed and specific to this company — not generic. Focus entirely on CONSUMER SENTIMENT, not political analysis.
 """
     else:
         prompt = f"""You are helping set up a political tweet classifier for the topic: "{body.topic_name}"

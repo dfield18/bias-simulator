@@ -70,9 +70,8 @@ import NarrativeMix from "@/components/NarrativeMix";
 const tabs = [
   { id: "feed", label: "Simulated Feed", subtitle: "The conversation" },
   { id: "pulse", label: "Overview", subtitle: "The big picture" },
-  { id: "narrative", label: "Arguments", subtitle: "How each side frames it" },
+  { id: "narrative", label: "The Divide", subtitle: "Arguments, overlap, and blind spots" },
   { id: "voices", label: "Key Voices", subtitle: "Who's saying what" },
-  { id: "echo", label: "Echo Chamber", subtitle: "Who & where" },
   { id: "strategy", label: "Insights & Action", subtitle: "Key findings and next steps" },
   { id: "report", label: "Full Report", subtitle: "All tabs in one view" },
 ];
@@ -185,20 +184,13 @@ export default function AnalyticsPage() {
       cachedFetch(`${s}:hashtags`, () => fetchHashtags(s)).then((d) => d && setHashtags(d)).catch(console.error);
       cachedFetch(`${s}:mediaBreakdown`, () => fetchMediaBreakdown(s)).then((d) => d && setMediaBreakdown(d)).catch(console.error);
       cachedFetch(`${s}:summaries`, () => fetchSummaries(s)).then(setSummaries).catch(console.error);
+      cachedFetch(`${s}:exposureOverlap`, () => fetchExposureOverlap(s)).then((d) => d && setExposureOverlap(d)).catch(console.error);
+      cachedFetch(`${s}:pairedStories`, () => fetchPairedStories(s)).then((d) => d && setPairedStories(d)).catch(console.error);
     }
     if (activeTab === "voices" || activeTab === "report") {
       cachedFetch(`${s}:narrativeDepth`, () => fetchNarrativeDepth(s)).then((d) => d && setNarrativeDepth(d)).catch(console.error);
       cachedFetch(`${s}:analytics`, () => fetchAnalytics(s)).then((d) => d && setAnalytics(d)).catch(console.error);
-    }
-    if (activeTab === "voices" || activeTab === "report") {
       cachedFetch(`${s}:dunks`, () => fetchDunks(s)).then((d) => d && setDunksData(d)).catch(console.error);
-    }
-    if (activeTab === "echo" || activeTab === "report") {
-      cachedFetch(`${s}:narrative`, () => fetchNarrative(s)).then((d) => d && setNarrative(d)).catch(console.error);
-      cachedFetch(`${s}:exposureOverlap`, () => fetchExposureOverlap(s)).then((d) => d && setExposureOverlap(d)).catch(console.error);
-      cachedFetch(`${s}:pairedStories`, () => fetchPairedStories(s)).then((d) => d && setPairedStories(d)).catch(console.error);
-      cachedFetch(`${s}:analytics`, () => fetchAnalytics(s)).then((d) => d && setAnalytics(d)).catch(console.error);
-      cachedFetch(`${s}:narrativeStrategy`, () => fetchNarrativeStrategy(s)).then((d) => d && setNarrativeStrategy(d)).catch(console.error);
     }
     if (activeTab === "strategy" || activeTab === "report") {
       cachedFetch(`${s}:gapAnalysis`, () => fetchGapAnalysis(s)).then((d) => d && setGapAnalysis(d)).catch(console.error);
@@ -1139,10 +1131,10 @@ export default function AnalyticsPage() {
                     <span>Shared conversation</span>
                   </div>
                   <button
-                    onClick={() => setActiveTab("echo")}
+                    onClick={() => setActiveTab("narrative")}
                     className="text-[10px] text-gray-500 hover:text-gray-300 mt-3 transition-colors"
                   >
-                    View full echo chamber analysis &rarr;
+                    View full analysis in The Divide &rarr;
                   </button>
                 </div>
               );
@@ -1523,7 +1515,39 @@ export default function AnalyticsPage() {
                   </Section>
                 );
               })()}
+              {/* ── Echo Chamber section (merged into The Divide) ── */}
 
+              {/* Topic Overlap — full detail */}
+              {narrative && exposureOverlap && (
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber</div>
+                  <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
+                    Are They Seeing the Same Events?
+                  </h3>
+                  <p className="text-[10px] sm:text-xs text-gray-600 mb-4">
+                    Which news and events appear on both sides, and which are unique to one simulated feed
+                  </p>
+                  <NarrativeFrames data={narrative} exposureOverlap={exposureOverlap} hideFraming={true} />
+                </div>
+              )}
+
+              {/* Same Story, Different Lens */}
+              {pairedStories && pairedStories.stories.length > 0 && (
+                <PairedStories data={pairedStories} />
+              )}
+
+              {/* Blind Spots */}
+              {analytics && (
+                <BlindSpots
+                  analytics={analytics}
+                  narrativeGaps={summaries.narrative_gaps || null}
+                  frameGaps={narrativeStrategy?.gaps}
+                  frameGapLabels={narrativeStrategy ? { anti: narrativeStrategy.anti_label, pro: narrativeStrategy.pro_label } : undefined}
+                />
+              )}
+
+              {/* Top Sources & Media */}
+              {analytics && <TopSources data={analytics} />}
 
 
             </>
@@ -1858,45 +1882,8 @@ export default function AnalyticsPage() {
           </>
         )}
 
-        {/* ============ TAB: Echo Chamber ============ */}
-        {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Echo Chamber</div></div>}
-
-        {(activeTab === "echo" || activeTab === "report") && (
-          <>
-            {/* Topic Overlap — full detail */}
-            {narrative && exposureOverlap && (
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Shared Topics</div>
-                <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
-                  Are They Seeing the Same Events?
-                </h3>
-                <p className="text-[10px] sm:text-xs text-gray-600 mb-4">
-                  Which news and events appear on both sides, and which are unique to one feed
-                </p>
-                <NarrativeFrames data={narrative} exposureOverlap={exposureOverlap} hideFraming={true} />
-              </div>
-            )}
-
-            {/* Same Story, Different Lens */}
-            {pairedStories && pairedStories.stories.length > 0 && (
-              <PairedStories data={pairedStories} />
-            )}
-
-            {/* Blind Spots — merged: information gaps + frame gaps */}
-            {analytics && (
-              <BlindSpots
-                analytics={analytics}
-                narrativeGaps={summaries.narrative_gaps || null}
-                frameGaps={narrativeStrategy?.gaps}
-                frameGapLabels={narrativeStrategy ? { anti: narrativeStrategy.anti_label, pro: narrativeStrategy.pro_label } : undefined}
-              />
-            )}
-
-            {/* Top Sources & Media */}
-            {analytics && <TopSources data={analytics} />}
-
-            {/* Common Ground — inline overlap */}
-            {analytics?.overlap && (() => {
+        {/* Common Ground — inline overlap (for report tab) */}
+        {activeTab === "report" && analytics?.overlap && (() => {
               const { shared_sources, shared_narratives } = analytics.overlap;
               const sharedNarr = shared_narratives?.filter(n => n.anti_count > 0 && n.pro_count > 0) || [];
               const hasShared = (shared_sources?.length > 0) || (sharedNarr.length > 0);
@@ -1994,9 +1981,6 @@ export default function AnalyticsPage() {
                 </div>
               );
             })()}
-
-          </>
-        )}
 
         {/* ============ TAB 4: Strategy ============ */}
         {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Insights & Action</div></div>}
@@ -2184,7 +2168,6 @@ export default function AnalyticsPage() {
                   { name: "Overview", desc: "High-level KPIs: who's leading the conversation, engagement comparison, narrative divide score, and what each side's audience actually sees." },
                   { name: "Arguments", desc: "How each side frames the topic (radar charts), emotional tone, trending phrases, hashtags, content format breakdown, engagement by frame, and rhetoric intensity." },
                   { name: "Key Voices", desc: "Who is driving the conversation (high-reach vs organic accounts), top voices by engagement, and the highest-engagement tweets per narrative frame. Includes an expandable Flashpoints section showing tweets that triggered the other side." },
-                  { name: "Echo Chamber", desc: "How much overlap exists between the two sides: shared stories, blind spots (what each side misses), source analysis, and common ground." },
                   { name: "Insights & Action", desc: "What's driving the divergence between sides, AI-generated recommendations, and actionable bridge-building strategies based on shared topics and sources." },
                   { name: "Full Report", desc: "Renders all tabs in a single scrollable view for export or presentation. Use the \"Export PDF\" button to save." },
                 ]).map((tab) => (

@@ -156,8 +156,8 @@ Return a JSON object with these exact fields:
 - description: 1-2 sentence description of the company and why public sentiment about it is notable or divided
 - anti_label: "Negative" (this appears on the LEFT of the UI — represents critical/negative consumer sentiment)
 - pro_label: "Positive" (this appears on the RIGHT of the UI — represents supportive/positive consumer sentiment)
-- anti_definition: 2-3 sentence definition of what negative consumer sentiment about this company looks like — common complaints, frustrations, criticisms from customers and the public
-- pro_definition: 2-3 sentence definition of what positive consumer sentiment about this company looks like — praise, satisfaction, brand loyalty, advocacy from customers and the public
+- anti_definition: 2-3 sentence definition of what negative consumer sentiment about this company looks like — common complaints, frustrations, criticisms from customers and the public. IMPORTANT: Always end the definition with the sentence: "This also includes any other consumer criticisms, complaints, or negative experiences not specifically listed above."
+- pro_definition: 2-3 sentence definition of what positive consumer sentiment about this company looks like — praise, satisfaction, brand loyalty, advocacy from customers and the public. IMPORTANT: Always end the definition with the sentence: "This also includes any other consumer praise, positive experiences, or brand advocacy not specifically listed above."
 - search_query: a Twitter search query designed to MAXIMIZE relevant tweet capture about this company. Follow these rules:
   1. Include the company name, common abbreviations, ticker symbols, product names
   2. Include the CEO/founder name if they are a well-known public figure

@@ -61,6 +61,7 @@ import NarrativeFrames from "@/components/NarrativeFrames";
 import GapAnalysis from "@/components/GapAnalysis";
 import PairedStories from "@/components/PairedStories";
 import Recommendations from "@/components/Recommendations";
+import SentimentMap from "@/components/SentimentMap";
 import { WhatThisMeansInline } from "@/components/WhatThisMeans";
 import TweetCard from "@/components/TweetCard";
 import BreakdownChart from "@/components/BreakdownChart";
@@ -1851,6 +1852,16 @@ export default function AnalyticsPage() {
 
           return (
             <>
+              {/* US Sentiment Map */}
+              {geography.us_states.length > 0 && (
+                <SentimentMap
+                  states={geography.us_states}
+                  antiLabel={aL}
+                  proLabel={pL}
+                  colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}
+                />
+              )}
+
               {/* Summary stats */}
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
                 <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Geographic Reach</div>

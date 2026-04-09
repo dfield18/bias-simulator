@@ -3380,8 +3380,44 @@ async def get_geography(
     total_tweets = total_result.scalar() or 0
     coverage_pct = round(total_with_location / max(total_tweets, 1) * 100)
 
+    # Aggregate by US state for map visualization
+    _STATE_NAMES_TO_ABBR = {v.lower(): k.upper() for k, v in _US_STATES.items()}
+    _STATE_NAMES_TO_ABBR["washington, d.c."] = "DC"
+    state_data = defaultdict(lambda: {"anti": 0, "pro": 0, "neutral": 0, "total": 0})
+    for loc_str, counts in location_data.items():
+        # Extract US state from normalized location
+        parts = [p.strip() for p in loc_str.split(",")]
+        state_found = None
+        for part in parts:
+            part_lower = part.strip().lower()
+            if part_lower in _STATE_NAMES_TO_ABBR:
+                state_found = _STATE_NAMES_TO_ABBR[part_lower]
+                break
+            # Check if it's already an abbreviation
+            if part_lower in _US_STATES:
+                state_found = part_lower.upper()
+                break
+        if state_found:
+            state_data[state_found]["anti"] += counts["anti"]
+            state_data[state_found]["pro"] += counts["pro"]
+            state_data[state_found]["neutral"] += counts["neutral"]
+            state_data[state_found]["total"] += counts["total"]
+
+    us_states_map = []
+    for abbr, counts in state_data.items():
+        us_states_map.append({
+            "state": abbr,
+            "anti_count": counts["anti"],
+            "pro_count": counts["pro"],
+            "neutral_count": counts["neutral"],
+            "total": counts["total"],
+            "ratio": round(counts["pro"] / max(counts["anti"] + counts["pro"], 1), 2),
+        })
+    us_states_map.sort(key=lambda x: -x["total"])
+
     response = {
         "locations": top_locations,
+        "us_states": us_states_map,
         "summary": {
             "total_with_location": total_with_location,
             "total_tweets": total_tweets,

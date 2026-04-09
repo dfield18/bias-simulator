@@ -332,7 +332,7 @@ function TopSources({ data, colorScheme }: AnalyticsViewProps) {
   const hasAnti = sources.anti?.domains?.length > 0 || sources.anti?.urls?.length > 0;
   const hasPro = sources.pro?.domains?.length > 0 || sources.pro?.urls?.length > 0;
   const hasOverall = sources.overall?.domains?.length > 0 || sources.overall?.urls?.length > 0;
-  const hasShared = data.overlap?.shared_sources?.length > 0 || data.overlap?.shared_urls?.length > 0;
+  const hasShared = (data.overlap?.shared_sources?.length ?? 0) > 0 || (data.overlap?.shared_urls?.length ?? 0) > 0;
 
   if (!hasAnti && !hasPro && !hasOverall) return null;
 

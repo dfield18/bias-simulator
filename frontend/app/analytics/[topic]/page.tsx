@@ -1289,7 +1289,7 @@ export default function AnalyticsPage() {
 
                 {/* Card 1: Same Story, Different Lens */}
                 {pairedStories && pairedStories.stories.length > 0 && (
-                  <details className="bg-gray-900 border border-gray-800 rounded-xl col-span-1 sm:col-span-2">
+                  <details className="bg-gray-900 border border-gray-800 rounded-xl col-span-1 sm:col-span-2" open={activeTab === "report" || undefined}>
                     <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
                       <div className="inline">
                         <span className="text-sm font-semibold text-gray-300">Same Story, Different Lens</span>
@@ -1304,7 +1304,7 @@ export default function AnalyticsPage() {
 
                 {/* Card 2: Blind Spots */}
                 {analytics && (
-                  <details className="bg-gray-900 border border-gray-800 rounded-xl">
+                  <details className="bg-gray-900 border border-gray-800 rounded-xl" open={activeTab === "report" || undefined}>
                     <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
                       <div className="inline">
                         <span className="text-sm font-semibold text-gray-300">Blind Spots</span>
@@ -1325,7 +1325,7 @@ export default function AnalyticsPage() {
 
                 {/* Card 3: Top Sources */}
                 {analytics && (
-                  <details className="bg-gray-900 border border-gray-800 rounded-xl">
+                  <details className="bg-gray-900 border border-gray-800 rounded-xl" open={activeTab === "report" || undefined}>
                     <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
                       <div className="inline">
                         <span className="text-sm font-semibold text-gray-300">Top Sources & Media</span>
@@ -1339,7 +1339,7 @@ export default function AnalyticsPage() {
                 )}
 
                 {/* Card 4: Deep Dive */}
-                <details className="bg-gray-900 border border-gray-800 rounded-xl">
+                <details className="bg-gray-900 border border-gray-800 rounded-xl" open={activeTab === "report" || undefined}>
                   <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
                     <div className="inline">
                       <span className="text-sm font-semibold text-gray-300">Deep Dive</span>
@@ -1724,7 +1724,7 @@ export default function AnalyticsPage() {
               })();
               if (!dunksContent) return null;
               return (
-                <details className="bg-gray-900 border border-gray-800 rounded-xl">
+                <details className="bg-gray-900 border border-gray-800 rounded-xl" open={activeTab === "report" || undefined}>
                   <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
                     <div className="inline">
                       <span className="text-sm font-semibold text-gray-300">Flashpoints</span>

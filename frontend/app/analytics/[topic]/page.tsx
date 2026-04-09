@@ -1282,7 +1282,17 @@ export default function AnalyticsPage() {
                 />
               )}
 
-              {/* 5. Engagement by Frame — collapsed by default */}
+              {/* Deep Dive — expandable section for detailed metrics */}
+              <details className="bg-gray-900 border border-gray-800 rounded-xl">
+                <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
+                  <div className="inline">
+                    <span className="text-sm font-semibold text-gray-300">Deep Dive</span>
+                    <span className="text-[10px] text-gray-500 ml-2">Engagement metrics, trending phrases, hashtags, content format, rhetoric intensity</span>
+                  </div>
+                </summary>
+                <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-6 -mt-2">
+
+              {/* 5. Engagement by Frame */}
               {narrativeStrategy && narrativeStrategy.frame_performance.length > 0 && (() => {
                 const topFrames = narrativeStrategy.frame_performance.slice(0, 6);
                 const maxEng = Math.max(...topFrames.map(f => f.avg_engagement), 1);
@@ -1515,21 +1525,10 @@ export default function AnalyticsPage() {
                   </Section>
                 );
               })()}
-              {/* ── Echo Chamber section (merged into The Divide) ── */}
-
-              {/* Topic Overlap — full detail */}
-              {narrative && exposureOverlap && (
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber</div>
-                  <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
-                    Are They Seeing the Same Events?
-                  </h3>
-                  <p className="text-[10px] sm:text-xs text-gray-600 mb-4">
-                    Which news and events appear on both sides, and which are unique to one simulated feed
-                  </p>
-                  <NarrativeFrames data={narrative} exposureOverlap={exposureOverlap} hideFraming={true} />
                 </div>
-              )}
+              </details>
+
+              {/* ── Echo Chamber section (merged into The Divide) ── */}
 
               {/* Same Story, Different Lens */}
               {pairedStories && pairedStories.stories.length > 0 && (
@@ -1548,7 +1547,6 @@ export default function AnalyticsPage() {
 
               {/* Top Sources & Media */}
               {analytics && <TopSources data={analytics} />}
-
 
             </>
           );

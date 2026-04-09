@@ -3218,10 +3218,39 @@ async def get_geography(
     result = await db.execute(raw_stmt, {"topic": topic, "since": since})
     rows = result.all()
 
+    import re as _re
+    import unicodedata as _ud
+
+    def _is_valid_location(s: str) -> bool:
+        """Filter out non-location strings from Twitter profile location field."""
+        if len(s) < 2 or len(s) > 80:
+            return False
+        # Strip emojis and special chars — if nothing meaningful remains, skip
+        stripped = _re.sub(r'[^\w\s,.\-/&\'()]', '', s, flags=_re.UNICODE).strip()
+        if len(stripped) < 2:
+            return False
+        # Must contain at least one letter
+        if not any(c.isalpha() for c in stripped):
+            return False
+        # Reject common non-location patterns
+        lower = s.lower()
+        reject_phrases = [
+            "turn on", "notifications", "subscribe", "follow me", "link in bio",
+            "dm for", "booking", "check out", "http", "www.", ".com", "@",
+            "god", "heaven", "earth", "worldwide", "everywhere", "internet",
+            "your mom", "your heart", "the moon", "mars", "hogwarts",
+            "maga", "trump", "biden", "resist", "wake up",
+        ]
+        if any(phrase in lower for phrase in reject_phrases):
+            return False
+        return True
+
     # Aggregate locations — normalize common variations
     location_data = defaultdict(lambda: {"anti": 0, "pro": 0, "neutral": 0, "total": 0, "views": 0, "engagement": 0})
     for loc, bent, views, eng in rows:
         clean_loc = loc.strip()
+        if not _is_valid_location(clean_loc):
+            continue
         bent_lower = (bent or "").lower()
         side = "anti" if bent_lower == anti_bent or "anti" in bent_lower or bent_lower == "negative" else \
                "pro" if bent_lower == pro_bent or "pro" in bent_lower or bent_lower == "positive" else "neutral"

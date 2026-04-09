@@ -72,7 +72,6 @@ const tabs = [
   { id: "pulse", label: "Overview", subtitle: "The big picture" },
   { id: "narrative", label: "Arguments", subtitle: "How each side frames it" },
   { id: "voices", label: "Key Voices", subtitle: "Who's saying what" },
-  { id: "dunks", label: "Flashpoints", subtitle: "Posts that sparked the other side" },
   { id: "echo", label: "Echo Chamber", subtitle: "Who & where" },
   { id: "strategy", label: "Insights & Action", subtitle: "Key findings and next steps" },
   { id: "report", label: "Full Report", subtitle: "All tabs in one view" },
@@ -190,7 +189,7 @@ export default function AnalyticsPage() {
       cachedFetch(`${s}:narrativeDepth`, () => fetchNarrativeDepth(s)).then((d) => d && setNarrativeDepth(d)).catch(console.error);
       cachedFetch(`${s}:analytics`, () => fetchAnalytics(s)).then((d) => d && setAnalytics(d)).catch(console.error);
     }
-    if (activeTab === "dunks" || activeTab === "report") {
+    if (activeTab === "voices" || activeTab === "report") {
       cachedFetch(`${s}:dunks`, () => fetchDunks(s)).then((d) => d && setDunksData(d)).catch(console.error);
     }
     if (activeTab === "echo" || activeTab === "report") {
@@ -1730,15 +1729,11 @@ export default function AnalyticsPage() {
                 </div>
               );
             })()}
-          </>
-        )}
-
-        {/* ============ TAB: Flashpoints ============ */}
-        {(activeTab === "dunks" || activeTab === "report") && (() => {
+            {/* Flashpoints — expandable section within Key Voices */}
+            {(() => {
+              const dunksContent = (() => {
           if (!dunksData || dunksData.dunks.length === 0) {
-            return activeTab === "dunks" ? (
-              <div className="text-center py-12 text-gray-500 text-sm">No dunks detected in this dataset.</div>
-            ) : null;
+            return null;
           }
 
           const fmt = (n: number) => n >= 1000000 ? `${(n / 1000000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
@@ -1817,32 +1812,41 @@ export default function AnalyticsPage() {
 
           return (
             <>
-              {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Flashpoints</div></div>}
+              <p className="text-[10px] text-gray-600 mb-4">
+                Posts that got picked up by the opposing side through quote-tweets, replies, or disproportionately high reply ratios (&quot;ratio&apos;d&quot;)
+              </p>
 
-              <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Flashpoints</div>
-                <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
-                  Tweets that triggered the other side
-                </h3>
-                <p className="text-[10px] text-gray-600 mb-5">
-                  Posts that got picked up by the opposing side through quote-tweets, replies, or disproportionately high reply ratios (&quot;ratio&apos;d&quot;)
-                </p>
-
-                <div className="space-y-4">
-                  {dunks.slice(0, 10).map((dunk, i) => renderDunk(dunk, i))}
-                </div>
-
-                {dunks.length > 0 && (
-                  <p className="text-[10px] text-gray-500 mt-5">
-                    {antiDunked.length} {dunksData.anti_label} tweets dunked by {dunksData.pro_label},{" "}
-                    {proDunked.length} {dunksData.pro_label} tweets dunked by {dunksData.anti_label}.
-                    Analyzed {dunksData.total_analyzed} tweets total.
-                  </p>
-                )}
+              <div className="space-y-4">
+                {dunks.slice(0, 10).map((dunk, i) => renderDunk(dunk, i))}
               </div>
+
+              {dunks.length > 0 && (
+                <p className="text-[10px] text-gray-500 mt-5">
+                  {antiDunked.length} {dunksData.anti_label} tweets dunked by {dunksData.pro_label},{" "}
+                  {proDunked.length} {dunksData.pro_label} tweets dunked by {dunksData.anti_label}.
+                  Analyzed {dunksData.total_analyzed} tweets total.
+                </p>
+              )}
             </>
           );
-        })()}
+              })();
+              if (!dunksContent) return null;
+              return (
+                <details className="bg-gray-900 border border-gray-800 rounded-xl">
+                  <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
+                    <div className="inline">
+                      <span className="text-sm font-semibold text-gray-300">Flashpoints</span>
+                      <span className="text-[10px] text-gray-500 ml-2">Posts that sparked the other side</span>
+                    </div>
+                  </summary>
+                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 -mt-2">
+                    {dunksContent}
+                  </div>
+                </details>
+              );
+            })()}
+          </>
+        )}
 
         {/* ============ TAB: Echo Chamber ============ */}
         {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Echo Chamber</div></div>}
@@ -2169,8 +2173,7 @@ export default function AnalyticsPage() {
                   { name: "Feed", desc: "A simulated Twitter feed ranked by the algorithm above. Use the bias slider to see how different political leanings change what content surfaces. Toggle between \"For You\" (algorithm-ranked) and \"Latest\" (chronological)." },
                   { name: "Overview", desc: "High-level KPIs: who's leading the conversation, engagement comparison, narrative divide score, and what each side's audience actually sees." },
                   { name: "Arguments", desc: "How each side frames the topic (radar charts), emotional tone, trending phrases, hashtags, content format breakdown, engagement by frame, and rhetoric intensity." },
-                  { name: "Key Voices", desc: "Who is driving the conversation (high-reach vs organic accounts), top voices by engagement, and the highest-engagement tweets per narrative frame." },
-                  { name: "Flashpoints", desc: "Tweets that triggered the other side — identified through high reply ratios (\"ratio'd\"), quote-tweet dunks from opposing accounts, and cross-side engagement patterns. Shows the original tweet, why it scored as a dunk, and example responses." },
+                  { name: "Key Voices", desc: "Who is driving the conversation (high-reach vs organic accounts), top voices by engagement, and the highest-engagement tweets per narrative frame. Includes an expandable Flashpoints section showing tweets that triggered the other side." },
                   { name: "Echo Chamber", desc: "How much overlap exists between the two sides: shared stories, blind spots (what each side misses), source analysis, and common ground." },
                   { name: "Insights & Action", desc: "What's driving the divergence between sides, AI-generated recommendations, and actionable bridge-building strategies based on shared topics and sources." },
                   { name: "Full Report", desc: "Renders all tabs in a single scrollable view for export or presentation. Use the \"Export PDF\" button to save." },

@@ -48,22 +48,36 @@ router = APIRouter(dependencies=[Depends(get_current_user)])
 async def _get_latest_run_since(topic: str, db: AsyncSession, fallback_hours: int = 720) -> datetime:
     """Get the start time for data queries — scoped to the latest pipeline run.
 
-    Returns the ran_at timestamp of the most recent successful run,
-    so all analytics show only data from that run's time window.
+    Finds the earliest tweet created_at among tweets fetched during the most
+    recent successful run, so all tabs show only data from that run.
     Falls back to fallback_hours if no runs exist.
     """
-    stmt = (
+    # Get the latest successful run's timestamp
+    run_stmt = (
         select(FetchRun.ran_at)
         .where(FetchRun.topic_slug == topic, FetchRun.status == "success")
         .order_by(FetchRun.ran_at.desc())
         .limit(1)
     )
-    result = await db.execute(stmt)
-    ran_at = result.scalar_one_or_none()
-    if ran_at:
-        # Use 1 minute before the run started to capture all tweets from that run
-        return ran_at - timedelta(minutes=1)
-    return datetime.now(timezone.utc) - timedelta(hours=fallback_hours)
+    run_result = await db.execute(run_stmt)
+    ran_at = run_result.scalar_one_or_none()
+    if not ran_at:
+        return datetime.now(timezone.utc) - timedelta(hours=fallback_hours)
+
+    # Find the earliest created_at of tweets fetched during this run
+    tweet_stmt = (
+        select(func.min(Tweet.created_at))
+        .where(
+            Tweet.topic_slug == topic,
+            Tweet.fetched_at >= ran_at - timedelta(minutes=1),
+        )
+    )
+    tweet_result = await db.execute(tweet_stmt)
+    earliest = tweet_result.scalar_one_or_none()
+    if earliest:
+        return earliest - timedelta(minutes=1)
+    # Fallback: use ran_at minus the default hours window
+    return ran_at - timedelta(hours=fallback_hours)
 
 
 @router.get("/feed", response_model=list[FeedItemResponse])

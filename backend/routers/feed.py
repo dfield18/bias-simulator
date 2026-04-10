@@ -45,6 +45,27 @@ async def _check_feed_topic_access(topic_slug: str, user: dict, db: AsyncSession
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
+async def _get_latest_run_since(topic: str, db: AsyncSession, fallback_hours: int = 720) -> datetime:
+    """Get the start time for data queries — scoped to the latest pipeline run.
+
+    Returns the ran_at timestamp of the most recent successful run,
+    so all analytics show only data from that run's time window.
+    Falls back to fallback_hours if no runs exist.
+    """
+    stmt = (
+        select(FetchRun.ran_at)
+        .where(FetchRun.topic_slug == topic, FetchRun.status == "success")
+        .order_by(FetchRun.ran_at.desc())
+        .limit(1)
+    )
+    result = await db.execute(stmt)
+    ran_at = result.scalar_one_or_none()
+    if ran_at:
+        # Use 1 minute before the run started to capture all tweets from that run
+        return ran_at - timedelta(minutes=1)
+    return datetime.now(timezone.utc) - timedelta(hours=fallback_hours)
+
+
 @router.get("/feed", response_model=list[FeedItemResponse])
 async def get_feed(
     topic: str,
@@ -56,7 +77,7 @@ async def get_feed(
 ):
     """Get a simulated feed filtered by political bias (continuous -10 to +10)."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     # Query tweets with classifications
     stmt = (
@@ -133,7 +154,7 @@ async def get_feed_all(
 ):
     """Return all on-topic tweets with classifications, unsorted. Client does scoring."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     stmt = (
         select(Tweet, Classification)
@@ -292,7 +313,7 @@ async def get_smart_feed(
     if cached is not None:
         return cached
 
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     # Load topic
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -726,7 +747,7 @@ async def get_breakdown(
 ):
     """Get breakdown stats for a topic."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     # Total tweets
     total_stmt = select(func.count()).select_from(Tweet).where(
@@ -863,7 +884,7 @@ async def get_narrative(
     cached = get_cached(cache_key)
     if cached is not None:
         return cached
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -1008,7 +1029,7 @@ async def get_gap_analysis(
 ):
     """Compute comparative diagnostic metrics explaining why the narrative gap exists."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -1231,7 +1252,7 @@ async def get_exposure_overlap(
 ):
     """Compute Exposure Overlap: how much of the story universe is shared between sides."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -1442,7 +1463,7 @@ async def get_paired_stories(
 ):
     """Find stories covered by both sides and show how each frames them differently."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -1757,7 +1778,7 @@ async def get_recommendations(
 ):
     """Generate strategic recommendations for each side based on analytics data."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -1889,7 +1910,7 @@ async def get_analytics(
     if cached is not None:
         return cached
 
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     # Load topic to get labels
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2315,7 +2336,7 @@ async def get_pulse_extras(
 ):
     """Return viral posts and alert flags for the executive pulse tab."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -2447,7 +2468,7 @@ async def get_narrative_strategy(
     ck = f"{topic}:narr_strategy:{hours}"
     cv = get_cached(ck)
     if cv is not None: return cv
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -2566,7 +2587,7 @@ async def get_narrative_depth(
     ck = f"{topic}:narr_depth:{hours}"
     cv = get_cached(ck)
     if cv is not None: return cv
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -2762,7 +2783,7 @@ async def get_media_breakdown(
 ):
     """Return media type distribution per side."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -2844,7 +2865,7 @@ async def get_side_by_side_feed(
 ):
     """Return top N tweets per side for a side-by-side feed preview."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -2911,7 +2932,7 @@ async def get_hashtags(
 ):
     """Return hashtag frequency per side."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -3020,7 +3041,7 @@ async def get_dunks(
 ):
     """Find tweets being 'dunked on' — cross-side engagement, ratio'd tweets, quote-dunks."""
     await _check_feed_topic_access(topic, user, db)
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
     topic_obj = topic_result.scalar_one_or_none()
@@ -3187,7 +3208,7 @@ async def get_geography(
     if cached is not None:
         return cached
 
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     # Load topic labels
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))

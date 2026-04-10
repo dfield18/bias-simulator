@@ -148,6 +148,12 @@ export default function SentimentMap({ states, countries, antiLabel, proLabel, c
         {view === "us" ? (
           <svg viewBox="0 0 850 500" className="w-full" style={{ maxHeight: 400 }}>
             <rect width="850" height="500" fill="transparent" />
+            {/* Simplified US outline */}
+            <path d="M95,190 L105,155 L120,130 L130,120 L150,105 L180,95 L210,92 L250,95 L290,100 L330,95 L370,92 L410,95 L445,100 L470,108 L500,115 L530,120 L560,128 L590,132 L620,138 L650,145 L680,155 L700,162 L720,170 L740,175 L755,182 L765,192 L770,205 L768,220 L760,235 L755,248 L748,258 L740,265 L735,275 L728,285 L720,295 L710,305 L700,312 L690,318 L680,325 L670,332 L660,340 L650,348 L645,358 L640,370 L635,385 L630,395 L625,405 L618,415 L610,422 L600,428 L585,432 L570,435 L555,438 L540,442 L525,445 L510,448 L500,450 L490,448 L480,442 L470,435 L460,428 L445,425 L430,428 L415,435 L400,440 L385,445 L370,448 L355,445 L340,438 L325,430 L310,420 L295,408 L280,395 L265,382 L250,370 L235,358 L220,348 L205,340 L190,335 L175,332 L160,330 L145,325 L130,318 L118,308 L108,295 L100,280 L95,265 L92,248 L90,230 L92,210 Z" fill="none" stroke="rgb(55, 65, 81)" strokeWidth="1.5" strokeOpacity="0.4" />
+            {/* Alaska outline */}
+            <path d="M100,430 L120,425 L145,428 L170,435 L190,445 L200,460 L195,475 L175,480 L150,478 L125,472 L108,465 L100,450 Z" fill="none" stroke="rgb(55, 65, 81)" strokeWidth="1" strokeOpacity="0.3" />
+            {/* Hawaii outline */}
+            <path d="M240,465 L255,460 L275,462 L285,470 L278,478 L260,480 L245,475 Z" fill="none" stroke="rgb(55, 65, 81)" strokeWidth="1" strokeOpacity="0.3" />
             {Object.entries(STATE_COORDS).map(([abbr, { x, y, name }]) => {
               const data = stateMap[abbr];
               let fillColor = "rgb(31, 41, 55)";
@@ -181,6 +187,19 @@ export default function SentimentMap({ states, countries, antiLabel, proLabel, c
         ) : (
           <svg viewBox="0 0 900 480" className="w-full" style={{ maxHeight: 400 }}>
             <rect width="900" height="480" fill="transparent" />
+            {/* Simplified continent outlines */}
+            {/* North America */}
+            <path d="M80,50 L120,35 L170,30 L220,28 L260,35 L280,50 L290,70 L285,95 L270,115 L250,130 L240,150 L235,170 L230,190 L220,210 L210,230 L195,250 L180,265 L170,280 L165,295 L175,310 L185,318 L190,325 L185,335 L170,340 L155,335 L140,325 L125,310 L115,295 L108,278 L100,260 L92,240 L85,218 L80,195 L75,170 L72,145 L70,120 L72,95 L75,70 Z" fill="rgb(31, 41, 55)" fillOpacity="0.3" stroke="rgb(55, 65, 81)" strokeWidth="1" strokeOpacity="0.4" />
+            {/* South America */}
+            <path d="M235,295 L260,280 L285,275 L310,278 L330,290 L340,310 L345,330 L340,355 L330,375 L315,395 L300,410 L285,425 L270,440 L260,448 L255,440 L258,420 L262,400 L260,380 L252,360 L245,340 L240,320 Z" fill="rgb(31, 41, 55)" fillOpacity="0.3" stroke="rgb(55, 65, 81)" strokeWidth="1" strokeOpacity="0.4" />
+            {/* Europe */}
+            <path d="M420,80 L440,72 L465,68 L490,70 L515,75 L535,85 L545,100 L540,120 L530,138 L520,155 L515,170 L510,185 L505,200 L498,210 L488,218 L475,222 L460,220 L448,215 L438,208 L430,198 L425,185 L422,170 L420,155 L418,138 L415,120 L415,100 Z" fill="rgb(31, 41, 55)" fillOpacity="0.3" stroke="rgb(55, 65, 81)" strokeWidth="1" strokeOpacity="0.4" />
+            {/* Africa */}
+            <path d="M445,228 L465,225 L490,228 L515,235 L535,248 L550,265 L558,285 L560,310 L555,335 L545,358 L530,378 L515,395 L500,408 L485,415 L470,410 L458,398 L450,380 L445,358 L442,335 L440,310 L438,285 L440,260 L442,242 Z" fill="rgb(31, 41, 55)" fillOpacity="0.3" stroke="rgb(55, 65, 81)" strokeWidth="1" strokeOpacity="0.4" />
+            {/* Asia */}
+            <path d="M545,65 L580,55 L620,50 L660,48 L700,52 L740,60 L770,75 L790,95 L798,120 L795,150 L788,178 L780,205 L770,228 L755,248 L740,265 L720,278 L700,288 L680,295 L660,298 L640,295 L620,288 L600,278 L585,265 L572,248 L562,228 L555,208 L550,185 L545,160 L542,135 L540,110 L542,85 Z" fill="rgb(31, 41, 55)" fillOpacity="0.3" stroke="rgb(55, 65, 81)" strokeWidth="1" strokeOpacity="0.4" />
+            {/* Australia */}
+            <path d="M720,370 L745,362 L770,360 L795,365 L810,378 L815,395 L810,415 L798,430 L780,440 L760,442 L742,438 L728,428 L720,412 L715,395 L718,380 Z" fill="rgb(31, 41, 55)" fillOpacity="0.3" stroke="rgb(55, 65, 81)" strokeWidth="1" strokeOpacity="0.4" />
             {countries.map((c) => {
               const coords = COUNTRY_COORDS[c.country];
               if (!coords) return null;

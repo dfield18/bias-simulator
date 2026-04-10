@@ -1943,50 +1943,6 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* Sentiment by location — top 10 with split bars */}
-              {locations.length > 0 && (
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Sentiment by Location</div>
-                  <h3 className="text-sm font-semibold text-gray-300 mb-1">How sentiment varies by geography</h3>
-                  <p className="text-[10px] text-gray-600 mb-4">Locations with the strongest tilt toward one side</p>
-
-                  {(() => {
-                    // Sort by most skewed sentiment
-                    const skewed = [...locations]
-                      .filter(l => l.total >= 3)
-                      .map(l => ({
-                        ...l,
-                        skew: Math.abs(l.anti_count - l.pro_count) / l.total,
-                        dominant: l.anti_count > l.pro_count ? "anti" : "pro",
-                      }))
-                      .sort((a, b) => b.skew - a.skew)
-                      .slice(0, 10);
-
-                    return (
-                      <div className="space-y-2">
-                        {skewed.map((loc) => {
-                          const antiPct = loc.total > 0 ? Math.round((loc.anti_count / loc.total) * 100) : 0;
-                          const proPct = loc.total > 0 ? Math.round((loc.pro_count / loc.total) * 100) : 0;
-                          return (
-                            <div key={loc.location} className="flex items-center gap-3">
-                              <div className="w-32 sm:w-40 text-xs text-gray-300 truncate shrink-0" title={loc.location}>
-                                {loc.location}
-                              </div>
-                              <div className="flex-1 h-5 rounded overflow-hidden flex">
-                                <div className={`h-full ${sc.anti.bg} opacity-60`} style={{ width: `${antiPct}%` }} />
-                                <div className={`h-full ${sc.pro.bg} opacity-60`} style={{ width: `${proPct}%` }} />
-                              </div>
-                              <div className="w-20 text-right text-[10px] text-gray-500 shrink-0">
-                                {antiPct}% / {proPct}%
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
             </>
           );
         })()}

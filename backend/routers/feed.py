@@ -3256,28 +3256,6 @@ async def get_geography(
     import re as _re
     import unicodedata as _ud
 
-    # Known location words for positive validation
-    _LOCATION_MARKERS = set()
-    _LOCATION_MARKERS.update(v.lower() for v in _US_STATES.values())  # US state names
-    _LOCATION_MARKERS.update(k for k in _US_STATES.keys())  # US state abbreviations
-    _LOCATION_MARKERS.update(v.lower() for v in _CA_PROVINCES.values())
-    _LOCATION_MARKERS.update(k for k in _CA_PROVINCES.keys())
-    _LOCATION_MARKERS.update(k for k in _COUNTRIES.keys())
-    _LOCATION_MARKERS.update(v.lower() for v in _COUNTRIES.values())
-    _LOCATION_MARKERS.update(k for k in _KNOWN_CITIES.keys())
-    # Common US cities not in _KNOWN_CITIES
-    _LOCATION_MARKERS.update([
-        "new york", "los angeles", "chicago", "houston", "phoenix", "philadelphia",
-        "san antonio", "san diego", "dallas", "san jose", "austin", "jacksonville",
-        "fort worth", "columbus", "charlotte", "indianapolis", "san francisco",
-        "seattle", "denver", "nashville", "oklahoma city", "el paso", "washington",
-        "boston", "portland", "las vegas", "memphis", "louisville", "baltimore",
-        "milwaukee", "albuquerque", "tucson", "fresno", "sacramento", "mesa",
-        "kansas city", "atlanta", "omaha", "raleigh", "miami", "tampa", "minneapolis",
-        "new orleans", "cleveland", "orlando", "pittsburgh", "st. louis", "detroit",
-        "brooklyn", "queens", "manhattan", "bronx", "staten island", "long island",
-    ])
-
     def _is_valid_location(s: str) -> bool:
         """Filter out non-location strings from Twitter profile location field."""
         if len(s) < 2 or len(s) > 80:
@@ -3371,6 +3349,27 @@ async def get_geography(
         "rio de janeiro": "Brazil", "lima": "Peru", "santiago": "Chile",
         "auckland": "New Zealand", "wellington": "New Zealand",
     }
+
+    # Known location words for positive validation (must be after _US_STATES, _COUNTRIES, _KNOWN_CITIES)
+    _LOCATION_MARKERS = set()
+    _LOCATION_MARKERS.update(v.lower() for v in _US_STATES.values())
+    _LOCATION_MARKERS.update(k for k in _US_STATES.keys())
+    _LOCATION_MARKERS.update(v.lower() for v in _CA_PROVINCES.values())
+    _LOCATION_MARKERS.update(k for k in _CA_PROVINCES.keys())
+    _LOCATION_MARKERS.update(k for k in _COUNTRIES.keys())
+    _LOCATION_MARKERS.update(v.lower() for v in _COUNTRIES.values())
+    _LOCATION_MARKERS.update(k for k in _KNOWN_CITIES.keys())
+    _LOCATION_MARKERS.update([
+        "new york", "los angeles", "chicago", "houston", "phoenix", "philadelphia",
+        "san antonio", "san diego", "dallas", "san jose", "austin", "jacksonville",
+        "fort worth", "columbus", "charlotte", "indianapolis", "san francisco",
+        "seattle", "denver", "nashville", "oklahoma city", "el paso", "washington",
+        "boston", "portland", "las vegas", "memphis", "louisville", "baltimore",
+        "milwaukee", "albuquerque", "tucson", "fresno", "sacramento", "mesa",
+        "kansas city", "atlanta", "omaha", "raleigh", "miami", "tampa", "minneapolis",
+        "new orleans", "cleveland", "orlando", "pittsburgh", "st. louis", "detroit",
+        "brooklyn", "queens", "manhattan", "bronx", "staten island", "long island",
+    ])
 
     def _normalize_location(raw: str) -> str:
         """Normalize Twitter location to 'City, State, Country' format."""

@@ -3256,6 +3256,28 @@ async def get_geography(
     import re as _re
     import unicodedata as _ud
 
+    # Known location words for positive validation
+    _LOCATION_MARKERS = set()
+    _LOCATION_MARKERS.update(v.lower() for v in _US_STATES.values())  # US state names
+    _LOCATION_MARKERS.update(k for k in _US_STATES.keys())  # US state abbreviations
+    _LOCATION_MARKERS.update(v.lower() for v in _CA_PROVINCES.values())
+    _LOCATION_MARKERS.update(k for k in _CA_PROVINCES.keys())
+    _LOCATION_MARKERS.update(k for k in _COUNTRIES.keys())
+    _LOCATION_MARKERS.update(v.lower() for v in _COUNTRIES.values())
+    _LOCATION_MARKERS.update(k for k in _KNOWN_CITIES.keys())
+    # Common US cities not in _KNOWN_CITIES
+    _LOCATION_MARKERS.update([
+        "new york", "los angeles", "chicago", "houston", "phoenix", "philadelphia",
+        "san antonio", "san diego", "dallas", "san jose", "austin", "jacksonville",
+        "fort worth", "columbus", "charlotte", "indianapolis", "san francisco",
+        "seattle", "denver", "nashville", "oklahoma city", "el paso", "washington",
+        "boston", "portland", "las vegas", "memphis", "louisville", "baltimore",
+        "milwaukee", "albuquerque", "tucson", "fresno", "sacramento", "mesa",
+        "kansas city", "atlanta", "omaha", "raleigh", "miami", "tampa", "minneapolis",
+        "new orleans", "cleveland", "orlando", "pittsburgh", "st. louis", "detroit",
+        "brooklyn", "queens", "manhattan", "bronx", "staten island", "long island",
+    ])
+
     def _is_valid_location(s: str) -> bool:
         """Filter out non-location strings from Twitter profile location field."""
         if len(s) < 2 or len(s) > 80:
@@ -3277,10 +3299,27 @@ async def get_geography(
             "maga", "trump", "biden", "resist", "wake up",
             " to ", " in ", " from ", " and ", " for ", " with ",
             " since ", " born ", " living ", " moved ",
+            "hopefully", "traveling", "somewhere", "nowhere", "home",
+            "retired", "proud", "lover", "fan of", "just a",
+            "the world", "planet", "galaxy", "universe", "global",
         ]
         if any(phrase in lower for phrase in reject_phrases):
             return False
-        return True
+        # Positive validation: must contain at least one recognized place name
+        parts = [p.strip().lower() for p in _re.split(r'[,/|·•]', lower) if p.strip()]
+        has_known_place = False
+        for part in parts:
+            if part in _LOCATION_MARKERS:
+                has_known_place = True
+                break
+            # Check if any known place is a substring (e.g., "south florida" contains no exact match but "florida" does)
+            for marker in _LOCATION_MARKERS:
+                if len(marker) >= 3 and marker in part:
+                    has_known_place = True
+                    break
+            if has_known_place:
+                break
+        return has_known_place
 
     # US state abbreviation → full name
     _US_STATES = {

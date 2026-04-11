@@ -1281,11 +1281,11 @@ export default function AnalyticsPage() {
               )}
 
               {/* ── The Full Picture — 2x2 expandable card grid ── */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
 
                 {/* Card 1: Same Story, Different Lens */}
                 {pairedStories && pairedStories.stories.length > 0 && (
-                  <details className="bg-gray-900 border border-gray-800 rounded-xl col-span-1 sm:col-span-2" open={activeTab === "report" || undefined}>
+                  <details className="bg-gray-900 border border-gray-800 rounded-xl" open={activeTab === "report" || undefined}>
                     <summary className="p-4 sm:p-5 cursor-pointer select-none hover:bg-gray-800/30 transition-colors rounded-xl">
                       <div className="inline">
                         <span className="text-sm font-semibold text-gray-300">Same Story, Different Lens</span>

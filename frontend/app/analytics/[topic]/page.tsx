@@ -534,7 +534,7 @@ export default function AnalyticsPage() {
       {/* Spacer for fixed header */}
       <div style={{ height: `${headerHeight}px` }} />
 
-      <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 pt-8 pb-6 space-y-6">
 
         {/* Pipeline progress banner */}
         {isRunning === "running" && pipelineProgress && (() => {

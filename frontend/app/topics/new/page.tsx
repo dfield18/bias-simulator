@@ -35,6 +35,7 @@ export default function NewTopicPage() {
   }, [router]);
   const [topicType, setTopicType] = useState<"political" | "company">("political");
   const [topicInput, setTopicInput] = useState("");
+  const [slugConflict, setSlugConflict] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<TopicSuggestion | null>(null);
   const [creating, setCreating] = useState(false);
@@ -106,7 +107,13 @@ export default function NewTopicPage() {
         // Topic exists but pipeline failed — redirect to it
         router.push(`/analytics/${suggestion.slug}`);
       } else {
-        setError(e instanceof Error ? e.message : "An error occurred");
+        const msg = e instanceof Error ? e.message : "An error occurred";
+        if (msg.includes("already exists")) {
+          setSlugConflict(suggestion.slug);
+          setError(null);
+        } else {
+          setError(msg);
+        }
         setCreating(false);
       }
     }
@@ -254,6 +261,32 @@ export default function NewTopicPage() {
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 text-red-400 text-sm">
           {error}
+        </div>
+      )}
+
+      {slugConflict && suggestion && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-5 mb-6">
+          <h3 className="text-sm font-semibold text-yellow-300 mb-2">Topic &quot;{suggestion.topic_name}&quot; already exists</h3>
+          <p className="text-xs text-yellow-400/70 mb-4">A topic with the slug &quot;{slugConflict}&quot; has already been created. You can view the existing topic, refresh its data, or create this as a new topic with a different name.</p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={`/analytics/${slugConflict}`}
+              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-sm font-medium transition-colors"
+            >
+              View Existing Topic
+            </Link>
+            <button
+              onClick={() => {
+                setSlugConflict(null);
+                // Append a number to make the slug unique
+                const newSlug = `${slugConflict}-${Date.now().toString(36).slice(-4)}`;
+                setSuggestion({ ...suggestion, slug: newSlug });
+              }}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              Create as New Topic
+            </button>
+          </div>
         </div>
       )}
 

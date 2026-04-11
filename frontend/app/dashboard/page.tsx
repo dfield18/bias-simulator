@@ -31,7 +31,24 @@ export default function Home() {
       setUpgraded(true);
       window.history.replaceState({}, "", "/dashboard");
     }
-    fetchMe().then(setUser).catch((e) => setError("Could not connect to backend. Please try again.")).finally(() => setUserLoading(false));
+    const loadUser = async () => {
+      try {
+        const u = await fetchMe();
+        setUser(u);
+      } catch {
+        // Retry once after 2s — new users may need a moment for their account to be created
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+          const u = await fetchMe();
+          setUser(u);
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "Could not connect to backend. Please try again.");
+        }
+      } finally {
+        setUserLoading(false);
+      }
+    };
+    loadUser();
     Promise.all([
       cachedFetch("topics", () => fetchTopics(), 2 * 60 * 1000),
       cachedFetch("myTopics", () => fetchMyTopics(), 2 * 60 * 1000),

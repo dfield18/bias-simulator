@@ -3371,6 +3371,36 @@ async def get_geography(
         "brooklyn", "queens", "manhattan", "bronx", "staten island", "long island",
     ])
 
+    # US cities → state mapping
+    _US_CITIES = {
+        "new york": "New York", "los angeles": "California", "chicago": "Illinois",
+        "houston": "Texas", "phoenix": "Arizona", "philadelphia": "Pennsylvania",
+        "san antonio": "Texas", "san diego": "California", "dallas": "Texas",
+        "san jose": "California", "austin": "Texas", "jacksonville": "Florida",
+        "fort worth": "Texas", "columbus": "Ohio", "charlotte": "North Carolina",
+        "indianapolis": "Indiana", "san francisco": "California", "seattle": "Washington",
+        "denver": "Colorado", "nashville": "Tennessee", "oklahoma city": "Oklahoma",
+        "el paso": "Texas", "boston": "Massachusetts", "portland": "Oregon",
+        "las vegas": "Nevada", "memphis": "Tennessee", "louisville": "Kentucky",
+        "baltimore": "Maryland", "milwaukee": "Wisconsin", "albuquerque": "New Mexico",
+        "tucson": "Arizona", "fresno": "California", "sacramento": "California",
+        "mesa": "Arizona", "kansas city": "Missouri", "atlanta": "Georgia",
+        "omaha": "Nebraska", "raleigh": "North Carolina", "miami": "Florida",
+        "tampa": "Florida", "minneapolis": "Minnesota", "new orleans": "Louisiana",
+        "cleveland": "Ohio", "orlando": "Florida", "pittsburgh": "Pennsylvania",
+        "st. louis": "Missouri", "detroit": "Michigan", "brooklyn": "New York",
+        "queens": "New York", "manhattan": "New York", "bronx": "New York",
+        "staten island": "New York", "long island": "New York",
+        "washington dc": "Washington, D.C.", "washington d.c.": "Washington, D.C.",
+        "scottsdale": "Arizona", "plano": "Texas", "irvine": "California",
+        "st. petersburg": "Florida", "richmond": "Virginia", "boise": "Idaho",
+        "des moines": "Iowa", "salt lake city": "Utah", "honolulu": "Hawaii",
+        "anchorage": "Alaska", "birmingham": "Alabama", "charleston": "South Carolina",
+        "savannah": "Georgia", "jersey city": "New Jersey", "newark": "New Jersey",
+        "buffalo": "New York", "rochester": "New York", "hartford": "Connecticut",
+        "providence": "Rhode Island", "cincinnati": "Ohio", "dayton": "Ohio",
+    }
+
     def _normalize_location(raw: str) -> str:
         """Normalize Twitter location to 'City, State, Country' format."""
         # Clean up
@@ -3396,6 +3426,13 @@ async def get_geography(
             # Check Canadian provinces
             if lower in _CA_PROVINCES:
                 return f"{_CA_PROVINCES[lower]}, Canada"
+            # Check US cities
+            if lower in _US_CITIES:
+                city_display = parts[0].title() if parts[0].islower() else parts[0]
+                state = _US_CITIES[lower]
+                if state == "Washington, D.C.":
+                    return "Washington, D.C., USA"
+                return f"{city_display}, {state}, USA"
             # Check well-known international cities
             if lower in _KNOWN_CITIES:
                 city_display = parts[0].title() if parts[0].islower() else parts[0]

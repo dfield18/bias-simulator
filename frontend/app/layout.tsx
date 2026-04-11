@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import AuthProvider from "@/components/AuthProvider";
 import CookieBanner from "@/components/CookieBanner";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
@@ -44,6 +45,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider appearance={{
+      baseTheme: dark,
       variables: { colorPrimary: "#3b82f6" },
       elements: {
         card: "bg-gray-900 border-gray-700",

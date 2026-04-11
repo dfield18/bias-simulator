@@ -9,10 +9,13 @@ export default function PricingPage() {
   const { isSignedIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [userTier, setUserTier] = useState<string | null>(null);
+  const [tierLoading, setTierLoading] = useState(true);
 
   useEffect(() => {
     if (isSignedIn) {
-      fetchMe().then((u) => setUserTier(u.tier)).catch(() => {});
+      fetchMe().then((u) => setUserTier(u.tier)).catch(() => {}).finally(() => setTierLoading(false));
+    } else {
+      setTierLoading(false);
     }
   }, [isSignedIn]);
 
@@ -65,7 +68,9 @@ export default function PricingPage() {
               <span className="text-green-400">&#10003;</span> AI classification
             </li>
           </ul>
-          {isSignedIn && userTier === "free" ? (
+          {isSignedIn && tierLoading ? (
+            <div className="block text-center px-4 py-2 bg-gray-800 text-gray-500 rounded-lg text-sm font-medium">Loading...</div>
+          ) : isSignedIn && userTier === "free" ? (
             <Link
               href="/dashboard"
               className="block text-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"

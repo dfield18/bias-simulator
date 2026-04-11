@@ -19,11 +19,19 @@ export default function Home() {
   const [topics, setTopics] = useState<TopicData[]>([]);
   const [myTopics, setMyTopics] = useState<Record<string, string>>({}); // slug → role
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [upgraded, setUpgraded] = useState(false);
 
   useEffect(() => {
-    fetchMe().then(setUser).catch(() => {});
+    // Check for ?upgraded=true from Stripe checkout
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("upgraded") === "true") {
+      setUpgraded(true);
+      window.history.replaceState({}, "", "/dashboard");
+    }
+    fetchMe().then(setUser).catch((e) => setError("Could not connect to backend. Please try again.")).finally(() => setUserLoading(false));
     Promise.all([
       cachedFetch("topics", () => fetchTopics(), 2 * 60 * 1000),
       cachedFetch("myTopics", () => fetchMyTopics(), 2 * 60 * 1000),
@@ -127,7 +135,23 @@ export default function Home() {
           <UserButton />
         </div>
       </div>
-      {user && user.tier !== "free" ? (
+
+      {/* Upgrade success banner */}
+      {upgraded && (
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-green-300 font-medium">Welcome to Pro!</p>
+            <p className="text-xs text-green-400/70 mt-0.5">Your account has been upgraded. You now have unlimited topics and 100 refreshes per month.</p>
+          </div>
+          <button onClick={() => setUpgraded(false)} className="text-green-400/50 hover:text-green-300 text-lg shrink-0 ml-4">&times;</button>
+        </div>
+      )}
+
+      {userLoading ? (
+        <p className="text-gray-500 text-sm mb-10">Loading your account...</p>
+      ) : error && !user ? (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 text-red-400 text-sm">{error}</div>
+      ) : user && user.tier !== "free" ? (
         <>
           <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
             Explore preloaded topics below, or create a new one — it takes about two minutes to gather tweets and build your dashboard.

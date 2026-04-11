@@ -1,5 +1,7 @@
 """Account management endpoints — deletion, data export, and usage stats."""
 
+import os
+import httpx
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, func, select
@@ -8,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from auth import get_current_user
 from models import User, UserTopic, Topic, Tweet, Classification, FetchRun
+
+CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY", "")
 
 router = APIRouter()
 
@@ -109,6 +113,18 @@ async def delete_account(
     await db.execute(delete(User).where(User.id == user_id))
 
     await db.commit()
+
+    # Delete the user from Clerk so they can't sign back in
+    if CLERK_SECRET_KEY:
+        try:
+            async with httpx.AsyncClient() as client:
+                await client.delete(
+                    f"https://api.clerk.com/v1/users/{user_id}",
+                    headers={"Authorization": f"Bearer {CLERK_SECRET_KEY}"},
+                    timeout=10,
+                )
+        except Exception as e:
+            print(f"[Account] Warning: Failed to delete Clerk user {user_id}: {e}")
 
     return {"status": "deleted"}
 

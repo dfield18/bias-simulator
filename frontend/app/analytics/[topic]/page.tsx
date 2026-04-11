@@ -487,6 +487,12 @@ export default function AnalyticsPage() {
                     : "Starting..."
                   : isRunning === "done" ? "Data Updated" : "Refresh Data"}
               </button>}
+              {/* Data freshness note */}
+              {lastRun && lastRun.ran_at && !isRunning && (
+                <span className="text-[10px] text-gray-600 hidden sm:inline" title="To see more up-to-date data, click Refresh Data. It takes a few minutes to collect and analyze new posts.">
+                  Data from {new Date(lastRun.ran_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </span>
+              )}
               {(userTier === "admin" || (topic && topic.created_by != null && userId === topic.created_by)) && <Link
                 href={`/topics/${topicSlug}`}
                 className="px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors hidden sm:block"
@@ -787,6 +793,14 @@ export default function AnalyticsPage() {
 
         {(activeTab === "pulse" || activeTab === "report") && (
           <>
+            {/* Data freshness info */}
+            {lastRun && lastRun.ran_at && activeTab === "pulse" && (
+              <div className="text-[10px] text-gray-600 mb-2">
+                This data was last refreshed on {new Date(lastRun.ran_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} at {new Date(lastRun.ran_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}.
+                {(userTier === "admin" || (topic && topic.created_by != null && userId === topic.created_by)) && " To see more current data, click Refresh Data above — it takes a few minutes to collect and analyze new posts."}
+              </div>
+            )}
+
             {/* Executive Snapshot Metrics */}
             {analytics && narrative && (() => {
               const anti = analytics.engagement.anti;

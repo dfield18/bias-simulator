@@ -405,7 +405,15 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {userTier === "free" && !(topic && topic.created_by != null && userId === topic.created_by) && (
+              {!userId && (
+                <Link
+                  href="/sign-up"
+                  className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-md transition-colors hover:bg-blue-500/20"
+                >
+                  Sign up free
+                </Link>
+              )}
+              {userId && userTier === "free" && !(topic && topic.created_by != null && userId === topic.created_by) && (
                 <Link
                   href="/pricing"
                   className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-md transition-colors hover:bg-blue-500/20"

@@ -443,10 +443,12 @@ export default function NewTopicPage() {
                         onChange={(e) => setMaxPages(Number(e.target.value))}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
                       >
-                        <option value={10}>Small (~200 tweets)</option>
-                        <option value={25}>Medium (~500 tweets)</option>
-                        <option value={50}>Large (~1,000 tweets)</option>
-                        <option value={100}>Extra Large (~2,000 tweets)</option>
+                        <option value={10}>Small (~200 posts)</option>
+                        <option value={25}>Medium (~500 posts)</option>
+                        <option value={50}>Large (~1,000 posts)</option>
+                        <option value={100}>Extra Large (~2,000 posts)</option>
+                        <option value={500}>Massive (~10,000 posts, ~15 min)</option>
+                        <option value={1000}>Maximum (~20,000 posts, ~35 min)</option>
                       </select>
                     </div>
                     <div>

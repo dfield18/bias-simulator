@@ -929,7 +929,7 @@ export default function AnalyticsPage() {
                       {volDominantPct}% of tweets <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsDominantPct2}% of views
                     </div>
                     <div className="text-[10px] text-gray-600 mt-0.5">
-                      {volRatio}× more tweets <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsRatio}× more views
+                      {volRatio <= 1.1 ? "similar tweet volume" : `${volRatio}× more tweets`} <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsRatio <= 1.1 ? "similar views" : `${viewsRatio}× more views`}
                     </div>
                   </div>
 
@@ -937,7 +937,7 @@ export default function AnalyticsPage() {
                   <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
                     <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">What Performs Best</div>
                     <div className={`text-base sm:text-lg font-bold ${perfDominant === topic.anti_label ? sc.anti.text : sc.pro.text} leading-tight`}>
-                      {perfDominant} gets {perfRatio}× more engagement
+                      {perfRatio <= 1.1 ? `${perfDominant} and ${perfDominant === topic.anti_label ? topic.pro_label : topic.anti_label} have similar engagement` : `${perfDominant} gets ${perfRatio}× more engagement`}
                     </div>
                     <div className="text-[10px] text-gray-400 mt-2">
                       {fmt(Math.round(Math.max(anti.avg_engagement, pro.avg_engagement)))} vs {fmt(Math.round(Math.min(anti.avg_engagement, pro.avg_engagement)))} avg engagement per tweet (likes + retweets + replies)

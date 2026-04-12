@@ -13,6 +13,7 @@ import {
   fetchTopicRuns,
   runTopicPipeline,
   fetchPipelineProgress,
+  fetchMe,
 } from "@/lib/api";
 
 function timeAgo(dateStr: string | null): string {
@@ -57,6 +58,11 @@ export default function TopicManagePage() {
   const [targetCountry, setTargetCountry] = useState("");
   const [colorScheme, setColorScheme] = useState("political");
   const [classificationModel, setClassificationModel] = useState("fast");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetchMe().then((u) => setIsAdmin(u.tier === "admin")).catch(() => {});
+  }, []);
 
   const loadData = () => {
     setLoading(true);
@@ -459,10 +465,12 @@ export default function TopicManagePage() {
                 onChange={(e) => setMaxPages(Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm"
               >
-                <option value={10}>Small (~200 tweets)</option>
-                <option value={25}>Medium (~500 tweets)</option>
-                <option value={50}>Large (~1,000 tweets)</option>
-                <option value={100}>Extra Large (~2,000 tweets)</option>
+                <option value={10}>Small (~200 posts)</option>
+                <option value={25}>Medium (~500 posts)</option>
+                <option value={50}>Large (~1,000 posts)</option>
+                <option value={100}>Extra Large (~2,000 posts)</option>
+                {isAdmin && <option value={500}>Massive (~10,000 posts, ~15 min)</option>}
+                {isAdmin && <option value={1000}>Maximum (~20,000 posts, ~35 min)</option>}
               </select>
               <p className="text-[10px] text-gray-600 mt-1">
                 More tweets = better analysis but slower pipeline and higher API costs

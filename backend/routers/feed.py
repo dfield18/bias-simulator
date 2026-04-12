@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from collections import defaultdict, Counter
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, and_, case, text
-from cache import get_cached, set_cache
+from cache import get_cached, set_cache, cache_ttl_for_topic
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -773,6 +773,10 @@ async def get_breakdown(
 ):
     """Get breakdown stats for a topic."""
     await _check_feed_topic_access(topic, user, db)
+    cache_key = f"{topic}:breakdown"
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
+    if cached is not None:
+        return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     # Total tweets
@@ -861,7 +865,7 @@ async def get_breakdown(
     last_run_result = await db.execute(last_run_stmt)
     last_updated = last_run_result.scalar()
 
-    return BreakdownResponse(
+    response = BreakdownResponse(
         topic=topic,
         total_tweets=total_tweets,
         on_topic=on_topic,
@@ -869,6 +873,8 @@ async def get_breakdown(
         intensity=intensity,
         last_updated=last_updated,
     )
+    set_cache(cache_key, response)
+    return response
 
 
 @router.get("/summaries")
@@ -907,7 +913,7 @@ async def get_narrative(
     """Get narrative frame and emotion distributions by side."""
     await _check_feed_topic_access(topic, user, db)
     cache_key = f"{topic}:narrative:{hours}"
-    cached = get_cached(cache_key)
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
     if cached is not None:
         return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
@@ -1055,6 +1061,10 @@ async def get_gap_analysis(
 ):
     """Compute comparative diagnostic metrics explaining why the narrative gap exists."""
     await _check_feed_topic_access(topic, user, db)
+    cache_key = f"{topic}:gap_analysis"
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
+    if cached is not None:
+        return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -1225,7 +1235,7 @@ async def get_gap_analysis(
     else:
         causal = f"The divergence between {aL} and {pL} appears driven by a combination of source, framing, and emotional differences rather than any single dominant factor."
 
-    return {
+    response = {
         "metrics": {
             "source_overlap": {
                 "anti_value": src_overlap, "pro_value": src_overlap,
@@ -1267,6 +1277,8 @@ async def get_gap_analysis(
         "anti_label": aL,
         "pro_label": pL,
     }
+    set_cache(cache_key, response)
+    return response
 
 
 @router.get("/exposure-overlap")
@@ -1278,6 +1290,10 @@ async def get_exposure_overlap(
 ):
     """Compute Exposure Overlap: how much of the story universe is shared between sides."""
     await _check_feed_topic_access(topic, user, db)
+    cache_key = f"{topic}:exposure_overlap"
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
+    if cached is not None:
+        return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -1451,7 +1467,7 @@ async def get_exposure_overlap(
     all_themes = build_cluster_list(all_meaningful, "kw:")
     all_urls_list = build_cluster_list(all_meaningful, "url:")
 
-    return {
+    response = {
         "score": score,
         "label": label,
         "sentence": sentence,
@@ -1478,6 +1494,8 @@ async def get_exposure_overlap(
         "anti_label": topic_obj.anti_label,
         "pro_label": topic_obj.pro_label,
     }
+    set_cache(cache_key, response)
+    return response
 
 
 @router.get("/paired-stories")
@@ -1489,6 +1507,10 @@ async def get_paired_stories(
 ):
     """Find stories covered by both sides and show how each frames them differently."""
     await _check_feed_topic_access(topic, user, db)
+    cache_key = f"{topic}:paired_stories"
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
+    if cached is not None:
+        return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -1788,11 +1810,13 @@ Return a JSON array with one object per story:
                 af, pf = s["anti"]["frame"], s["pro"]["frame"]
                 s["interpretation"] = f"Same event, framed as {af.lower()} on one side and {pf.lower()} on the other."
 
-    return {
+    response = {
         "stories": stories,
         "anti_label": topic_obj.anti_label,
         "pro_label": topic_obj.pro_label,
     }
+    set_cache(cache_key, response)
+    return response
 
 
 @router.get("/recommendations")
@@ -1804,6 +1828,10 @@ async def get_recommendations(
 ):
     """Generate strategic recommendations for each side based on analytics data."""
     await _check_feed_topic_access(topic, user, db)
+    cache_key = f"{topic}:recommendations"
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
+    if cached is not None:
+        return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -1912,7 +1940,7 @@ Return JSON:
             "pro_recommendations": [{"title": "Analysis unavailable", "detail": f"Could not generate recommendations: {e}", "type": "messaging"}],
         }
 
-    return {
+    response = {
         "anti_recommendations": recs.get("anti_recommendations", []),
         "pro_recommendations": recs.get("pro_recommendations", []),
         "anti_label": aL,
@@ -1920,6 +1948,8 @@ Return JSON:
         "anti_stats": anti_stats,
         "pro_stats": pro_stats,
     }
+    set_cache(cache_key, response)
+    return response
 
 
 @router.get("/analytics")
@@ -1932,7 +1962,7 @@ async def get_analytics(
     """Get analytics data: engagement comparison, top voices, trending phrases."""
     await _check_feed_topic_access(topic, user, db)
     cache_key = f"{topic}:analytics:{hours}"
-    cached = get_cached(cache_key)
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
     if cached is not None:
         return cached
 
@@ -2362,6 +2392,10 @@ async def get_pulse_extras(
 ):
     """Return viral posts and alert flags for the executive pulse tab."""
     await _check_feed_topic_access(topic, user, db)
+    cache_key = f"{topic}:pulse_extras"
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
+    if cached is not None:
+        return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2474,12 +2508,14 @@ async def get_pulse_extras(
                         "message": f"{side_label} has only {round(vol * 100)}% of posts but captures {round(eng * 100)}% of engagement.",
                     })
 
-    return {
+    response = {
         "viral": viral,
         "alerts": alerts,
         "anti_label": aL,
         "pro_label": pL,
     }
+    set_cache(cache_key, response)
+    return response
 
 
 @router.get("/narrative-strategy")
@@ -2809,6 +2845,10 @@ async def get_media_breakdown(
 ):
     """Return media type distribution per side."""
     await _check_feed_topic_access(topic, user, db)
+    cache_key = f"{topic}:media_breakdown"
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
+    if cached is not None:
+        return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -2872,13 +2912,15 @@ async def get_media_breakdown(
     anti_tw = [(t, c) for t, c in rows if c.effective_political_bent == anti_bent]
     pro_tw = [(t, c) for t, c in rows if c.effective_political_bent == pro_bent]
 
-    return {
+    response = {
         "anti": media_stats(anti_tw),
         "pro": media_stats(pro_tw),
         "overall": media_stats(rows),
         "anti_label": topic_obj.anti_label,
         "pro_label": topic_obj.pro_label,
     }
+    set_cache(cache_key, response)
+    return response
 
 
 @router.get("/side-by-side-feed")
@@ -2958,6 +3000,10 @@ async def get_hashtags(
 ):
     """Return hashtag frequency per side."""
     await _check_feed_topic_access(topic, user, db)
+    cache_key = f"{topic}:hashtags"
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
+    if cached is not None:
+        return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -3001,7 +3047,7 @@ async def get_hashtags(
     pro_tags = {h.get("text", "").strip().lower() for t, c in pro_tw for h in ((t.raw_json or {}).get("entities") or {}).get("hashtags") or [] if h.get("text")}
     shared_tags = anti_tags & pro_tags
 
-    return {
+    response = {
         "anti": extract_hashtags(anti_tw),
         "pro": extract_hashtags(pro_tw),
         "overall": extract_hashtags(rows),
@@ -3011,6 +3057,8 @@ async def get_hashtags(
         "anti_label": topic_obj.anti_label,
         "pro_label": topic_obj.pro_label,
     }
+    set_cache(cache_key, response)
+    return response
 
 
 @router.get("/last-run")
@@ -3067,6 +3115,10 @@ async def get_dunks(
 ):
     """Find tweets being 'dunked on' — cross-side engagement, ratio'd tweets, quote-dunks."""
     await _check_feed_topic_access(topic, user, db)
+    cache_key = f"{topic}:dunks"
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
+    if cached is not None:
+        return cached
     since = await _get_latest_run_since(topic, db, fallback_hours=hours)
 
     topic_result = await db.execute(select(Topic).where(Topic.slug == topic))
@@ -3211,12 +3263,14 @@ async def get_dunks(
 
     dunks.sort(key=lambda x: -x["dunk_score"])
 
-    return {
+    response = {
         "dunks": dunks[:20],
         "anti_label": aL,
         "pro_label": pL,
         "total_analyzed": len(rows),
     }
+    set_cache(cache_key, response)
+    return response
 
 
 @router.get("/geography")
@@ -3230,7 +3284,7 @@ async def get_geography(
     await _check_feed_topic_access(topic, user, db)
 
     cache_key = f"{topic}:geography:{hours}"
-    cached = get_cached(cache_key)
+    cached = get_cached(cache_key, ttl=cache_ttl_for_topic(topic))
     if cached is not None:
         return cached
 

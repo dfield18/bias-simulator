@@ -7,6 +7,15 @@ from typing import Any
 
 _store: dict[str, tuple[Any, float]] = {}
 DEFAULT_TTL = 300  # 5 minutes
+DEMO_TTL = 3600  # 1 hour for demo/public topics
+
+# Demo topics get much longer cache
+DEMO_TOPICS = {"iran-conflict"}
+
+
+def cache_ttl_for_topic(topic: str) -> int:
+    """Return cache TTL based on whether a topic is a demo topic."""
+    return DEMO_TTL if topic in DEMO_TOPICS else DEFAULT_TTL
 
 
 def get_cached(key: str, ttl: int = DEFAULT_TTL) -> Any | None:

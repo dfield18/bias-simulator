@@ -10,7 +10,7 @@ DEFAULT_TTL = 300  # 5 minutes
 DEMO_TTL = 3600  # 1 hour for demo/public topics
 
 # Demo topics get much longer cache
-DEMO_TOPICS = {"iran-conflict"}
+DEMO_TOPICS = {"iran-conflict", "anthropic"}
 
 
 def cache_ttl_for_topic(topic: str) -> int:

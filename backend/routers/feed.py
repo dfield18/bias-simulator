@@ -52,7 +52,7 @@ async def _check_feed_topic_access(topic_slug: str, user: dict | None, db: Async
 
 
 # Topics accessible without authentication (demo/public showcase)
-DEMO_TOPICS = {"iran-conflict"}
+DEMO_TOPICS = {"iran-conflict", "anthropic"}
 
 router = APIRouter()
 

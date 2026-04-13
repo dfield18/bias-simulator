@@ -350,7 +350,7 @@ export default function TopicManagePage() {
           Edit any field below to control how the tool builds your simulated feed and classifies tweets.
         </p>
         <ul className="space-y-1.5 text-xs text-blue-300/80 leading-relaxed">
-          <li><span className="text-blue-200 font-medium">Search query</span> &mdash; determines which tweets are pulled from Twitter. Broaden it to get more data or narrow it to focus on a specific angle.</li>
+          <li><span className="text-blue-200 font-medium">Search query</span> &mdash; determines which posts are pulled from X. Broaden it to get more data or narrow it to focus on a specific angle.</li>
           <li><span className="text-blue-200 font-medium">Side labels &amp; definitions</span> &mdash; tell the classifier what the two sides believe. More specific definitions produce more accurate tweet classifications.</li>
           <li><span className="text-blue-200 font-medium">Classification prompts</span> (under Advanced) &mdash; the exact instructions sent to the AI to classify and score each tweet. Edit these for full control over how the tool interprets content.</li>
         </ul>

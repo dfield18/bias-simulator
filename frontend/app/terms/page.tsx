@@ -76,7 +76,7 @@ export default function TermsOfService() {
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">7. Social Media Content</h2>
           <p>
-            DividedView analyzes publicly available social media posts. We do not claim ownership of this content. The display of tweets within DividedView is for analytical purposes. DividedView is not affiliated with, endorsed by, or sponsored by X (formerly Twitter) or any other social media platform.
+            DividedView analyzes publicly available social media posts. We do not claim ownership of this content. The display of posts within DividedView is for analytical purposes. DividedView is not affiliated with, endorsed by, or sponsored by X (formerly Twitter) or any other social media platform.
           </p>
         </section>
 

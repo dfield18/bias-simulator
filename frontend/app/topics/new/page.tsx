@@ -361,7 +361,7 @@ export default function NewTopicPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs text-gray-500">Twitter search terms</label>
+                  <label className="block text-xs text-gray-500">X search terms</label>
                   <button
                     onClick={() => setEditingSearch(!editingSearch)}
                     className="text-[10px] text-blue-400 hover:text-blue-300"

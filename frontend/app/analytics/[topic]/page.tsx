@@ -640,7 +640,7 @@ export default function AnalyticsPage() {
               />
             )}
             <p className="text-[11px] text-gray-500 leading-relaxed">
-              This simulated feed is built from real tweets pulled from Twitter and classified by AI. Drag the slider to simulate how a feed algorithm would prioritize content based on political leaning. Classifications are estimates and may occasionally be inaccurate.
+              This simulated feed is built from real posts pulled from X and classified by AI. Drag the slider to simulate how a feed algorithm would prioritize content based on political leaning. Classifications are estimates and may occasionally be inaccurate.
             </p>
 
             {/* Feed header with sort toggle + account filter */}
@@ -1536,7 +1536,7 @@ export default function AnalyticsPage() {
                         Top tweets by narrative frame
                       </h3>
                       <p className="text-[10px] text-gray-600">
-                        The highest-engagement tweet from each side — click to view on Twitter
+                        The highest-engagement post from each side — click to view on X
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
@@ -2067,14 +2067,14 @@ export default function AnalyticsPage() {
                     tag: "Source Authority",
                     title: "Who is this person?",
                     range: "0.3x - 2.5x",
-                    desc: "Combines follower count (log scale), follower/following ratio, Twitter list count, account age, and verification status. Activist accounts get a 1.4x boost over news sources. Bot-like accounts (100+ posts/day) are penalized to 0.3x.",
-                    detail: "Account type is detected from bio keywords. Accounts posting from native Twitter clients (iOS, Android, Web) are boosted over API-posted content (0.75x for non-native sources)."
+                    desc: "Combines follower count (log scale), follower/following ratio, X list count, account age, and verification status. Activist accounts get a 1.4x boost over news sources. Bot-like accounts (100+ posts/day) are penalized to 0.3x.",
+                    detail: "Account type is detected from bio keywords. Accounts posting from native X clients (iOS, Android, Web) are boosted over API-posted content (0.75x for non-native sources)."
                   },
                   {
                     tag: "Format Boost",
                     title: "What kind of content is this?",
                     range: "0.5x - 2.6x",
-                    desc: "Mirrors Twitter's actual content hierarchy: native video (2.0x) > photos (1.4x) > text-only (1.0x) > external links (0.9x). Quote tweets with commentary get 1.3x. Thread starters get 1.15x. Deep replies are penalized to 0.6x.",
+                    desc: "Mirrors X's actual content hierarchy: native video (2.0x) > photos (1.4x) > text-only (1.0x) > external links (0.9x). Quote posts with commentary get 1.3x. Thread starters get 1.15x. Deep replies are penalized to 0.6x.",
                     detail: "This is one of the strongest signals. A video tweet from an activist account will consistently outrank a text-only tweet from a news outlet, even with similar engagement."
                   },
                   {
@@ -2095,7 +2095,7 @@ export default function AnalyticsPage() {
                     tag: "Emotional Valence",
                     title: "Does this trigger a reaction?",
                     range: "0.4x - 1.15x",
-                    desc: "Tweets classified as outrage, fear, or moral condemnation get a modest boost (up to 1.15x) because Twitter's algorithm rewards engagement bait. However, extreme-intensity content with low engagement is penalized to 0.4x as a toxicity proxy.",
+                    desc: "Posts classified as outrage, fear, or moral condemnation get a modest boost (up to 1.15x) because X's algorithm rewards engagement bait. However, extreme-intensity content with low engagement is penalized to 0.4x as a toxicity proxy.",
                     detail: null
                   },
                   {
@@ -2140,7 +2140,7 @@ export default function AnalyticsPage() {
                 <div>
                   <div className="text-xs font-semibold text-gray-300 mb-1">Limitations</div>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    The feed cannot access who retweeted or liked a tweet (Twitter API limitation), so in-network engagement is approximated from quote-tweets and replies within the dataset. Geographic targeting is not available. Toxicity scoring uses intensity + emotion as a proxy, not a dedicated moderation API.
+                    The feed cannot access who reposted or liked a post (X API limitation), so in-network engagement is approximated from quote-posts and replies within the dataset. Geographic targeting is not available. Toxicity scoring uses intensity + emotion as a proxy, not a dedicated moderation API.
                   </p>
                 </div>
               </div>
@@ -2151,7 +2151,7 @@ export default function AnalyticsPage() {
               <h2 className="text-base font-bold text-gray-200 mb-4">Dashboard Tabs</h2>
               <div className="space-y-3">
                 {([
-                  { name: "Feed", desc: "A simulated Twitter feed ranked by the algorithm above. Use the bias slider to see how different political leanings change what content surfaces. Toggle between \"For You\" (algorithm-ranked) and \"Latest\" (chronological)." },
+                  { name: "Feed", desc: "A simulated X feed ranked by the algorithm above. Use the bias slider to see how different political leanings change what content surfaces. Toggle between \"For You\" (algorithm-ranked) and \"Latest\" (chronological)." },
                   { name: "Overview", desc: "High-level KPIs: who's leading the conversation, engagement comparison, narrative divide score, and what each side's audience actually sees." },
                   { name: "Arguments", desc: "How each side frames the topic (radar charts), emotional tone, trending phrases, hashtags, content format breakdown, engagement by frame, and rhetoric intensity." },
                   { name: "Key Voices", desc: "Who is driving the conversation (high-reach vs organic accounts), top voices by engagement, and the highest-engagement tweets per narrative frame. Includes an expandable Flashpoints section showing tweets that triggered the other side." },

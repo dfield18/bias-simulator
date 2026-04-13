@@ -137,7 +137,7 @@ async def suggest_topic(body: SuggestRequest, user: dict = Depends(get_current_u
     if body.topic_type == "company":
         prompt = f"""You are helping set up a CONSUMER SENTIMENT classifier for: "{body.topic_name}"
 
-Generate a complete configuration for analyzing general public and consumer sentiment about this company or brand on Twitter/X.
+Generate a complete configuration for analyzing general public and consumer sentiment about this company or brand on X (formerly Twitter).
 
 IMPORTANT: This is NOT about politics or public policy. This is about CONSUMER SENTIMENT — what everyday people, customers, and the public think and feel about this company. Focus on:
 - Product/service quality and experiences
@@ -158,7 +158,7 @@ Return a JSON object with these exact fields:
 - pro_label: "Positive" (this appears on the RIGHT of the UI — represents supportive/positive consumer sentiment)
 - anti_definition: 2-3 sentence definition of what negative consumer sentiment about this company looks like — common complaints, frustrations, criticisms from customers and the public. IMPORTANT: Always end the definition with the sentence: "This also includes any other consumer criticisms, complaints, or negative experiences not specifically listed above."
 - pro_definition: 2-3 sentence definition of what positive consumer sentiment about this company looks like — praise, satisfaction, brand loyalty, advocacy from customers and the public. IMPORTANT: Always end the definition with the sentence: "This also includes any other consumer praise, positive experiences, or brand advocacy not specifically listed above."
-- search_query: a Twitter search query designed to MAXIMIZE relevant tweet capture about this company. Follow these rules:
+- search_query: an X search query designed to MAXIMIZE relevant tweet capture about this company. Follow these rules:
   1. Include the company name, common abbreviations, ticker symbols, product names
   2. Include the CEO/founder name if they are a well-known public figure
   3. Include hashtags people use about the company
@@ -209,10 +209,10 @@ Return a JSON object with these exact fields:
 - pro_label: short label for the conservative/right side (this appears on the RIGHT of the UI)
 - anti_definition: 2-3 sentence definition of what the liberal/left side believes, advocates for, and how they frame the issue
 - pro_definition: 2-3 sentence definition of what the conservative/right side believes, advocates for, and how they frame the issue
-- search_query: a Twitter search query designed to MAXIMIZE relevant tweet capture. Follow these rules:
+- search_query: an X search query designed to MAXIMIZE relevant tweet capture. Follow these rules:
   1. Mix quoted exact phrases AND unquoted keyword combinations: e.g. "AI regulation" OR "regulate AI" OR AI oversight OR AI governance OR "AI bill" OR "AI safety law"
   2. Include VERB FORMS people actually use in tweets: "regulate AI" not just "AI regulation", "ban TikTok" not just "TikTok ban"
-  3. Include SLANG, HASHTAGS, and informal terms people use on Twitter: e.g. #AIregulation, #RegulateAI, "big tech regulation"
+  3. Include SLANG, HASHTAGS, and informal terms people use on X: e.g. #AIregulation, #RegulateAI, "big tech regulation"
   4. Include KEY PEOPLE and ORGANIZATIONS central to this debate (e.g. specific lawmakers, agencies, companies)
   5. Include both FORMAL and INFORMAL language: "artificial intelligence oversight" AND "AI rules" AND "regulate tech"
   6. Use 10-15 OR-separated terms to cast a wide net — it's better to capture too many tweets (we filter later) than too few

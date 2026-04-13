@@ -104,8 +104,10 @@ async def get_topics(
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
-    """Return public active topics + user's own private topics."""
+    """Return public active topics + user's own private topics + demo topics."""
     from sqlalchemy import or_
+    # Demo topics that are always visible (even for unauthenticated users)
+    DEMO_SLUGS = {"iran-conflict", "anthropic"}
     stmt = select(Topic).where(Topic.is_active == True)
     if user:
         stmt = stmt.where(
@@ -113,10 +115,11 @@ async def get_topics(
                 Topic.visibility == "public",
                 Topic.visibility.is_(None),  # legacy topics without visibility set
                 Topic.created_by == user["id"],
+                Topic.slug.in_(DEMO_SLUGS),
             )
         )
     else:
-        stmt = stmt.where(or_(Topic.visibility == "public", Topic.visibility.is_(None)))
+        stmt = stmt.where(or_(Topic.visibility == "public", Topic.visibility.is_(None), Topic.slug.in_(DEMO_SLUGS)))
     stmt = stmt.order_by(Topic.name)
     result = await db.execute(stmt)
     topics = result.scalars().all()

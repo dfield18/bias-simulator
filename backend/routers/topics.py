@@ -107,7 +107,7 @@ async def get_topics(
     """Return public active topics + user's own private topics + demo topics."""
     from sqlalchemy import or_
     # Demo topics that are always visible (even for unauthenticated users)
-    DEMO_SLUGS = {"iran-conflict", "anthropic"}
+    DEMO_SLUGS = {"iran-conflict", "anthropic", "peter-magyar"}
     stmt = select(Topic).where(Topic.is_active == True)
     if user:
         stmt = stmt.where(

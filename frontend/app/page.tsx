@@ -407,6 +407,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-600">
           <div>&copy; 2026 BrooklynEcho LLC. All rights reserved.</div>
           <div className="flex gap-5">
+            <Link href="/about" className="hover:text-gray-400 transition-colors">About</Link>
             <Link href="/pricing" className="hover:text-gray-400 transition-colors">Pricing</Link>
             <Link href="/privacy" className="hover:text-gray-400 transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-gray-400 transition-colors">Terms</Link>

@@ -22,6 +22,10 @@ DividedView is built by BrooklynEcho LLC. It uses AI classification to analyze t
 - [Peter Magyar Analysis](https://www.dividedview.com/analytics/peter-magyar): Political analysis of Hungarian politics
 - [Pope Leo XIII Analysis](https://www.dividedview.com/analytics/pope-leo-xiii): Public opinion analysis
 
+## Company
+
+- [About DividedView](https://www.dividedview.com/about): How it works, who built it, AI transparency, and pricing
+
 ## Policies
 
 - [Privacy Policy](https://www.dividedview.com/privacy): Data handling and user privacy practices

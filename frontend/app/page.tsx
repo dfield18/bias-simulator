@@ -92,21 +92,101 @@ export default function LandingPage() {
     );
   }
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "DividedView",
-    "applicationCategory": "AnalyticsApplication",
-    "operatingSystem": "Web",
-    "description": "DividedView uses AI to analyze real posts from X on any political topic, showing how each side frames the same events.",
-    "url": "https://www.dividedview.com",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD",
-      "description": "Free plan with 5 preloaded topics and 1 custom topic",
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://www.dividedview.com/#organization",
+      "name": "BrooklynEcho LLC",
+      "url": "https://www.dividedview.com",
+      "logo": "https://www.dividedview.com/favicon.svg",
+      "description": "BrooklynEcho LLC builds DividedView, an AI-powered political media and brand sentiment analysis platform.",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "support@dividedview.com",
+        "contactType": "customer support",
+      },
     },
-  };
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": "https://www.dividedview.com/#website",
+      "name": "DividedView",
+      "url": "https://www.dividedview.com",
+      "publisher": { "@id": "https://www.dividedview.com/#organization" },
+      "description": "AI-powered political media and brand sentiment analysis showing how each side frames the same events.",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "DividedView",
+      "applicationCategory": "AnalyticsApplication",
+      "operatingSystem": "Web",
+      "description": "DividedView uses AI to analyze real posts from X on any political topic, showing how each side frames the same events. Simulated feeds, narrative analysis, echo chamber scoring, and geographic sentiment mapping.",
+      "url": "https://www.dividedview.com",
+      "publisher": { "@id": "https://www.dividedview.com/#organization" },
+      "offers": [
+        {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD",
+          "description": "Free plan with 5 preloaded topics, 1 custom topic, and 3 data refreshes per month",
+        },
+        {
+          "@type": "Offer",
+          "price": "29",
+          "priceCurrency": "USD",
+          "description": "Pro plan with unlimited custom topics, 100 data refreshes per month, and priority support",
+        },
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is DividedView?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "DividedView is an AI-powered platform that analyzes real posts from X (formerly Twitter) on political topics and brands. It classifies posts by political leaning or sentiment intensity, and shows how each side frames the same events through simulated feeds, narrative analysis, and echo chamber scoring.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "How does DividedView detect echo chambers?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "DividedView calculates an Echo Chamber Score by measuring the overlap in sources, arguments, and narrative frames between opposing perspectives on any topic. A low score indicates a strong echo chamber where each side sees completely different content and framing.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "Is DividedView free to use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. DividedView offers a free plan with access to 5 preloaded topics, 1 custom topic, and 3 data refreshes per month. A Pro plan is available at $29/month for unlimited custom topics, 100 refreshes, and priority support.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "What topics can I analyze on DividedView?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "DividedView supports any political topic or public policy issue (e.g., immigration, AI regulation, elections) as well as company and brand sentiment analysis (e.g., Tesla, Nike, Meta). You can analyze any subject that people discuss on X.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "How does the simulated feed work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "DividedView's simulated feed pulls real posts from X and reorganizes them using a multi-signal scoring algorithm that accounts for political bias, engagement, source authority, recency, and content type. A bias slider lets you see how different political leanings change which posts surface first.",
+          },
+        },
+      ],
+    },
+  ];
 
   return (
     <div className="min-h-screen overflow-x-hidden">
@@ -297,6 +377,28 @@ export default function LandingPage() {
           >
             Get started
           </Link>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="max-w-3xl mx-auto px-5 sm:px-8 py-16">
+        <h2 className="text-2xl font-bold text-center mb-10">Frequently Asked Questions</h2>
+        <div className="space-y-4">
+          {[
+            { q: "What is DividedView?", a: "DividedView is an AI-powered platform that analyzes real posts from X (formerly Twitter) on any political topic or brand. It classifies posts by political leaning or consumer sentiment, then shows how each side frames the same events through simulated feeds, narrative analysis, and echo chamber scoring." },
+            { q: "How does the simulated feed work?", a: "DividedView pulls real posts from X and reorganizes them using a multi-signal scoring algorithm that factors in political bias, engagement, source authority, recency, and content type. A bias slider lets you see how different leanings change which posts surface first." },
+            { q: "How does DividedView detect echo chambers?", a: "DividedView calculates an Echo Chamber Score by measuring the overlap in sources, arguments, and narrative frames between opposing perspectives. A low score indicates a strong echo chamber where each side sees completely different content." },
+            { q: "Can I analyze companies and brands?", a: "Yes. DividedView supports both political topics and brand sentiment analysis. For companies, it classifies posts as positive or negative consumer sentiment, with frames like product quality, customer service, and pricing." },
+            { q: "Is DividedView free?", a: "Yes. The free plan includes 5 preloaded topics, 1 custom topic, and 3 data refreshes per month. A Pro plan is available at $29/month for unlimited custom topics and 100 refreshes." },
+          ].map(({ q, a }) => (
+            <details key={q} className="bg-gray-900 border border-gray-800 rounded-xl group">
+              <summary className="px-5 py-4 cursor-pointer select-none text-sm font-medium text-gray-200 hover:text-white transition-colors flex items-center justify-between">
+                {q}
+                <span className="text-gray-600 group-open:rotate-45 transition-transform text-lg ml-2">+</span>
+              </summary>
+              <p className="px-5 pb-4 text-sm text-gray-400 leading-relaxed -mt-1">{a}</p>
+            </details>
+          ))}
         </div>
       </section>
 

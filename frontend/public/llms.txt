@@ -1,0 +1,28 @@
+# DividedView
+
+> DividedView is an AI-powered political media and brand sentiment analysis platform that pulls real posts from X (formerly Twitter) on any topic and shows how each side frames the same events through simulated feeds, narrative analysis, echo chamber scoring, and blind spot detection.
+
+## About
+
+DividedView is built by BrooklynEcho LLC. It uses AI classification to analyze thousands of real social media posts per topic, categorizing them by political leaning (or brand sentiment) and intensity. Users can explore simulated feeds that demonstrate how algorithmic bias reshapes information exposure based on perspective.
+
+## Key Features
+
+- [Simulated Feeds](https://www.dividedview.com): Real posts from X reorganized to show how bias reshapes content prioritization
+- [Echo Chamber Analysis](https://www.dividedview.com): Measures overlap between opposing perspectives on any topic
+- [Narrative Framing](https://www.dividedview.com): Identifies how each side frames the same events differently
+- [Geographic Analysis](https://www.dividedview.com): Maps sentiment by US state and international locations
+- [Brand Sentiment](https://www.dividedview.com): Analyzes consumer sentiment for companies and brands
+- [Pricing](https://www.dividedview.com/pricing): Free plan with preloaded topics; Pro plan at $29/month for unlimited custom topics
+
+## Public Demo Dashboards
+
+- [Iran Conflict Analysis](https://www.dividedview.com/analytics/iran-conflict): Political stance analysis of the Iran-US conflict
+- [Anthropic Analysis](https://www.dividedview.com/analytics/anthropic): Brand sentiment analysis for Anthropic
+- [Peter Magyar Analysis](https://www.dividedview.com/analytics/peter-magyar): Political analysis of Hungarian politics
+- [Pope Leo XIII Analysis](https://www.dividedview.com/analytics/pope-leo-xiii): Public opinion analysis
+
+## Policies
+
+- [Privacy Policy](https://www.dividedview.com/privacy): Data handling and user privacy practices
+- [Terms of Service](https://www.dividedview.com/terms): Terms governing platform usage

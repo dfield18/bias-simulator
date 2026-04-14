@@ -16,6 +16,26 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.dividedview.com/analytics/iran-conflict</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.dividedview.com/analytics/anthropic</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.dividedview.com/analytics/peter-magyar</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.dividedview.com/analytics/pope-leo-xiii</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.dividedview.com/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

@@ -1016,20 +1016,32 @@ export default function AnalyticsPage() {
                   {(summaries.anti?.summary || summaries.pro?.summary) && (() => {
                     const extractTopStories = (text: string): string[] => {
                       const stories: string[] = [];
+                      // Extract from bold sections (Key Themes, Current Events, etc.)
                       const sections = text.split("**");
                       for (let i = 0; i < sections.length; i++) {
                         const header = sections[i].toLowerCase().trim();
-                        if ((header.includes("current events") || header.includes("key themes")) && i + 1 < sections.length) {
+                        if ((header.includes("current events") || header.includes("key themes") || header.includes("general") || header.includes("tone")) && i + 1 < sections.length) {
                           const content = sections[i + 1].replace(/^\s*:?\s*/, "").trim();
-                          // Split into sentences and take the first one, capped at 150 chars
                           const sentences = content.split(/\.(?:\s|$)/).filter(s => s.trim().length > 15);
-                          if (sentences[0]) {
-                            const s = sentences[0].trim();
-                            stories.push(s + ".");
+                          for (const s of sentences) {
+                            const clean = s.trim();
+                            if (clean.length > 15 && stories.length < 5) {
+                              stories.push(clean.endsWith(".") ? clean : clean + ".");
+                            }
                           }
                         }
                       }
-                      return stories.slice(0, 2);
+                      // Fallback: if bold parsing didn't work, split entire text into sentences
+                      if (stories.length < 3) {
+                        const allSentences = text.replace(/\*\*[^*]+\*\*/g, "").split(/\.(?:\s|$)/).filter(s => s.trim().length > 20);
+                        for (const s of allSentences) {
+                          const clean = s.trim();
+                          if (clean.length > 20 && !stories.includes(clean + ".") && stories.length < 5) {
+                            stories.push(clean.endsWith(".") ? clean : clean + ".");
+                          }
+                        }
+                      }
+                      return stories.slice(0, 5);
                     };
 
                     const antiStories = summaries.anti?.summary ? extractTopStories(summaries.anti.summary) : [];

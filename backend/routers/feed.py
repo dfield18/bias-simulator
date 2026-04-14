@@ -51,8 +51,7 @@ async def _check_feed_topic_access(topic_slug: str, user: dict | None, db: Async
     raise HTTPException(status_code=404, detail="Topic not found")
 
 
-# Topics accessible without authentication (demo/public showcase)
-DEMO_TOPICS = {"iran-conflict", "anthropic", "peter-magyar", "pope-leo-xiii"}
+from config import DEMO_TOPICS
 
 router = APIRouter()
 

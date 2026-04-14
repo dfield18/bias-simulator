@@ -162,5 +162,8 @@ async def optional_user(
         return None
     try:
         return await get_current_user(authorization=authorization, db=db)
-    except HTTPException:
+    except HTTPException as e:
+        # Only swallow auth errors (401/403) — reraise server errors (500+)
+        if e.status_code >= 500:
+            raise
         return None

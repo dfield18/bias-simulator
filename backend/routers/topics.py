@@ -106,8 +106,7 @@ async def get_topics(
 ):
     """Return public active topics + user's own private topics + demo topics."""
     from sqlalchemy import or_
-    # Demo topics that are always visible (even for unauthenticated users)
-    DEMO_SLUGS = {"iran-conflict", "anthropic", "peter-magyar", "pope-leo-xiii"}
+    from config import DEMO_TOPICS as DEMO_SLUGS
     stmt = select(Topic).where(Topic.is_active == True)
     if user:
         stmt = stmt.where(
@@ -284,6 +283,9 @@ async def create_topic(
     user: dict = Depends(get_current_user),
 ):
     """Create a new topic from user-adjusted definitions."""
+    # Validate slug format
+    if not re.match(r'^[a-z0-9][a-z0-9-]{0,79}$', body.slug):
+        raise HTTPException(status_code=400, detail="Invalid slug. Use only lowercase letters, numbers, and hyphens (2-80 characters).")
     # Tier enforcement: free users get 1 topic, pro gets unlimited
     from models import UserTopic
     if user.get("tier") == "free":
@@ -351,6 +353,11 @@ async def get_my_topics(
 @router.post("/topics/{slug}/run")
 async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_pages: int = Query(default=25), model: str = Query(default="fast"), user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Trigger the pipeline for a topic in a background thread."""
+    # Prevent concurrent runs for the same topic
+    from pipeline.run import get_progress
+    current = get_progress(slug)
+    if current and current.get("running"):
+        raise HTTPException(status_code=409, detail="A pipeline run is already in progress for this topic. Please wait for it to finish.")
     if model not in ("fast", "balanced", "accurate"):
         raise HTTPException(status_code=400, detail="Invalid model. Must be: fast, balanced, or accurate")
     await _check_topic_pipeline_access(slug, user, db)

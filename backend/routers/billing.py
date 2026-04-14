@@ -80,12 +80,15 @@ async def create_portal_session(
     if not db_user.stripe_customer_id:
         raise HTTPException(status_code=400, detail="No billing account found")
 
-    session = stripe.billing_portal.Session.create(
-        customer=db_user.stripe_customer_id,
-        return_url=f"{FRONTEND_URL}/dashboard",
-    )
-
-    return {"url": session.url}
+    try:
+        session = stripe.billing_portal.Session.create(
+            customer=db_user.stripe_customer_id,
+            return_url=f"{FRONTEND_URL}/dashboard",
+        )
+        return {"url": session.url}
+    except stripe.error.StripeError as e:
+        print(f"[Stripe] Portal error: {e}")
+        raise HTTPException(status_code=502, detail=f"Billing portal error: {str(e)[:200]}")
 
 
 @router.post("/billing/webhook")

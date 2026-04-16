@@ -13,7 +13,7 @@ DividedView is built by BrooklynEcho LLC. It uses AI classification to analyze t
 - [Narrative Framing](https://www.dividedview.com): Identifies how each side frames the same events differently
 - [Geographic Analysis](https://www.dividedview.com): Maps sentiment by US state and international locations
 - [Brand Sentiment](https://www.dividedview.com): Analyzes consumer sentiment for companies and brands
-- [Pricing](https://www.dividedview.com/pricing): Free plan with preloaded topics; Pro plan at $29/month for unlimited custom topics
+- [Pricing](https://www.dividedview.com/pricing): Free plan with preloaded topics; Pro plan at $10/month for 100 custom topics and 100 runs
 
 ## Public Demo Dashboards
 

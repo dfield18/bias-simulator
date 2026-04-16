@@ -72,7 +72,7 @@ export default function AboutPage() {
         <section>
           <h2 className="text-lg font-semibold text-gray-100 mb-3">Pricing</h2>
           <p className="mb-3">
-            DividedView offers a <strong className="text-gray-100">free plan</strong> with access to preloaded topics, 1 custom topic, and 3 data refreshes per month. The <strong className="text-gray-100">Pro plan</strong> is available at $29/month for unlimited custom topics, 100 data refreshes, and priority support.
+            DividedView offers a <strong className="text-gray-100">free plan</strong> with access to preloaded topics, 1 custom topic, and 3 data refreshes per month. The <strong className="text-gray-100">Pro plan</strong> is available at $10/month for 100 custom topics, 100 runs, and priority support.
           </p>
           <p>
             <Link href="/pricing" className="text-blue-400 hover:text-blue-300">View full pricing details &rarr;</Link>

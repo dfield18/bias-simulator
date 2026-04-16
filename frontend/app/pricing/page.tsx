@@ -100,7 +100,7 @@ export default function PricingPage() {
             Popular
           </div>
           <h2 className="text-lg font-semibold mb-1">Pro</h2>
-          <div className="text-3xl font-bold mb-1">$29<span className="text-base font-normal text-gray-500">/mo</span></div>
+          <div className="text-3xl font-bold mb-1">$10<span className="text-base font-normal text-gray-500">/mo</span></div>
           <p className="text-sm text-gray-500 mb-6">For serious analysis</p>
           <ul className="space-y-2 text-sm text-gray-400 mb-8">
             <li className="flex items-center gap-2">

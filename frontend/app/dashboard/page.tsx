@@ -158,7 +158,7 @@ export default function Home() {
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div>
             <p className="text-sm text-green-300 font-medium">Welcome to Pro!</p>
-            <p className="text-xs text-green-400/70 mt-0.5">Your account has been upgraded. You now have unlimited topics and 100 refreshes per month.</p>
+            <p className="text-xs text-green-400/70 mt-0.5">Your account has been upgraded. You now have 100 custom topics and 100 runs per month.</p>
           </div>
           <button onClick={() => setUpgraded(false)} className="text-green-400/50 hover:text-green-300 text-lg shrink-0 ml-4">&times;</button>
         </div>
@@ -216,7 +216,7 @@ export default function Home() {
         <div className="bg-gray-900 border border-blue-500/20 rounded-xl p-4 mb-6 flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-300">You&apos;re on the <span className="font-semibold">Free plan</span> — 1 custom topic, 3 refreshes/month</p>
-            <p className="text-xs text-gray-500 mt-0.5">Upgrade to Pro for unlimited topics and 100 refreshes per month. Questions? <a href="mailto:support@dividedview.com" className="text-blue-400 hover:text-blue-300">support@dividedview.com</a></p>
+            <p className="text-xs text-gray-500 mt-0.5">Upgrade to Pro for 100 custom topics and 100 runs per month. Questions? <a href="mailto:support@dividedview.com" className="text-blue-400 hover:text-blue-300">support@dividedview.com</a></p>
           </div>
           <Link
             href="/pricing"

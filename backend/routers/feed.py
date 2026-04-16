@@ -57,41 +57,17 @@ router = APIRouter()
 
 
 async def _get_latest_run_since(topic: str, db: AsyncSession, fallback_hours: int = 720) -> datetime:
-    """Lower bound on tweet.fetched_at to scope queries to the latest pipeline run.
+    """Rolling lower bound on tweet.fetched_at for analytics queries.
 
-    log_fetch_run() writes FetchRun.ran_at at the end of the pipeline, so a run's
-    tweets always have fetched_at < ran_at. Tweets fetched strictly after the
-    previous successful run's ran_at therefore belong to the latest run.
-    Falls back to fallback_hours when no prior run exists.
+    Returns now - fallback_hours so consecutive pipeline runs accumulate into
+    a moving window rather than replacing each other. Callers must filter on
+    Tweet.fetched_at >= since (not created_at) — runs can pull old tweets
+    whose created_at wouldn't fall inside a creation-time window.
 
-    Callers must filter on Tweet.fetched_at >= since (not created_at), since
-    a run may legitimately pull tweets with old created_at values.
+    `topic` and `db` are kept in the signature for call-site stability; the
+    window is currently topic-independent.
     """
-    # Get the latest successful run's timestamp
-    latest_stmt = (
-        select(FetchRun.ran_at)
-        .where(FetchRun.topic_slug == topic, FetchRun.status == "success")
-        .order_by(FetchRun.ran_at.desc())
-        .limit(1)
-    )
-    latest_ran_at = (await db.execute(latest_stmt)).scalar_one_or_none()
-    if not latest_ran_at:
-        return datetime.now(timezone.utc) - timedelta(hours=fallback_hours)
-
-    prev_stmt = (
-        select(FetchRun.ran_at)
-        .where(
-            FetchRun.topic_slug == topic,
-            FetchRun.status == "success",
-            FetchRun.ran_at < latest_ran_at,
-        )
-        .order_by(FetchRun.ran_at.desc())
-        .limit(1)
-    )
-    prev_ran_at = (await db.execute(prev_stmt)).scalar_one_or_none()
-    if prev_ran_at:
-        return prev_ran_at
-    return latest_ran_at - timedelta(hours=fallback_hours)
+    return datetime.now(timezone.utc) - timedelta(hours=fallback_hours)
 
 
 @router.get("/feed", response_model=list[FeedItemResponse])

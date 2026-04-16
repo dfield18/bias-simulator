@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from auth import get_current_user, optional_user
 from models import Topic, UserTopic, TopicResponse, TopicDetailResponse
+from config import tier_limits
 
 
 async def _get_topic_or_404(slug: str, db: AsyncSession) -> Topic:
@@ -286,19 +287,23 @@ async def create_topic(
     # Validate slug format
     if not re.match(r'^[a-z0-9][a-z0-9-]{0,79}$', body.slug):
         raise HTTPException(status_code=400, detail="Invalid slug. Use only lowercase letters, numbers, and hyphens (2-80 characters).")
-    # Tier enforcement: free users get 1 topic, pro gets unlimited
+    # Tier enforcement
     from models import UserTopic
-    if user.get("tier") == "free":
+    max_topics = tier_limits(user.get("tier", "free"))["max_topics"]
+    if max_topics is not None:
         count_result = await db.execute(
             select(func.count()).select_from(UserTopic)
             .where(UserTopic.user_id == user["id"], UserTopic.role == "creator")
         )
         topic_count = count_result.scalar() or 0
-        if topic_count >= 1:
-            raise HTTPException(
-                status_code=403,
-                detail="Free plan allows 1 custom topic. Upgrade to Pro for unlimited topics."
+        if topic_count >= max_topics:
+            tier = user.get("tier", "free")
+            detail = (
+                f"Free plan allows {max_topics} custom topic. Upgrade to Pro for more."
+                if tier == "free"
+                else f"Pro plan allows {max_topics} custom topics. You've created {topic_count}."
             )
+            raise HTTPException(status_code=403, detail=detail)
 
     # Check if slug already exists
     existing = await db.execute(select(Topic).where(Topic.slug == body.slug))
@@ -369,7 +374,7 @@ async def run_topic_pipeline(slug: str, hours: int = Query(default=48), max_page
         from datetime import datetime, timezone
         from models import FetchRun, UserTopic
         month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        max_runs = 100 if user.get("tier") == "pro" else 3
+        max_runs = tier_limits(user.get("tier"))["max_runs"]
         creator_topics_result = await db.execute(
             select(UserTopic.topic_slug).where(
                 UserTopic.user_id == user["id"],

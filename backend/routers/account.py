@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from auth import get_current_user
 from models import User, UserTopic, Topic, Tweet, Classification, FetchRun
+from config import tier_limits
 
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY", "")
 
@@ -53,21 +54,12 @@ async def get_account_usage(
         )
         runs_this_month = run_count_result.scalar() or 0
 
-    if tier == "free":
-        max_topics = 1
-        max_runs = 3
-    elif tier == "pro":
-        max_topics = None  # unlimited
-        max_runs = 100
-    else:
-        max_topics = None
-        max_runs = None
-
+    limits = tier_limits(tier)
     return {
         "topics_created": topics_created,
-        "max_topics": max_topics,
+        "max_topics": limits["max_topics"],
         "runs_this_month": runs_this_month,
-        "max_runs": max_runs,
+        "max_runs": limits["max_runs"],
     }
 
 

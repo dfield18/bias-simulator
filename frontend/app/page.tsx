@@ -230,7 +230,12 @@ export default function LandingPage() {
             >
               Try it free
             </Link>
-            <Link href="/pricing" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">Pro is <span className="text-gray-300 font-medium">$10/mo</span></Link>
+            <Link
+              href="/pricing"
+              className="inline-block px-6 py-2.5 border border-gray-600 text-gray-300 rounded-md font-medium hover:border-gray-400 hover:text-white transition-colors text-sm"
+            >
+              Pro is $10/mo
+            </Link>
           </div>
         </div>
 

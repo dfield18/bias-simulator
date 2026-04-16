@@ -16,8 +16,32 @@ interface SentimentDistributionProps {
   colorScheme?: ColorScheme;
 }
 
-function buildDistribution(items: RawFeedItem[], mode: YAxisMode = "volume"): number[] {
+function labelToBent(label: string): string {
+  return label.toLowerCase().replace(/\s+/g, "-");
+}
+
+type Side = "pro" | "anti" | "neutral" | null;
+
+function classifySide(bent: string, proBent: string, antiBent: string): Side {
+  const b = bent.toLowerCase();
+  if (b === proBent) return "pro";
+  if (b === antiBent) return "anti";
+  if (b === "neutral") return "neutral";
+  // Generic brand-sentiment fallback for topics using positive/negative bents
+  if (b === "positive") return "pro";
+  if (b === "negative") return "anti";
+  return null;
+}
+
+function buildDistribution(
+  items: RawFeedItem[],
+  mode: YAxisMode,
+  proLabel: string,
+  antiLabel: string,
+): number[] {
   const raw = new Array(21).fill(0);
+  const proBent = labelToBent(proLabel);
+  const antiBent = labelToBent(antiLabel);
 
   for (const item of items) {
     const score = item.classification.effective_intensity_score;
@@ -27,7 +51,11 @@ function buildDistribution(items: RawFeedItem[], mode: YAxisMode = "volume"): nu
     if (score != null) {
       const idx = Math.round(score + 10);
       if (idx >= 0 && idx <= 20) raw[idx] += weight;
-    } else if (bent.includes("anti")) {
+      continue;
+    }
+
+    const side = classifySide(bent, proBent, antiBent);
+    if (side === "anti") {
       const center = 6;
       const sigma = 1.8;
       let total = 0;
@@ -40,7 +68,7 @@ function buildDistribution(items: RawFeedItem[], mode: YAxisMode = "volume"): nu
       for (let i = 0; i <= 9; i++) {
         raw[i] += (weights[i] / total) * weight;
       }
-    } else if (bent.includes("pro")) {
+    } else if (side === "pro") {
       const center = 14;
       const sigma = 1.8;
       let total = 0;
@@ -53,7 +81,7 @@ function buildDistribution(items: RawFeedItem[], mode: YAxisMode = "volume"): nu
       for (let i = 11; i <= 20; i++) {
         raw[i] += (weights[i - 11] / total) * weight;
       }
-    } else if (bent === "neutral") {
+    } else if (side === "neutral") {
       raw[10] += weight;
     }
   }
@@ -101,17 +129,23 @@ export default function SentimentDistribution({
   colorScheme = "political",
 }: SentimentDistributionProps) {
   const [yAxisMode, setYAxisMode] = useState<YAxisMode>("reach");
-  const distribution = useMemo(() => buildDistribution(items, yAxisMode), [items, yAxisMode]);
+  const distribution = useMemo(
+    () => buildDistribution(items, yAxisMode, proLabel, antiLabel),
+    [items, yAxisMode, proLabel, antiLabel],
+  );
   const sideColors = useMemo(() => getSideColors(colorScheme), [colorScheme]);
 
   const sentimentSummary = useMemo(() => {
+    const proBent = labelToBent(proLabel);
+    const antiBent = labelToBent(antiLabel);
     let proTotal = 0;
     let antiTotal = 0;
     for (const item of items) {
       const bent = (item.classification.effective_political_bent || "").toLowerCase();
       const weight = yAxisMode === "reach" ? Math.max(item.tweet.views || 0, 1) : 1;
-      if (bent.includes("pro") || bent === "positive") proTotal += weight;
-      else if (bent.includes("anti") || bent === "negative") antiTotal += weight;
+      const side = classifySide(bent, proBent, antiBent);
+      if (side === "pro") proTotal += weight;
+      else if (side === "anti") antiTotal += weight;
     }
     if (proTotal === 0 && antiTotal === 0) return null;
     const label = yAxisMode === "reach" ? "reach" : "post volume";

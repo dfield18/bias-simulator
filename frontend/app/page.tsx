@@ -223,12 +223,15 @@ export default function LandingPage() {
           <p className="text-base sm:text-lg text-gray-400 mb-8 leading-relaxed max-w-lg">
             DividedView pulls real posts from X on any political topic and rebuilds a simulated feed from both perspectives — surfacing the main arguments each side makes and the top accounts driving them.
           </p>
-          <Link
-            href="/sign-up"
-            className="inline-block px-6 py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
-          >
-            Try it free
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/sign-up"
+              className="inline-block px-6 py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
+            >
+              Try it free
+            </Link>
+            <span className="text-sm text-gray-500">Pro starts at <span className="text-gray-300 font-medium">$10/mo</span></span>
+          </div>
         </div>
 
         <p className="text-sm text-gray-500 mt-10 sm:mt-14 mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>

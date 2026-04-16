@@ -13,7 +13,10 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 
-def _call_gemini(prompt: str) -> str:
+_GEMINI_FLASH_RATES = {"input": 0.10, "output": 0.40}  # USD per 1M tokens
+
+
+def _call_gemini(prompt: str) -> tuple[str, float]:
     from google import genai
 
     client = genai.Client(api_key=GEMINI_API_KEY)
@@ -22,7 +25,12 @@ def _call_gemini(prompt: str) -> str:
         contents=prompt,
         config={"temperature": 0.4},
     )
-    return response.text or ""
+    cost = 0.0
+    if response.usage_metadata:
+        in_tok = response.usage_metadata.prompt_token_count or 0
+        out_tok = response.usage_metadata.candidates_token_count or 0
+        cost = (in_tok * _GEMINI_FLASH_RATES["input"] + out_tok * _GEMINI_FLASH_RATES["output"]) / 1_000_000
+    return response.text or "", cost
 
 
 def _build_summary_prompt(tweets: list[dict], side_label: str, topic_name: str) -> str:
@@ -57,8 +65,8 @@ Tweets:
 """
 
 
-def generate_summaries(conn, topic_slug: str):
-    """Generate overall, anti, and pro summaries for a topic."""
+def generate_summaries(conn, topic_slug: str) -> float:
+    """Generate overall, anti, and pro summaries for a topic. Returns cost USD."""
     cur = conn.cursor()
 
     # Load topic info
@@ -69,8 +77,9 @@ def generate_summaries(conn, topic_slug: str):
     row = cur.fetchone()
     if not row:
         print(f"  Summary: Topic '{topic_slug}' not found")
-        return
+        return 0.0
     topic_name, pro_label, anti_label = row
+    total_cost = 0.0
 
     # Determine bent values
     pro_bent = pro_label.lower().replace(" ", "-")
@@ -133,7 +142,8 @@ def generate_summaries(conn, topic_slug: str):
     def generate_one(side_key, tweets, label):
         print(f"  Summary ({label}): Generating from {len(tweets)} tweets...")
         prompt = _build_summary_prompt(tweets, label, topic_name)
-        return side_key, _call_gemini(prompt), len(tweets)
+        summary, cost = _call_gemini(prompt)
+        return side_key, summary, len(tweets), cost
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
         futures = [
@@ -142,7 +152,8 @@ def generate_summaries(conn, topic_slug: str):
         ]
         for future in concurrent.futures.as_completed(futures):
             try:
-                side_key, summary, count = future.result()
+                side_key, summary, count, cost = future.result()
+                total_cost += cost
                 cur.execute(
                     """
                     INSERT INTO topic_summaries (topic_slug, side, summary_text, tweet_count, generated_at)
@@ -192,7 +203,8 @@ Format your response as two sections:
 
 Write analytically and neutrally. Do not take sides. Use bullet points with "- " prefix.
 """
-        gap_text = _call_gemini(gap_prompt)
+        gap_text, gap_cost = _call_gemini(gap_prompt)
+        total_cost += gap_cost
 
         cur.execute(
             """
@@ -206,3 +218,6 @@ Write analytically and neutrally. Do not take sides. Use bullet points with "- "
         )
         conn.commit()
         print("  Narrative gaps generated successfully")
+
+    print(f"  Summaries total cost: ${total_cost:.4f}")
+    return total_cost

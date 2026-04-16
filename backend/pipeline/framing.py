@@ -94,7 +94,10 @@ async def get_topic_labels_async(db, topic_slug: str) -> tuple[dict[str, str], d
     return fl, el
 
 
-def _call_gemini(prompt: str) -> str:
+_GEMINI_FLASH_RATES = {"input": 0.10, "output": 0.40}  # USD per 1M tokens
+
+
+def _call_gemini(prompt: str) -> tuple[str, float]:
     from google import genai
 
     client = genai.Client(api_key=GEMINI_API_KEY)
@@ -106,7 +109,12 @@ def _call_gemini(prompt: str) -> str:
             "temperature": 0.1,
         },
     )
-    return response.text or ""
+    cost = 0.0
+    if response.usage_metadata:
+        in_tok = response.usage_metadata.prompt_token_count or 0
+        out_tok = response.usage_metadata.candidates_token_count or 0
+        cost = (in_tok * _GEMINI_FLASH_RATES["input"] + out_tok * _GEMINI_FLASH_RATES["output"]) / 1_000_000
+    return response.text or "", cost
 
 
 def _build_framing_prompt(tweets_batch: list[dict], topic_name: str,
@@ -153,8 +161,8 @@ Return a JSON array where each element has:
 """
 
 
-def classify_frames(conn, topic_slug: str):
-    """Classify narrative frames and emotions for all on-topic tweets."""
+def classify_frames(conn, topic_slug: str) -> float:
+    """Classify narrative frames and emotions for all on-topic tweets. Returns cost USD."""
     cur = conn.cursor()
 
     # Get topic name
@@ -162,7 +170,7 @@ def classify_frames(conn, topic_slug: str):
     row = cur.fetchone()
     if not row:
         print(f"  Framing: Topic '{topic_slug}' not found")
-        return
+        return 0.0
     topic_name = row[0]
 
     # Load dynamic frame/emotion labels for this topic
@@ -189,7 +197,7 @@ def classify_frames(conn, topic_slug: str):
 
     if not tweets:
         print("  Framing: All tweets already classified")
-        return
+        return 0.0
 
     print(f"  Framing: Classifying {len(tweets)} tweets...")
 
@@ -199,16 +207,21 @@ def classify_frames(conn, topic_slug: str):
     batch_size = 50
     max_parallel = 15
     total_classified = 0
+    total_cost = 0.0
     db_lock = threading.Lock()
+    cost_lock = threading.Lock()
 
     batches = [tweets[i:i + batch_size] for i in range(0, len(tweets), batch_size)]
 
     def process_batch(batch):
-        """Classify framing for a batch and return (updates, count)."""
+        """Classify framing for a batch and return (updates, cost)."""
+        nonlocal total_cost
         prompt = _build_framing_prompt(batch, topic_name, frame_labels, emotion_labels)
         updates = []
         try:
-            response_text = _call_gemini(prompt)
+            response_text, batch_cost = _call_gemini(prompt)
+            with cost_lock:
+                total_cost += batch_cost
             text = response_text.strip()
             if text.startswith("```"):
                 text = text.split("\n", 1)[1].rsplit("```", 1)[0].strip()
@@ -254,4 +267,5 @@ def classify_frames(conn, topic_slug: str):
                         total_classified += 1
 
     conn.commit()
-    print(f"  Framing: Classified {total_classified} tweets")
+    print(f"  Framing: Classified {total_classified} tweets | Cost: ${total_cost:.4f}")
+    return total_cost

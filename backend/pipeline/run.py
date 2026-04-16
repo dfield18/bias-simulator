@@ -272,7 +272,7 @@ def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classifi
         t_fetch_start = _time.time()
         search_query = topic.get("search_query") or topic["name"]
         lang = topic.get("target_language") or "en"
-        raw_tweets = fetch_tweets(topic_slug, search_query, hours=hours, max_pages=max_pages, lang=lang)
+        raw_tweets, fetch_cost = fetch_tweets(topic_slug, search_query, hours=hours, max_pages=max_pages, lang=lang)
         tweets_fetched = len(raw_tweets)
         timings["fetch"] = round(_time.time() - t_fetch_start, 1)
 
@@ -568,7 +568,7 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
         except Exception as e:
             print(f"  Backfill query error (non-fatal): {e}")
 
-        total_cost = cost_class + cost_intensity
+        total_cost = cost_class + cost_intensity + fetch_cost
 
         # Log run — moved after framing/summaries so timings are complete
 
@@ -586,13 +586,15 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
 
         framing_time = [0.0]
         summary_time = [0.0]
+        framing_cost = [0.0]
+        summary_cost = [0.0]
 
         def run_framing():
             t0 = _time.time()
             try:
                 frame_conn = get_sync_connection()
                 from pipeline.framing import classify_frames
-                classify_frames(frame_conn, topic_slug)
+                framing_cost[0] = classify_frames(frame_conn, topic_slug) or 0.0
                 frame_conn.close()
             except Exception as e:
                 print(f"  Frame classification failed: {e}")
@@ -603,7 +605,7 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
             try:
                 sum_conn = get_sync_connection()
                 from pipeline.summarize import generate_summaries
-                generate_summaries(sum_conn, topic_slug)
+                summary_cost[0] = generate_summaries(sum_conn, topic_slug) or 0.0
                 sum_conn.close()
             except Exception as e:
                 print(f"  Summary generation failed: {e}")
@@ -618,6 +620,15 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
         timings["summaries"] = summary_time[0]
         timings["framing_and_summaries"] = round(_time.time() - t_framing_start, 1)
         timings["total"] = round(_time.time() - pipeline_start, 1)
+
+        total_cost += framing_cost[0] + summary_cost[0]
+        timings["cost_breakdown"] = {
+            "fetch": round(fetch_cost, 4),
+            "classify_and_intensity": round(cost_class + cost_intensity, 4),
+            "framing": round(framing_cost[0], 4),
+            "summaries": round(summary_cost[0], 4),
+            "total": round(total_cost, 4),
+        }
 
         # Summary — invalidate backend cache for this topic + demo landing
         from cache import invalidate as invalidate_cache

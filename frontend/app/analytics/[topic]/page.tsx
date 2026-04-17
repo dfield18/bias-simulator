@@ -904,12 +904,15 @@ export default function AnalyticsPage() {
               })();
               const convType = convTypeData.label;
 
-              // Additional computed values for cards
+              // Additional computed values for cards — views stats for the tweet-count winner
               const antiViews = Math.round(anti.avg_views * anti.count);
               const proViews = Math.round(pro.avg_views * pro.count);
               const totalViews = antiViews + proViews;
-              const viewsDominantPct2 = totalViews > 0 ? Math.round(Math.max(antiViews, proViews) / totalViews * 100) : 0;
-              const viewsRatio = Math.round(Math.max(antiViews, proViews) / Math.max(Math.min(antiViews, proViews), 1) * 10) / 10;
+              const volDominantIsAnti = anti.count > pro.count;
+              const volDominantViews = volDominantIsAnti ? antiViews : proViews;
+              const volMinorityViews = volDominantIsAnti ? proViews : antiViews;
+              const viewsDominantPct2 = totalViews > 0 ? Math.round(volDominantViews / totalViews * 100) : 0;
+              const viewsRatio = volMinorityViews > 0 ? Math.round(volDominantViews / volMinorityViews * 10) / 10 : 0;
 
               const antiTop = topAntiEmotion ? emotionLabels[topAntiEmotion[0]] || topAntiEmotion[0] : "—";
               const proTop = topProEmotion ? emotionLabels[topProEmotion[0]] || topProEmotion[0] : "—";
@@ -937,7 +940,7 @@ export default function AnalyticsPage() {
                       {volDominantPct}% of tweets <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsDominantPct2}% of views
                     </div>
                     <div className="text-[10px] text-gray-600 mt-0.5">
-                      {volRatio <= 1.1 ? "similar tweet volume" : `${volRatio}× more tweets`} <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsRatio <= 1.1 ? "similar views" : `${viewsRatio}× more views`}
+                      {volRatio <= 1.1 ? "similar tweet volume" : `${volRatio}× more tweets`} <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsRatio >= 0.9 && viewsRatio <= 1.1 ? "similar views" : viewsRatio > 1.1 ? `${viewsRatio}× more views` : `${Math.round(1 / viewsRatio * 10) / 10}× fewer views`}
                     </div>
                   </div>
 

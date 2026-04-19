@@ -215,7 +215,7 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-5 sm:px-8 pt-10 sm:pt-20 pb-8 sm:pb-16">
         <div className="max-w-2xl">
-          <p className="text-sm text-gray-500 mb-2 sm:mb-3 tracking-wide hidden sm:block">Political media analysis</p>
+          <p className="text-sm text-gray-500 mb-2 sm:mb-3 tracking-wide hidden sm:block">Media sentiment analysis</p>
           <h1 className="text-3xl sm:text-[3.5rem] font-bold leading-[1.1] mb-3 sm:mb-5 tracking-tight">
             The same story.<br />
             Two different realities.

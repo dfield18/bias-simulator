@@ -41,24 +41,21 @@ export default function Home() {
         try {
           const u = await fetchMe();
           setUser(u);
-        } catch (e) {
-          setError(e instanceof Error ? e.message : "Could not connect to backend. Please try again.");
+        } catch {
+          // Anonymous visitor — no error, just show public topics
         }
       } finally {
         setUserLoading(false);
       }
     };
     loadUser();
-    Promise.all([
-      cachedFetch("topics", () => fetchTopics(), 2 * 60 * 1000),
-      cachedFetch("myTopics", () => fetchMyTopics(), 2 * 60 * 1000),
-    ])
-      .then(([t, my]) => {
-        setTopics(t);
-        setMyTopics(my);
-      })
+    cachedFetch("topics", () => fetchTopics(), 2 * 60 * 1000)
+      .then((t) => setTopics(t))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+    cachedFetch("myTopics", () => fetchMyTopics(), 2 * 60 * 1000)
+      .then((my) => setMyTopics(my))
+      .catch(() => {});
   }, []);
 
   const myTopicsList = topics.filter((t) => t.slug in myTopics);
@@ -147,10 +144,12 @@ export default function Home() {
     <main className="max-w-4xl mx-auto px-4 py-10 sm:py-16">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl sm:text-4xl font-bold">DividedView</h1>
-        <div className="flex items-center gap-3">
-          <Link href="/settings" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Settings</Link>
-          <UserButton />
-        </div>
+        {user && (
+          <div className="flex items-center gap-3">
+            <Link href="/settings" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Settings</Link>
+            <UserButton />
+          </div>
+        )}
       </div>
 
       {/* Upgrade success banner */}
@@ -165,10 +164,22 @@ export default function Home() {
       )}
 
       {userLoading ? (
-        <p className="text-gray-500 text-sm mb-10">Loading your account...</p>
+        <p className="text-gray-500 text-sm mb-10">Loading...</p>
       ) : error && !user ? (
         <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 text-red-400 text-sm">{error}</div>
-      ) : user && user.tier !== "free" ? (
+      ) : !user ? (
+        <>
+          <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
+            Explore topics below to see how both sides of a political debate compare. Sign up free to create your own.
+          </p>
+          <Link
+            href="/sign-up"
+            className="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors mb-10 sm:mb-12"
+          >
+            Sign up free
+          </Link>
+        </>
+      ) : user.tier !== "free" ? (
         <>
           <p className="text-gray-400 text-sm sm:text-base mb-4 max-w-xl">
             Explore preloaded topics below, or create a new one — it takes about two minutes to gather tweets and build your dashboard.

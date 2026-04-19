@@ -225,7 +225,7 @@ export default function LandingPage() {
           </p>
           <div className="flex items-center gap-3 sm:gap-4">
             <Link
-              href="/sign-up"
+              href="/dashboard"
               className="inline-block px-5 sm:px-6 py-2 sm:py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
             >
               Try it free

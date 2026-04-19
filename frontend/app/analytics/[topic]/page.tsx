@@ -1017,6 +1017,7 @@ export default function AnalyticsPage() {
 
                   {/* Top stories per side */}
                   {(summaries.anti?.summary || summaries.pro?.summary) && (() => {
+                    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
                     const extractTopStories = (text: string): string[] => {
                       const stories: string[] = [];
                       // Extract from bold sections (Key Themes, Current Events, etc.)
@@ -1029,7 +1030,7 @@ export default function AnalyticsPage() {
                           for (const s of sentences) {
                             const clean = s.trim();
                             if (clean.length > 15 && stories.length < 5) {
-                              stories.push(clean.endsWith(".") ? clean : clean + ".");
+                              stories.push(capitalize(clean.endsWith(".") ? clean : clean + "."));
                             }
                           }
                         }
@@ -1039,8 +1040,8 @@ export default function AnalyticsPage() {
                         const allSentences = text.replace(/\*\*[^*]+\*\*/g, "").split(/\.(?:\s|$)/).filter(s => s.trim().length > 20);
                         for (const s of allSentences) {
                           const clean = s.trim();
-                          if (clean.length > 20 && !stories.includes(clean + ".") && stories.length < 5) {
-                            stories.push(clean.endsWith(".") ? clean : clean + ".");
+                          if (clean.length > 20 && !stories.includes(capitalize(clean + ".")) && stories.length < 5) {
+                            stories.push(capitalize(clean.endsWith(".") ? clean : clean + "."));
                           }
                         }
                       }

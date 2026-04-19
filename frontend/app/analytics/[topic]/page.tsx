@@ -735,8 +735,11 @@ export default function AnalyticsPage() {
                       ))}
                     </div>
                   </div>
-                ) : feedItems.length === 0 ? (
-                  <p className="text-gray-500 text-center py-12">No tweets found.</p>
+                ) : feedItems.length === 0 && allTweets.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="animate-spin h-6 w-6 border-2 border-gray-600 border-t-transparent rounded-full mb-3" />
+                    <p className="text-sm text-gray-500">Loading tweets...</p>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {feedItems.map((item) => (

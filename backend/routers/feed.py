@@ -28,7 +28,7 @@ def tweet_response_with_media(tweet: Tweet) -> TweetResponse:
     return resp
 
 
-_ANON_TOPIC_LIMIT = 5       # unique topics per window
+_ANON_TOPIC_LIMIT = 10      # unique topics per window
 _ANON_RATE_WINDOW = 3600    # 1 hour in seconds
 # Tracks {ip: {topic_slug: first_access_time}} — only unique topics count
 _anon_topics: dict[str, dict[str, float]] = {}
@@ -69,7 +69,7 @@ async def _check_feed_topic_access(topic_slug: str, user: dict | None, db: Async
         if not _check_anon_rate_limit(ip, topic_slug):
             raise HTTPException(
                 status_code=429,
-                detail="You've reached the free limit of 5 topics per hour. Sign up for free to continue.",
+                detail="You've reached the free limit of 10 topics per hour. Sign up for free to continue.",
             )
         return
 

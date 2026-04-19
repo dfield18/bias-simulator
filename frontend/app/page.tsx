@@ -203,7 +203,7 @@ export default function LandingPage() {
               Log in
             </Link>
             <Link
-              href="/sign-up"
+              href="/dashboard"
               className="text-sm px-4 py-1.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors"
             >
               Get started

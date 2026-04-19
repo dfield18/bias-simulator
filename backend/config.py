@@ -2,7 +2,7 @@
 
 # Topics accessible without authentication (demo/public showcase)
 # Also get 1-hour cache TTL instead of 5-minute default
-DEMO_TOPICS = {"iran-conflict", "anthropic", "peter-magyar", "pope-leo-xiii"}
+DEMO_TOPICS = {"iran-conflict", "anthropic", "peter-magyar", "pope-leo-xiii", "donald-trump", "barack-obama", "israel"}
 
 
 # Per-tier quotas. Admin tier intentionally has no limits (None).

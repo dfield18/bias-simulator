@@ -809,6 +809,33 @@ export default function AnalyticsPage() {
               </div>
             )}
 
+            {/* Loading skeleton for overview data */}
+            {(!analytics || !narrative) && (
+              <div className="space-y-3 mb-6 animate-pulse">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-3 h-24">
+                      <div className="h-2 w-20 bg-gray-800 rounded mb-3" />
+                      <div className="h-4 w-32 bg-gray-800 rounded mb-2" />
+                      <div className="h-2 w-24 bg-gray-800 rounded" />
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4 h-40">
+                      <div className="h-2 w-28 bg-gray-800 rounded mb-4" />
+                      <div className="space-y-2">
+                        <div className="h-2 w-full bg-gray-800 rounded" />
+                        <div className="h-2 w-3/4 bg-gray-800 rounded" />
+                        <div className="h-2 w-5/6 bg-gray-800 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Executive Snapshot Metrics */}
             {analytics && narrative && (() => {
               const anti = analytics.engagement.anti;
@@ -1290,8 +1317,23 @@ export default function AnalyticsPage() {
         {activeTab === "report" && <div className="border-t border-gray-700 pt-6 mt-6"><div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-4">Arguments</div></div>}
 
         {(activeTab === "narrative" || activeTab === "report") && (() => {
+          const narrativeLoading = !narrative && Object.keys(summaries).length === 0;
           return (
             <>
+              {narrativeLoading && (
+                <div className="space-y-3 animate-pulse">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4 h-32">
+                      <div className="h-2 w-24 bg-gray-800 rounded mb-4" />
+                      <div className="space-y-2">
+                        <div className="h-2 w-full bg-gray-800 rounded" />
+                        <div className="h-2 w-4/5 bg-gray-800 rounded" />
+                        <div className="h-2 w-3/4 bg-gray-800 rounded" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               {/* 1. Summary — always open, no collapsible wrapper */}
               {Object.keys(summaries).length > 0 && (
                 <SummaryTabs
@@ -1451,6 +1493,19 @@ export default function AnalyticsPage() {
 
         {(activeTab === "voices" || activeTab === "report") && (
           <>
+            {!narrativeDepth && (
+              <div className="space-y-3 animate-pulse">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4 h-36">
+                    <div className="h-2 w-28 bg-gray-800 rounded mb-4" />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2"><div className="h-3 w-20 bg-gray-800 rounded" /><div className="h-8 w-16 bg-gray-800 rounded" /></div>
+                      <div className="space-y-2"><div className="h-3 w-20 bg-gray-800 rounded" /><div className="h-8 w-16 bg-gray-800 rounded" /></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             {/* Amplification — Who is driving the conversation */}
             {narrativeDepth && narrativeDepth.amplification && (() => {
               const { anti, pro, follower_threshold } = narrativeDepth.amplification;

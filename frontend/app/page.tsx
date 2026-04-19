@@ -223,19 +223,22 @@ export default function LandingPage() {
           <p className="text-base sm:text-lg text-gray-400 mb-8 leading-relaxed max-w-lg">
             DividedView pulls real posts from X on any political topic and rebuilds a simulated feed from both perspectives — surfacing the main arguments each side makes and the top accounts driving them.
           </p>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/sign-up"
-              className="inline-block px-6 py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
-            >
-              Try it free
-            </Link>
-            <Link
-              href="/pricing"
-              className="inline-block px-6 py-2.5 border border-gray-600 text-gray-300 rounded-md font-medium hover:border-gray-400 hover:text-white transition-colors text-sm"
-            >
-              Pro is $10/mo
-            </Link>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-4">
+              <Link
+                href="/sign-up"
+                className="inline-block px-6 py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
+              >
+                Try it free
+              </Link>
+              <Link
+                href="/pricing"
+                className="inline-block px-6 py-2.5 border border-gray-600 text-gray-300 rounded-md font-medium hover:border-gray-400 hover:text-white transition-colors text-sm"
+              >
+                Pro is $10/mo
+              </Link>
+            </div>
+            <p className="text-xs text-gray-500">No sign-up required to try it out</p>
           </div>
         </div>
 

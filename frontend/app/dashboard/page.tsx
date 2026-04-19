@@ -247,7 +247,7 @@ export default function Home() {
           {/* Public Policy / Political section */}
           {(() => {
             const featured = topics.filter((t) => t.featured && t.topic_type !== "company");
-            const isFree = user && user.tier === "free";
+            const isFree = !user || user.tier === "free";
             const hasPolitical = myPolitical.length > 0 || (isFree && featured.length > 0) || (!isFree && publicPolitical.length > 0);
             if (!hasPolitical) return null;
             return (
@@ -285,7 +285,7 @@ export default function Home() {
           {/* Company / Brand section */}
           {(() => {
             const featuredCompany = topics.filter((t) => t.featured && t.topic_type === "company");
-            const isFree = user && user.tier === "free";
+            const isFree = !user || user.tier === "free";
             const hasCompany = myCompany.length > 0 || (isFree && featuredCompany.length > 0) || (!isFree && publicCompany.length > 0);
             if (!hasCompany) return null;
             return (

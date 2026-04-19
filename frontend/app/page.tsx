@@ -375,20 +375,6 @@ export default function LandingPage() {
         <p className="text-[10px] text-gray-600 text-center mt-3">Live data from Iran War analysis</p>
       </section>
 
-      {/* CTA */}
-      <section className="border-t border-gray-800/30">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">See what both sides are saying.</h2>
-          <p className="text-gray-500 mb-8 text-sm">Free to start. No credit card required.</p>
-          <Link
-            href="/sign-up"
-            className="inline-block px-6 py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
-          >
-            Get started
-          </Link>
-        </div>
-      </section>
-
       {/* FAQ Section */}
       <section className="max-w-3xl mx-auto px-5 sm:px-8 py-16">
         <h2 className="text-2xl font-bold text-center mb-10">Frequently Asked Questions</h2>
@@ -409,6 +395,15 @@ export default function LandingPage() {
               <p className="px-5 pb-4 text-sm text-gray-400 leading-relaxed -mt-1">{a}</p>
             </details>
           ))}
+        </div>
+        <div className="text-center mt-12">
+          <p className="text-gray-500 text-sm mb-4">See what both sides are saying. Free to start, no credit card required.</p>
+          <Link
+            href="/dashboard"
+            className="inline-block px-6 py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
+          >
+            Get started
+          </Link>
         </div>
       </section>
 

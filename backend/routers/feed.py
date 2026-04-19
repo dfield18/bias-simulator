@@ -35,7 +35,7 @@ _anon_topics: dict[str, dict[str, float]] = {}
 
 
 def _check_anon_rate_limit(ip: str, topic_slug: str) -> bool:
-    """Return True if the anonymous IP is within the rate limit (5 unique topics/hour)."""
+    """Return True if the anonymous IP is within the rate limit (10 unique topics/hour)."""
     now = _time.time()
     cutoff = now - _ANON_RATE_WINDOW
     topics = _anon_topics.get(ip, {})
@@ -55,7 +55,7 @@ async def _check_feed_topic_access(topic_slug: str, user: dict | None, db: Async
     """Check user can access this topic. Raises 404 for private topics the user can't see.
 
     Allows unauthenticated access to demo topics (unlimited) and public
-    topics (rate-limited to 5 unique topics per hour per IP).
+    topics (rate-limited to 10 unique topics per hour per IP).
     """
     if topic_slug in DEMO_TOPICS:
         return

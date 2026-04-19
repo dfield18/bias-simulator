@@ -1,13 +1,15 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from dotenv import load_dotenv
 load_dotenv()
 
 from database import init_db
 from auth import get_current_user
 from routers import feed, topics, overrides, billing, demo, account
+from routers.feed import client_ip_var
 
 
 @asynccontextmanager
@@ -28,6 +30,17 @@ _origins = [
     ] if o.strip()
 ]
 
+class ClientIPMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        forwarded = request.headers.get("x-forwarded-for", "")
+        ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+        token = client_ip_var.set(ip)
+        try:
+            return await call_next(request)
+        finally:
+            client_ip_var.reset(token)
+
+app.add_middleware(ClientIPMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,

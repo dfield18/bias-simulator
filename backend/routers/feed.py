@@ -1,8 +1,12 @@
 import math
 import asyncio
+import time as _time
+from contextvars import ContextVar
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict, Counter
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+
+client_ip_var: ContextVar[str] = ContextVar("client_ip", default="unknown")
 from sqlalchemy import select, func, and_, case, text
 from cache import get_cached, set_cache, cache_ttl_for_topic
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,21 +28,55 @@ def tweet_response_with_media(tweet: Tweet) -> TweetResponse:
     return resp
 
 
+_ANON_TOPIC_LIMIT = 5       # unique topics per window
+_ANON_RATE_WINDOW = 3600    # 1 hour in seconds
+# Tracks {ip: {topic_slug: first_access_time}} — only unique topics count
+_anon_topics: dict[str, dict[str, float]] = {}
+
+
+def _check_anon_rate_limit(ip: str, topic_slug: str) -> bool:
+    """Return True if the anonymous IP is within the rate limit (5 unique topics/hour)."""
+    now = _time.time()
+    cutoff = now - _ANON_RATE_WINDOW
+    topics = _anon_topics.get(ip, {})
+    topics = {slug: t for slug, t in topics.items() if t > cutoff}
+    if topic_slug in topics:
+        _anon_topics[ip] = topics
+        return True
+    if len(topics) >= _ANON_TOPIC_LIMIT:
+        _anon_topics[ip] = topics
+        return False
+    topics[topic_slug] = now
+    _anon_topics[ip] = topics
+    return True
+
+
 async def _check_feed_topic_access(topic_slug: str, user: dict | None, db: AsyncSession):
     """Check user can access this topic. Raises 404 for private topics the user can't see.
 
-    Allows unauthenticated access to demo topics (DEMO_TOPICS).
+    Allows unauthenticated access to demo topics (unlimited) and public
+    topics (rate-limited to 5 unique topics per hour per IP).
     """
-    # Demo topics are accessible without auth
     if topic_slug in DEMO_TOPICS:
         return
-    # All other topics require authentication
+
     if not user:
-        raise HTTPException(status_code=401, detail="Authentication required")
+        result = await db.execute(select(Topic).where(Topic.slug == topic_slug))
+        topic_obj = result.scalar_one_or_none()
+        if not topic_obj or topic_obj.visibility == "private":
+            raise HTTPException(status_code=404, detail="Topic not found")
+        ip = client_ip_var.get()
+        if not _check_anon_rate_limit(ip, topic_slug):
+            raise HTTPException(
+                status_code=429,
+                detail="You've reached the free limit of 5 topics per hour. Sign up for free to continue.",
+            )
+        return
+
     result = await db.execute(select(Topic).where(Topic.slug == topic_slug))
     topic_obj = result.scalar_one_or_none()
     if not topic_obj:
-        return  # topic doesn't exist — endpoint will return empty data
+        return
     if topic_obj.visibility != "private" or user.get("tier") == "admin":
         return
     if topic_obj.created_by == user["id"]:

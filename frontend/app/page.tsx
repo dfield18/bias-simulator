@@ -213,37 +213,35 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-5 sm:px-8 pt-14 sm:pt-20 pb-12 sm:pb-16">
+      <section className="max-w-5xl mx-auto px-5 sm:px-8 pt-10 sm:pt-20 pb-8 sm:pb-16">
         <div className="max-w-2xl">
-          <p className="text-sm text-gray-500 mb-3 tracking-wide">Political media analysis</p>
-          <h1 className="text-4xl sm:text-[3.5rem] font-bold leading-[1.1] mb-5 tracking-tight">
+          <p className="text-sm text-gray-500 mb-2 sm:mb-3 tracking-wide hidden sm:block">Political media analysis</p>
+          <h1 className="text-3xl sm:text-[3.5rem] font-bold leading-[1.1] mb-3 sm:mb-5 tracking-tight">
             The same story.<br />
             Two different realities.
           </h1>
-          <p className="text-base sm:text-lg text-gray-400 mb-8 leading-relaxed max-w-lg">
-            DividedView pulls real posts from X on any political topic and rebuilds a simulated feed from both perspectives — surfacing the main arguments each side makes and the top accounts driving them.
+          <p className="text-sm sm:text-lg text-gray-400 mb-5 sm:mb-8 leading-relaxed max-w-lg">
+            Real posts from X, classified by AI — see the main arguments and top accounts on both sides of any topic.
           </p>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/sign-up"
-                className="inline-block px-6 py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
-              >
-                Try it free
-              </Link>
-              <Link
-                href="/pricing"
-                className="inline-block px-6 py-2.5 border border-gray-600 text-gray-300 rounded-md font-medium hover:border-gray-400 hover:text-white transition-colors text-sm"
-              >
-                Pro is $10/mo
-              </Link>
-            </div>
-            <p className="text-xs text-gray-500">No sign-up required to try it out</p>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Link
+              href="/sign-up"
+              className="inline-block px-5 sm:px-6 py-2 sm:py-2.5 bg-white text-gray-950 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
+            >
+              Try it free
+            </Link>
+            <Link
+              href="/pricing"
+              className="inline-block px-5 sm:px-6 py-2 sm:py-2.5 border border-gray-600 text-gray-300 rounded-md font-medium hover:border-gray-400 hover:text-white transition-colors text-sm"
+            >
+              Pro is $10/mo
+            </Link>
           </div>
+          <p className="text-xs text-gray-500 mt-2">No sign-up required to try it out</p>
         </div>
 
-        <p className="text-sm text-gray-500 mt-10 sm:mt-14 mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
-        <p className="text-base sm:text-lg text-gray-300 mb-6 font-medium">Slide to see how a user&apos;s political bias reshapes their simulated feed.</p>
+        <p className="text-xs sm:text-sm text-gray-500 mt-6 sm:mt-14 mb-2 sm:mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
+        <p className="text-sm sm:text-lg text-gray-300 mb-4 sm:mb-6 font-medium">Slide to see how a user&apos;s political bias reshapes their simulated feed.</p>
 
         {/* Interactive demo — Iran War feed */}
         {(() => {

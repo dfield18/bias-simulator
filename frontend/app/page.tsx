@@ -221,7 +221,7 @@ export default function LandingPage() {
             Two different realities.
           </h1>
           <p className="text-sm sm:text-lg text-gray-400 mb-5 sm:mb-8 leading-relaxed max-w-lg">
-            Real posts from X, split by AI into opposing feeds — see what each side sees, who drives it, and what gets amplified.
+            Real posts from X, split by AI into opposing feeds — see what each side sees, who drives it, and what narratives get amplified.
           </p>
           <div className="flex items-center gap-3 sm:gap-4">
             <Link

@@ -1087,20 +1087,20 @@ export default function AnalyticsPage() {
                       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {antiStories.length > 0 && (
                           <div className={`border ${sc.anti.border} rounded-lg p-3 ${sc.anti.bgFaint}`}>
-                            <div className={`text-[10px] ${sc.anti.text} uppercase tracking-wider font-medium mb-2`}>{topic.anti_label} is focused on</div>
-                            <ul className="space-y-1.5">
+                            <div className={`text-[11px] ${sc.anti.text} uppercase tracking-wider font-medium mb-2`}>{topic.anti_label} is focused on</div>
+                            <ul className="space-y-2">
                               {antiStories.map((s, i) => (
-                                <li key={i} className={`text-[11px] text-gray-300 leading-relaxed pl-3 border-l-2 ${sc.anti.border}`}>{s}</li>
+                                <li key={i} className={`text-xs text-gray-300 leading-relaxed pl-3 border-l-2 ${sc.anti.border}`}>{s}</li>
                               ))}
                             </ul>
                           </div>
                         )}
                         {proStories.length > 0 && (
                           <div className={`border ${sc.pro.border} rounded-lg p-3 ${sc.pro.bgFaint}`}>
-                            <div className={`text-[10px] ${sc.pro.text} uppercase tracking-wider font-medium mb-2`}>{topic.pro_label} is focused on</div>
-                            <ul className="space-y-1.5">
+                            <div className={`text-[11px] ${sc.pro.text} uppercase tracking-wider font-medium mb-2`}>{topic.pro_label} is focused on</div>
+                            <ul className="space-y-2">
                               {proStories.map((s, i) => (
-                                <li key={i} className={`text-[11px] text-gray-300 leading-relaxed pl-3 border-l-2 ${sc.pro.border}`}>{s}</li>
+                                <li key={i} className={`text-xs text-gray-300 leading-relaxed pl-3 border-l-2 ${sc.pro.border}`}>{s}</li>
                               ))}
                             </ul>
                           </div>

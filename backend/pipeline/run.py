@@ -238,7 +238,7 @@ MODEL_MAP = {
 }
 
 
-def run_pipeline(topic_slug: str, hours: int = 24, max_pages: int = 25, classification_model: str = "fast"):
+def run_pipeline(topic_slug: str, hours: int = 48, max_pages: int = 25, classification_model: str = "fast"):
     """Run the full pipeline for a topic."""
     import time as _time
     pipeline_start = _time.time()
@@ -662,7 +662,7 @@ Return a JSON array of objects: [{{"screen_name": "...", "author_type": "..."}}]
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run tweet classification pipeline")
     parser.add_argument("--topic", required=True, help="Topic slug (e.g. iran-conflict)")
-    parser.add_argument("--hours", type=int, default=24, help="Hours to look back (default: 24)")
+    parser.add_argument("--hours", type=int, default=48, help="Hours to look back (default: 48)")
     args = parser.parse_args()
 
     run_pipeline(args.topic, hours=args.hours)

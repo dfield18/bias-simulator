@@ -105,7 +105,7 @@ export default function TweetCard({
 
       {/* Author bio */}
       {tweet.author_bio && (
-        <p className="text-xs text-gray-500 mb-2">
+        <p className="text-sm text-gray-500 mb-2">
           {truncate(tweet.author_bio, 80)}
         </p>
       )}
@@ -116,7 +116,7 @@ export default function TweetCard({
         const isLong = cleanText.length > 280;
         if (!isLong) {
           return (
-            <p className="text-gray-200 mb-3 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">
+            <p className="text-gray-200 mb-3 whitespace-pre-wrap leading-relaxed text-base">
               {cleanText}
             </p>
           );

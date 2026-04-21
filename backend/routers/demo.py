@@ -33,7 +33,7 @@ async def get_landing_data(
     anti_bent = topic_obj.anti_label.lower().replace(" ", "-")
     pro_bent = topic_obj.pro_label.lower().replace(" ", "-")
 
-    since = datetime.now(timezone.utc) - timedelta(hours=720)
+    since = datetime.now(timezone.utc) - timedelta(hours=48)
 
     stmt = (
         select(Tweet, Classification)

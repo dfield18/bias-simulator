@@ -459,9 +459,10 @@ export default function FeedPage() {
               </button>
             </div>
           ) : feed.length === 0 ? (
-            <p className="text-gray-500 text-center py-12">
-              No tweets found for this topic.
-            </p>
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin h-6 w-6 border-2 border-gray-600 border-t-transparent rounded-full mb-3" />
+              <p className="text-sm text-gray-500">Loading tweets...</p>
+            </div>
           ) : (
             <div className="space-y-4">
               {feed.map((item) => (

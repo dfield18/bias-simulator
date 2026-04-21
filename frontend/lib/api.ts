@@ -903,7 +903,7 @@ export interface SmartFeedItem {
 export async function fetchSmartFeed(
   topic: string,
   bias: number = 0,
-  hours: number = 720,
+  hours: number = 48,
   limit: number = 100,
 ): Promise<SmartFeedItem[]> {
   const params = new URLSearchParams({

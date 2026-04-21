@@ -113,7 +113,7 @@ async def get_feed(
     topic: str,
     bias: float = Query(default=0.0, ge=-10, le=10),
     limit: int = Query(default=20, le=50),
-    hours: int = Query(default=24),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -190,7 +190,7 @@ class RawFeedItem(BaseModel):
 @router.get("/feed/all", response_model=list[RawFeedItem])
 async def get_feed_all(
     topic: str,
-    hours: int = Query(default=24),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -783,7 +783,7 @@ def _get_bias_weight_continuous(
 @router.get("/breakdown", response_model=BreakdownResponse)
 async def get_breakdown(
     topic: str,
-    hours: int = Query(default=24),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):

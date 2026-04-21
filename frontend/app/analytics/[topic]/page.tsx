@@ -1213,25 +1213,25 @@ export default function AnalyticsPage() {
 
               return (
                 <div className="mt-6 border-t border-gray-800 pt-6">
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber</div>
-                  <div className="flex items-center gap-4 mt-2">
-                    <span className={`text-3xl font-bold ${color}`}>{score}%</span>
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6">
+                  <div className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-medium">Echo Chamber</div>
+                  <div className="flex items-center gap-5 mt-3">
+                    <span className={`text-4xl font-bold ${color}`}>{score}%</span>
                     <div className="flex-1">
-                      <div className="text-sm font-semibold text-gray-200">{level}</div>
-                      <p className="text-[10px] text-gray-500 mt-0.5">{exposureOverlap.sentence}</p>
+                      <div className="text-base font-semibold text-gray-200">{level}</div>
+                      <p className="text-sm text-gray-500 mt-1">{exposureOverlap.sentence}</p>
                     </div>
                   </div>
-                  <div className="mt-3 h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="mt-4 h-2.5 bg-gray-800 rounded-full overflow-hidden">
                     <div className={`h-full ${bgColor} rounded-full transition-all`} style={{ width: `${score}%`, opacity: 0.7 }} />
                   </div>
-                  <div className="flex justify-between text-[9px] text-gray-600 mt-1">
+                  <div className="flex justify-between text-[10px] text-gray-600 mt-1.5">
                     <span>Separate realities</span>
                     <span>Shared conversation</span>
                   </div>
                   <button
                     onClick={() => setActiveTab("narrative")}
-                    className="text-[10px] text-gray-500 hover:text-gray-300 mt-3 transition-colors"
+                    className="text-xs text-gray-500 hover:text-gray-300 mt-4 transition-colors"
                   >
                     View full analysis in Narratives &rarr;
                   </button>
@@ -1321,18 +1321,20 @@ export default function AnalyticsPage() {
               );
 
               return (
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Feed Preview</div>
-                  <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
+                <div className="mt-6 border-t border-gray-800 pt-6">
+                <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6">
+                  <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-medium">Feed Preview</div>
+                  <h3 className="text-base font-semibold text-gray-300 mb-0.5">
                     What each side&apos;s audience sees
                   </h3>
-                  <p className="text-[10px] text-gray-600 mb-5">
+                  <p className="text-xs text-gray-600 mb-5">
                     The top posts from each side, ranked by engagement — this is the content shaping each audience
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {renderFeedColumn(sideBySideFeed.anti, aL, sc.anti.text, sc.anti.border)}
                     {renderFeedColumn(sideBySideFeed.pro, pL, sc.pro.text, sc.pro.border)}
                   </div>
+                </div>
                 </div>
               );
             })()}

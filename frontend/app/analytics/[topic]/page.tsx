@@ -1055,7 +1055,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Unified: What's Happening & Why + What's Driving This */}
-                <div className="mt-4 bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
+                <div className="mt-6 bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
                   <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-medium">
                     What's Happening & Why
                   </div>
@@ -1130,11 +1130,11 @@ export default function AnalyticsPage() {
                   })()}
 
                   {/* What This Means — combined with conversation type */}
-                  <div className="border-t border-gray-800 pt-3 mt-4">
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5 font-medium">
+                  <div className="border-t border-gray-800 pt-4 mt-5">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1.5 font-medium">
                       What This Means
                     </div>
-                    <p className="text-xs text-gray-300 leading-relaxed">
+                    <p className="text-sm text-gray-300 leading-relaxed">
                       <span className="font-semibold text-gray-200">{convType}:</span> {convTypeData.explanation}
                     </p>
                     {analytics && narrative && (
@@ -1153,13 +1153,14 @@ export default function AnalyticsPage() {
             })()}
 
             {/* Narrative Mix */}
-            {narrative && <NarrativeMix data={narrative} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}
+            {narrative && <div className="mt-6">{<NarrativeMix data={narrative} colorScheme={(topic.color_scheme || "political") as "political" | "neutral"} />}</div>}
 
             {/* Top Voices — compact */}
             {analytics && (
+              <div className="mt-6 border-t border-gray-800 pt-6">
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Top Voices</div>
-                <h3 className="text-sm font-semibold text-gray-300 mb-3">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-medium">Top Voices</div>
+                <h3 className="text-base font-semibold text-gray-300 mb-3">
                   Who's Shaping the Conversation
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1196,9 +1197,10 @@ export default function AnalyticsPage() {
                     );
                   })}
                 </div>
-                <p className="text-[9px] text-gray-600 mt-3">
+                <p className="text-xs text-gray-600 mt-3">
                   Engagement = likes + retweets + replies. Ranked by total engagement across all posts in the dataset.
                 </p>
+              </div>
               </div>
             )}
 
@@ -1210,8 +1212,9 @@ export default function AnalyticsPage() {
               const level = score <= 20 ? "Strong Echo Chamber" : score <= 40 ? "Moderate Echo Chamber" : score <= 60 ? "Some Overlap" : "Shared Conversation";
 
               return (
+                <div className="mt-6 border-t border-gray-800 pt-6">
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber</div>
                   <div className="flex items-center gap-4 mt-2">
                     <span className={`text-3xl font-bold ${color}`}>{score}%</span>
                     <div className="flex-1">
@@ -1232,6 +1235,7 @@ export default function AnalyticsPage() {
                   >
                     View full analysis in Narratives &rarr;
                   </button>
+                </div>
                 </div>
               );
             })()}

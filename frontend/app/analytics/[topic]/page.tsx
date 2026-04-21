@@ -1539,11 +1539,11 @@ export default function AnalyticsPage() {
 
               return (
                 <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Who Amplifies Whom</div>
-                  <h3 className="text-sm font-semibold text-gray-300 mb-0.5">
+                  <div className="text-[11px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Who Amplifies Whom</div>
+                  <h3 className="text-base font-semibold text-gray-300 mb-0.5">
                     Who is driving the conversation
                   </h3>
-                  <p className="text-[10px] text-gray-600 mb-5">
+                  <p className="text-xs text-gray-600 mb-5">
                     High-reach accounts ({thresholdLabel}+ followers) vs organic spread. Engagements = likes + retweets + quotes + replies.
                   </p>
 
@@ -1553,34 +1553,34 @@ export default function AnalyticsPage() {
                       { side: pro, label: pL, color: sc.pro.text, border: sc.pro.border, barColor: sc.pro.bgLight.replace("/20", "/50") },
                     ] as const).map(({ side, label, color, border, barColor }) => (
                       <div key={label} className={`border ${border} rounded-xl p-4 bg-gray-800/20`}>
-                        <div className={`text-[10px] ${color} uppercase tracking-wider font-medium mb-3`}>{label}</div>
+                        <div className={`text-[11px] ${color} uppercase tracking-wider font-medium mb-3`}>{label}</div>
                         <div className="mb-3">
-                          <div className="text-[10px] text-gray-400 mb-1">Share of engagement from high-reach accounts</div>
-                          <div className="h-5 bg-gray-800 rounded overflow-hidden relative">
+                          <div className="text-xs text-gray-400 mb-1">Share of engagement from high-reach accounts</div>
+                          <div className="h-6 bg-gray-800 rounded overflow-hidden relative">
                             <div className={`h-full ${barColor} rounded`} style={{ width: `${side.high_reach_eng_share}%` }} />
-                            <span className="absolute inset-y-0 left-2 flex items-center text-[10px] text-white font-medium">{side.high_reach_eng_share}%</span>
+                            <span className="absolute inset-y-0 left-2 flex items-center text-xs text-white font-medium">{side.high_reach_eng_share}%</span>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 text-center">
                           <div>
-                            <div className="text-lg font-bold text-gray-200">{fmt(side.high_reach_avg_eng)}</div>
-                            <div className="text-[9px] text-gray-500">avg engagements (high reach)</div>
+                            <div className="text-xl font-bold text-gray-200">{fmt(side.high_reach_avg_eng)}</div>
+                            <div className="text-[10px] text-gray-500">avg engagements (high reach)</div>
                           </div>
                           <div>
-                            <div className="text-lg font-bold text-gray-200">{fmt(side.organic_avg_eng)}</div>
-                            <div className="text-[9px] text-gray-500">avg engagements (organic)</div>
+                            <div className="text-xl font-bold text-gray-200">{fmt(side.organic_avg_eng)}</div>
+                            <div className="text-[10px] text-gray-500">avg engagements (organic)</div>
                           </div>
                         </div>
-                        <div className="text-[9px] text-gray-600 mt-2">{side.high_reach_count} high-reach / {side.organic_count} organic accounts</div>
+                        <div className="text-[10px] text-gray-600 mt-2">{side.high_reach_count} high-reach / {side.organic_count} organic accounts</div>
                         {side.top_amplifiers.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-gray-700/30">
-                            <div className="text-[9px] text-gray-500 uppercase tracking-wider mb-2">Top Amplifiers</div>
+                            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Top Amplifiers</div>
                             <div className="space-y-2">
                               {side.top_amplifiers.map((amp, i) => (
                                 <a key={`${amp.screen_name}-${i}`} href={amp.url} target="_blank" rel="noopener noreferrer"
                                   className="block hover:bg-gray-700/20 rounded px-1.5 py-1.5 transition-colors">
-                                  <p className="text-[10px] text-gray-300 leading-relaxed line-clamp-2 mb-1">{decodeHtml(amp.full_text)}</p>
-                                  <div className="flex items-center gap-2 text-[9px] text-gray-500">
+                                  <p className="text-xs text-gray-300 leading-relaxed line-clamp-2 mb-1">{decodeHtml(amp.full_text)}</p>
+                                  <div className="flex items-center gap-2 text-[10px] text-gray-500">
                                     <span>(@{amp.screen_name})</span>
                                     <span>{fmt(amp.followers)} followers</span>
                                     <span>{fmt(amp.engagement)} engagements</span>

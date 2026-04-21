@@ -826,7 +826,7 @@ export default function AnalyticsPage() {
           <>
             {/* Data freshness info */}
             {lastRun && lastRun.ran_at && activeTab === "pulse" && (
-              <div className="text-[10px] text-gray-600 mb-2">
+              <div className="text-xs text-gray-600 mb-2">
                 This data was last refreshed on {new Date(lastRun.ran_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} at {new Date(lastRun.ran_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}.
                 {(userTier === "admin" || (topic && topic.created_by != null && userId === topic.created_by)) && " To see more current data, click Refresh Data above — it takes a few minutes to collect and analyze new posts."}
               </div>
@@ -986,10 +986,10 @@ export default function AnalyticsPage() {
                     <div className={`text-lg sm:text-xl font-bold ${volDominant === topic.anti_label ? sc.anti.text : sc.pro.text} leading-tight`}>
                       {volDominant} leads the conversation
                     </div>
-                    <div className="text-xs text-gray-400 mt-2">
-                      {volDominantPct}% of tweets <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsDominantPct2}% of views
+                    <div className="text-sm text-gray-400 mt-2">
+                      {volDominantPct}% of tweets <span className="text-gray-500 mx-1">&#x2022;</span> {viewsDominantPct2}% of views
                     </div>
-                    <div className="text-[11px] text-gray-600 mt-0.5">
+                    <div className="text-xs text-gray-600 mt-0.5">
                       {volRatio <= 1.1 ? "similar tweet volume" : `${volRatio}× more tweets`} <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsRatio >= 0.9 && viewsRatio <= 1.1 ? "similar views" : viewsRatio > 1.1 ? `${viewsRatio}× more views` : `${Math.round(1 / viewsRatio * 10) / 10}× fewer views`}
                     </div>
                   </div>
@@ -1000,7 +1000,7 @@ export default function AnalyticsPage() {
                     <div className={`text-lg sm:text-xl font-bold ${perfDominant === topic.anti_label ? sc.anti.text : sc.pro.text} leading-tight`}>
                       {perfRatio <= 1.1 ? `${perfDominant} and ${perfDominant === topic.anti_label ? topic.pro_label : topic.anti_label} have similar engagement` : `${perfDominant} gets ${perfRatio}× more engagement`}
                     </div>
-                    <div className="text-xs text-gray-400 mt-2">
+                    <div className="text-sm text-gray-400 mt-2">
                       {fmt(Math.round(Math.max(anti.avg_engagement, pro.avg_engagement)))} vs {fmt(Math.round(Math.min(anti.avg_engagement, pro.avg_engagement)))} avg engagement per tweet (likes + retweets + replies)
                     </div>
                   </div>
@@ -1014,7 +1014,7 @@ export default function AnalyticsPage() {
                         : gapScore <= 60 ? "Very different stories being told"
                         : "Almost completely different realities"}
                     </div>
-                    <div className="text-xs text-gray-400 mt-2">
+                    <div className="text-sm text-gray-400 mt-2">
                       {gapLabel} divide ({gapScore}/100)
                     </div>
                     <details className="mt-1">
@@ -1035,7 +1035,7 @@ export default function AnalyticsPage() {
                         <div className="text-lg sm:text-xl font-bold text-gray-100 leading-tight">
                           {topEmotionLabel}
                         </div>
-                        <div className="text-xs text-gray-400 mt-2">
+                        <div className="text-sm text-gray-400 mt-2">
                           Top emotional driver on both sides
                         </div>
                       </>
@@ -1061,7 +1061,7 @@ export default function AnalyticsPage() {
                   </div>
 
                   {/* Headline */}
-                  <p className="text-base sm:text-lg text-gray-200 font-semibold leading-snug mt-1">
+                  <p className="text-lg sm:text-xl text-gray-200 font-semibold leading-snug mt-1">
                     {summaryLine}
                   </p>
 

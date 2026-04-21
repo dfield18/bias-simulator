@@ -10,11 +10,14 @@ from database import init_db
 from auth import get_current_user
 from routers import feed, topics, overrides, billing, demo, account
 from routers.feed import client_ip_var
+from scheduler import start_scheduler, refresh_featured_topics, CRON_SECRET
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    if os.getenv("ENABLE_SCHEDULER", "true").lower() == "true":
+        start_scheduler()
     yield
 
 
@@ -66,3 +69,15 @@ async def health():
 async def get_me(user: dict = Depends(get_current_user)):
     """Return the current user's profile (id, email, name, tier)."""
     return user
+
+
+@app.post("/api/cron/refresh-featured")
+async def cron_refresh_featured(request: Request):
+    """Trigger a refresh of all featured topics. Secured by CRON_SECRET."""
+    secret = request.headers.get("x-cron-secret", "")
+    if not CRON_SECRET or secret != CRON_SECRET:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Invalid cron secret")
+    import threading
+    threading.Thread(target=refresh_featured_topics, daemon=True).start()
+    return {"status": "started", "message": "Refreshing featured topics in background"}

@@ -981,73 +981,73 @@ export default function AnalyticsPage() {
                 <>
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {/* Card 1: Who's Dominating */}
-                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Who's Leading</div>
-                    <div className={`text-base sm:text-lg font-bold ${volDominant === topic.anti_label ? sc.anti.text : sc.pro.text} leading-tight`}>
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1.5">Who's Leading</div>
+                    <div className={`text-lg sm:text-xl font-bold ${volDominant === topic.anti_label ? sc.anti.text : sc.pro.text} leading-tight`}>
                       {volDominant} leads the conversation
                     </div>
-                    <div className="text-[10px] text-gray-400 mt-2">
+                    <div className="text-xs text-gray-400 mt-2">
                       {volDominantPct}% of tweets <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsDominantPct2}% of views
                     </div>
-                    <div className="text-[10px] text-gray-600 mt-0.5">
+                    <div className="text-[11px] text-gray-600 mt-0.5">
                       {volRatio <= 1.1 ? "similar tweet volume" : `${volRatio}× more tweets`} <span className="text-gray-500 mx-1 text-sm">&#x2022;</span> {viewsRatio >= 0.9 && viewsRatio <= 1.1 ? "similar views" : viewsRatio > 1.1 ? `${viewsRatio}× more views` : `${Math.round(1 / viewsRatio * 10) / 10}× fewer views`}
                     </div>
                   </div>
 
                   {/* Card 2: What Performs Best */}
-                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">What Performs Best</div>
-                    <div className={`text-base sm:text-lg font-bold ${perfDominant === topic.anti_label ? sc.anti.text : sc.pro.text} leading-tight`}>
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1.5">What Performs Best</div>
+                    <div className={`text-lg sm:text-xl font-bold ${perfDominant === topic.anti_label ? sc.anti.text : sc.pro.text} leading-tight`}>
                       {perfRatio <= 1.1 ? `${perfDominant} and ${perfDominant === topic.anti_label ? topic.pro_label : topic.anti_label} have similar engagement` : `${perfDominant} gets ${perfRatio}× more engagement`}
                     </div>
-                    <div className="text-[10px] text-gray-400 mt-2">
+                    <div className="text-xs text-gray-400 mt-2">
                       {fmt(Math.round(Math.max(anti.avg_engagement, pro.avg_engagement)))} vs {fmt(Math.round(Math.min(anti.avg_engagement, pro.avg_engagement)))} avg engagement per tweet (likes + retweets + replies)
                     </div>
                   </div>
 
                   {/* Card 3: Narrative Divide */}
-                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Narrative Divide</div>
-                    <div className="text-base sm:text-lg font-bold text-yellow-400 leading-tight">
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1.5">Narrative Divide</div>
+                    <div className="text-lg sm:text-xl font-bold text-yellow-400 leading-tight">
                       {gapScore <= 20 ? "Similar stories on both sides"
                         : gapScore <= 40 ? "Different stories, not just different opinions"
                         : gapScore <= 60 ? "Very different stories being told"
                         : "Almost completely different realities"}
                     </div>
-                    <div className="text-[10px] text-gray-400 mt-2">
+                    <div className="text-xs text-gray-400 mt-2">
                       {gapLabel} divide ({gapScore}/100)
                     </div>
                     <details className="mt-1">
-                      <summary className="text-[10px] text-gray-600 cursor-pointer hover:text-gray-400">
+                      <summary className="text-[11px] text-gray-600 cursor-pointer hover:text-gray-400">
                         How is this calculated?
                       </summary>
-                      <p className="text-[10px] text-gray-600 mt-1 leading-relaxed">
+                      <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
                         Measures how differently each side frames the topic. For each argument type (security, humanitarian, economic, etc.), we compare what % of each side's tweets use that frame, then sum the differences. 0 = identical framing on both sides. 100 = completely different framing with no overlap.
                       </p>
                     </details>
                   </div>
 
                   {/* Card 4: What Drives Engagement */}
-                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-3">
-                    <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">What Drives Engagement</div>
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1.5">What Drives Engagement</div>
                     {sameTopEmotion ? (
                       <>
-                        <div className="text-base sm:text-lg font-bold text-gray-100 leading-tight">
+                        <div className="text-lg sm:text-xl font-bold text-gray-100 leading-tight">
                           {topEmotionLabel}
                         </div>
-                        <div className="text-[10px] text-gray-400 mt-2">
+                        <div className="text-xs text-gray-400 mt-2">
                           Top emotional driver on both sides
                         </div>
                       </>
                     ) : (
                       <div className="space-y-1.5 mt-1">
                         <div>
-                          <div className={`text-[10px] ${sc.anti.text} font-medium`}>{topic.anti_label}</div>
-                          <div className="text-sm sm:text-base font-bold text-gray-100 leading-tight">{antiTop}</div>
+                          <div className={`text-[11px] ${sc.anti.text} font-medium`}>{topic.anti_label}</div>
+                          <div className="text-base sm:text-lg font-bold text-gray-100 leading-tight">{antiTop}</div>
                         </div>
                         <div>
-                          <div className={`text-[10px] ${sc.pro.text} font-medium`}>{topic.pro_label}</div>
-                          <div className="text-sm sm:text-base font-bold text-gray-100 leading-tight">{proTop}</div>
+                          <div className={`text-[11px] ${sc.pro.text} font-medium`}>{topic.pro_label}</div>
+                          <div className="text-base sm:text-lg font-bold text-gray-100 leading-tight">{proTop}</div>
                         </div>
                       </div>
                     )}
@@ -1056,12 +1056,12 @@ export default function AnalyticsPage() {
 
                 {/* Unified: What's Happening & Why + What's Driving This */}
                 <div className="mt-4 bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5">
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">
+                  <div className="text-xs text-gray-500 uppercase tracking-wider mb-1 font-medium">
                     What's Happening & Why
                   </div>
 
                   {/* Headline */}
-                  <p className="text-sm sm:text-base text-gray-200 font-semibold leading-snug mt-1">
+                  <p className="text-base sm:text-lg text-gray-200 font-semibold leading-snug mt-1">
                     {summaryLine}
                   </p>
 

@@ -138,12 +138,12 @@ export default function AnalyticsPage() {
     }).catch(() => { clearTimeout(timeout); setFeedLoading(false); });
     cachedFetch(`${s}:lastRun`, () => fetchLastRun(s), 2 * 60 * 1000).then((d) => d && setLastRun(d)).catch(console.error);
     // Feed data — needed for default tab
-    cachedFetch(`${s}:allTweets`, () => fetchAllTweets(s, 720)).then(setAllTweets).catch(console.error);
+    cachedFetch(`${s}:allTweets`, () => fetchAllTweets(s, 48)).then(setAllTweets).catch(console.error);
     cachedFetch(`${s}:smartFeed:0`, () => fetchSmartFeed(s, 0, 720, 200))
       .then(setSmartFeedItems)
       .catch(console.error)
       .finally(() => setFeedLoading(false));
-    cachedFetch(`${s}:breakdown`, () => fetchBreakdown(s, 720)).then(setBreakdown).catch(console.error);
+    cachedFetch(`${s}:breakdown`, () => fetchBreakdown(s, 48)).then(setBreakdown).catch(console.error);
 
     // Background prefetch — load all other data after a short delay so feed renders first
     const bgTimer = setTimeout(() => {
@@ -456,14 +456,14 @@ export default function AnalyticsPage() {
                             try {
                               const [newFeed, newBreakdown, newRun] = await Promise.all([
                                 fetchSmartFeed(topicSlug, bias, 720, 200),
-                                fetchBreakdown(topicSlug, 720),
+                                fetchBreakdown(topicSlug, 48),
                                 fetchLastRun(topicSlug),
                               ]);
                               setSmartFeedItems(newFeed);
                               setBreakdown(newBreakdown);
                               if (newRun) setLastRun(newRun);
                               // Also refresh all tweets for the chart
-                              fetchAllTweets(topicSlug, 720).then(setAllTweets).catch(() => {});
+                              fetchAllTweets(topicSlug, 48).then(setAllTweets).catch(() => {});
                             } catch { /* page will show stale data, user can reload */ }
                             setIsRunning("done");
                             return;

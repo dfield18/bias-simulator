@@ -94,7 +94,7 @@ from config import DEMO_TOPICS
 router = APIRouter()
 
 
-async def _get_latest_run_since(topic: str, db: AsyncSession, fallback_hours: int = 720) -> datetime:
+async def _get_latest_run_since(topic: str, db: AsyncSession, fallback_hours: int = 48) -> datetime:
     """Rolling lower bound on tweet.fetched_at for analytics queries.
 
     Returns now - fallback_hours so consecutive pipeline runs accumulate into
@@ -341,7 +341,7 @@ def _detect_media_type(raw_json: dict) -> str:
 async def get_smart_feed(
     topic: str,
     bias: float = Query(default=0.0, ge=-10, le=10),
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     limit: int = Query(default=100, le=500),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
@@ -922,7 +922,7 @@ async def get_summaries(
 @router.get("/narrative")
 async def get_narrative(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -1071,7 +1071,7 @@ def _overlap_label(pct: int) -> str:
 @router.get("/gap-analysis")
 async def get_gap_analysis(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -1300,7 +1300,7 @@ async def get_gap_analysis(
 @router.get("/exposure-overlap")
 async def get_exposure_overlap(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -1517,7 +1517,7 @@ async def get_exposure_overlap(
 @router.get("/paired-stories")
 async def get_paired_stories(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -1838,7 +1838,7 @@ Return a JSON array with one object per story:
 @router.get("/recommendations")
 async def get_recommendations(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -1971,7 +1971,7 @@ Return JSON:
 @router.get("/analytics")
 async def get_analytics(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -2402,7 +2402,7 @@ async def get_analytics(
 @router.get("/pulse-extras")
 async def get_pulse_extras(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -2537,7 +2537,7 @@ async def get_pulse_extras(
 @router.get("/narrative-strategy")
 async def get_narrative_strategy(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -2656,7 +2656,7 @@ async def get_narrative_strategy(
 @router.get("/narrative-depth")
 async def get_narrative_depth(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -2855,7 +2855,7 @@ async def get_narrative_depth(
 @router.get("/media-breakdown")
 async def get_media_breakdown(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -2942,7 +2942,7 @@ async def get_media_breakdown(
 @router.get("/side-by-side-feed")
 async def get_side_by_side_feed(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     n: int = Query(default=5, le=10),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
@@ -3010,7 +3010,7 @@ async def get_side_by_side_feed(
 @router.get("/hashtags")
 async def get_hashtags(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -3125,7 +3125,7 @@ async def get_last_run(
 @router.get("/dunks")
 async def get_dunks(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):
@@ -3292,7 +3292,7 @@ async def get_dunks(
 @router.get("/geography")
 async def get_geography(
     topic: str,
-    hours: int = Query(default=720),
+    hours: int = Query(default=48),
     db: AsyncSession = Depends(get_db),
     user: dict | None = Depends(optional_user),
 ):

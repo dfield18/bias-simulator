@@ -221,7 +221,7 @@ export default function LandingPage() {
             Two different realities.
           </h1>
           <p className="text-sm sm:text-lg text-gray-400 mb-5 sm:mb-8 leading-relaxed max-w-lg">
-            We rebuild X feeds from both sides of any topic — using real posts classified by AI so you can see what each side&apos;s algorithm would show them.
+            We simulate X feeds from both sides of any topic — using real posts classified by AI so you can see what each side&apos;s algorithm shows them.
           </p>
           <div className="flex items-center gap-3 sm:gap-4">
             <Link

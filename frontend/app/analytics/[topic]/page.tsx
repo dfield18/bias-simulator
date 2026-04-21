@@ -629,7 +629,7 @@ export default function AnalyticsPage() {
         {activeTab === "feed" && (
           <>
             {/* Sentiment distribution chart */}
-            {allTweets.length > 0 && (
+            {allTweets.length > 0 ? (
               <SentimentDistribution
                 items={allTweets}
                 antiLabel={topic.anti_label}
@@ -638,6 +638,26 @@ export default function AnalyticsPage() {
                 onChange={setBias}
                 colorScheme={(topic.color_scheme || "political") as "political" | "neutral"}
               />
+            ) : (
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 animate-pulse">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-4 w-40 bg-gray-800 rounded" />
+                  <div className="flex gap-2"><div className="h-5 w-14 bg-gray-800 rounded" /><div className="h-5 w-20 bg-gray-800 rounded" /></div>
+                </div>
+                <div className="h-40 flex items-end justify-center gap-0.5 mb-4">
+                  {[...Array(21)].map((_, i) => {
+                    const h = Math.max(8, Math.round(40 * Math.exp(-((i - 5) ** 2) / 8) + 40 * Math.exp(-((i - 15) ** 2) / 8)));
+                    return <div key={i} className="w-[4%] bg-gray-800 rounded-t" style={{ height: `${h}%` }} />;
+                  })}
+                </div>
+                <div className="flex justify-between">
+                  <div className="h-3 w-20 bg-gray-800 rounded" />
+                  <div className="h-3 w-8 bg-gray-800 rounded" />
+                  <div className="h-3 w-20 bg-gray-800 rounded" />
+                </div>
+                <div className="h-2 w-full bg-gray-800 rounded mt-3" />
+                <p className="text-xs text-gray-600 text-center mt-3">Loading distribution...</p>
+              </div>
             )}
             <p className="text-[11px] text-gray-500 leading-relaxed">
               This simulated feed is built from real posts pulled from X and classified by AI. Drag the slider to simulate how a feed algorithm would prioritize content based on political leaning. Classifications are estimates and may occasionally be inaccurate.

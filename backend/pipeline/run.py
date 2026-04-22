@@ -375,7 +375,7 @@ def run_pipeline(topic_slug: str, hours: int = 48, max_pages: int = 25, classifi
             results_lock = threading.Lock()
 
             batch_size = 40
-            max_parallel = 12
+            max_parallel = 6
             batches = [tweets_to_classify[i:i + batch_size] for i in range(0, len(tweets_to_classify), batch_size)]
 
             def classify_batch(batch):

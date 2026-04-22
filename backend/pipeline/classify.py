@@ -15,30 +15,41 @@ COSTS = {
 }
 
 
-def _call_gemini(prompt: str, model: str = "gemini-2.0-flash") -> tuple[str, float]:
-    """Call Gemini API and return (response_text, cost_usd)."""
+def _call_gemini(prompt: str, model: str = "gemini-2.0-flash", max_retries: int = 3) -> tuple[str, float]:
+    """Call Gemini API with retry on rate limits. Returns (response_text, cost_usd)."""
     from google import genai
 
     client = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(
-        model=model,
-        contents=prompt,
-        config={
-            "response_mime_type": "application/json",
-            "temperature": 0.1,
-        },
-    )
+    total_cost = 0.0
 
-    text = response.text or ""
-    # Estimate cost from usage metadata
-    cost = 0.0
-    if response.usage_metadata:
-        input_tokens = response.usage_metadata.prompt_token_count or 0
-        output_tokens = response.usage_metadata.candidates_token_count or 0
-        rates = COSTS.get(model, COSTS["gemini-2.0-flash"])
-        cost = (input_tokens * rates["input"] + output_tokens * rates["output"]) / 1_000_000
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "temperature": 0.1,
+                },
+            )
 
-    return text, cost
+            text = response.text or ""
+            if response.usage_metadata:
+                input_tokens = response.usage_metadata.prompt_token_count or 0
+                output_tokens = response.usage_metadata.candidates_token_count or 0
+                rates = COSTS.get(model, COSTS["gemini-2.0-flash"])
+                total_cost += (input_tokens * rates["input"] + output_tokens * rates["output"]) / 1_000_000
+
+            return text, total_cost
+        except Exception as e:
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                wait = 2 ** attempt * 5
+                print(f"  Rate limited (attempt {attempt + 1}/{max_retries}), waiting {wait}s...")
+                time.sleep(wait)
+            else:
+                raise
+
+    return "", total_cost
 
 
 def _build_classification_prompt(tweets_batch: list[dict], topic_prompt: str, topic_type: str = "political") -> str:

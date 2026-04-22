@@ -16,21 +16,34 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 _GEMINI_FLASH_RATES = {"input": 0.10, "output": 0.40}  # USD per 1M tokens
 
 
-def _call_gemini(prompt: str) -> tuple[str, float]:
+def _call_gemini(prompt: str, max_retries: int = 3) -> tuple[str, float]:
+    import time as _t
     from google import genai
 
     client = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt,
-        config={"temperature": 0.4},
-    )
-    cost = 0.0
-    if response.usage_metadata:
-        in_tok = response.usage_metadata.prompt_token_count or 0
-        out_tok = response.usage_metadata.candidates_token_count or 0
-        cost = (in_tok * _GEMINI_FLASH_RATES["input"] + out_tok * _GEMINI_FLASH_RATES["output"]) / 1_000_000
-    return response.text or "", cost
+    total_cost = 0.0
+
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt,
+                config={"temperature": 0.4},
+            )
+            if response.usage_metadata:
+                in_tok = response.usage_metadata.prompt_token_count or 0
+                out_tok = response.usage_metadata.candidates_token_count or 0
+                total_cost += (in_tok * _GEMINI_FLASH_RATES["input"] + out_tok * _GEMINI_FLASH_RATES["output"]) / 1_000_000
+            return response.text or "", total_cost
+        except Exception as e:
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                wait = 2 ** attempt * 5
+                print(f"  Summary rate limited (attempt {attempt + 1}/{max_retries}), waiting {wait}s...")
+                _t.sleep(wait)
+            else:
+                raise
+
+    return "", total_cost
 
 
 def _build_summary_prompt(tweets: list[dict], side_label: str, topic_name: str) -> str:

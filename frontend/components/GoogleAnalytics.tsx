@@ -2,12 +2,20 @@
 
 import Script from "next/script";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 const GA_ID = "G-EVZ0CK3P4G";
 const AW_ID = "AW-18069178143";
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
 export default function GoogleAnalytics() {
   const [consented, setConsented] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (localStorage.getItem("cookie-consent") === "accepted") {
@@ -23,7 +31,6 @@ export default function GoogleAnalytics() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // Also listen for same-tab consent changes via custom event
   useEffect(() => {
     const handler = () => {
       if (localStorage.getItem("cookie-consent") === "accepted") {
@@ -33,6 +40,12 @@ export default function GoogleAnalytics() {
     window.addEventListener("cookie-consent-change", handler);
     return () => window.removeEventListener("cookie-consent-change", handler);
   }, []);
+
+  useEffect(() => {
+    if (consented && window.gtag) {
+      window.gtag("event", "page_view", { page_path: pathname });
+    }
+  }, [pathname, consented]);
 
   if (!consented) return null;
 

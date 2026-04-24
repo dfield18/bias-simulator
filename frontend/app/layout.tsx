@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import AuthProvider from "@/components/AuthProvider";
+import { Suspense } from "react";
 import CookieBanner from "@/components/CookieBanner";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "./globals.css";
@@ -72,7 +73,7 @@ export default function RootLayout({
           <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5WJ9564T" height="0" width="0" style={{ display: "none", visibility: "hidden" }} /></noscript>
           <AuthProvider>{children}</AuthProvider>
           <CookieBanner />
-          <GoogleAnalytics />
+          <Suspense fallback={null}><GoogleAnalytics /></Suspense>
         </body>
       </html>
     </ClerkProvider>

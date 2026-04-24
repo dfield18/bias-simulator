@@ -110,21 +110,36 @@ def get_distribution_data(topic_slug: str) -> dict | None:
 
 
 def _score_tweet(tweet, bias):
-    score = tweet["score"]
+    """Score a tweet based on bias level. Intensity-aware: extreme bias
+    surfaces extreme tweets, moderate bias surfaces moderate ones."""
+    score = tweet["score"]  # -10 to +10
     eng = tweet["engagement"]
     views = tweet["views"]
     base = math.log10(max(eng, 1)) * 10 + math.log10(max(views, 1)) * 5
-    if bias != 0:
-        if score < 0:
-            if bias < 0:
-                base *= 1 + abs(bias) * 0.4
-            else:
-                base *= max(0.03, 1 - bias * 0.15)
-        elif score > 0:
-            if bias > 0:
-                base *= 1 + bias * 0.4
-            else:
-                base *= max(0.03, 1 - abs(bias) * 0.15)
+
+    if bias == 0:
+        return base
+
+    # Map bias (-10 to +10) to the intensity axis
+    # Proximity: how close is the tweet's intensity to the bias position?
+    # At bias=+8, a tweet at +8 gets max boost, +3 gets moderate, -5 gets suppressed
+    distance = abs(score - bias)
+    max_distance = 20  # theoretical max (-10 to +10)
+    proximity = 1 - (distance / max_distance)  # 0 to 1, higher = closer match
+
+    # Same-side tweets get boosted by proximity, opposite-side get suppressed
+    same_side = (score > 0 and bias > 0) or (score < 0 and bias < 0)
+    abs_bias = abs(bias)
+
+    if same_side:
+        # Boost: stronger at higher bias, scaled by proximity to bias position
+        boost = 1 + abs_bias * 0.3 * (0.5 + proximity * 0.5)
+        base *= boost
+    else:
+        # Suppress opposite side more as bias increases
+        suppression = max(0.03, 1 - abs_bias * 0.15)
+        base *= suppression
+
     return base
 
 

@@ -37,57 +37,77 @@ def refresh_featured_topics():
     return results
 
 
-SCHEDULE_HOUR_UTC = int(os.getenv("SCHEDULE_HOUR_UTC", "13"))  # 13 UTC = 9am EDT
+REFRESH_HOUR_UTC = int(os.getenv("REFRESH_HOUR_UTC", "13"))  # 13 UTC = 9am EDT
+
+# Post schedule: 9am ET (13 UTC), 12pm ET (16 UTC), 5pm ET (21 UTC)
+POST_HOURS_UTC = [13, 16, 21]
 
 
-def _seconds_until_next_run() -> float:
-    """Seconds until the next scheduled run time."""
+def _seconds_until(hour_utc: int) -> float:
+    """Seconds until the next occurrence of a given UTC hour."""
     now = datetime.now(timezone.utc)
-    target = now.replace(hour=SCHEDULE_HOUR_UTC, minute=0, second=0, microsecond=0)
+    target = now.replace(hour=hour_utc, minute=0, second=0, microsecond=0)
     if now >= target:
         target += timedelta(days=1)
-    wait = (target - now).total_seconds()
-    return wait
+    return (target - now).total_seconds()
+
+
+def _post_slot(slot: int):
+    """Post a tweet for a specific daily slot."""
+    try:
+        from promo.daily_schedule import post_daily_slot
+        success = post_daily_slot(slot)
+        print(f"[Scheduler] Daily post slot {slot}: {'success' if success else 'failed'}")
+    except Exception as e:
+        print(f"[Scheduler] Daily post slot {slot} error: {e}")
 
 
 def _scheduler_loop():
-    """Background loop that refreshes featured topics daily at a fixed time."""
+    """Background loop: refreshes data at 9am ET, posts 3x daily."""
     time.sleep(60)
-    wait = _seconds_until_next_run()
-    target_hr = SCHEDULE_HOUR_UTC
-    print(f"[Scheduler] Started — daily refresh at {target_hr}:00 UTC (9am ET). Next run in {wait / 3600:.1f}h")
-    time.sleep(wait)
+
+    print(f"[Scheduler] Started — refresh at {REFRESH_HOUR_UTC}:00 UTC, posts at {POST_HOURS_UTC} UTC")
 
     while True:
-        now = datetime.now(timezone.utc)
-        print(f"[Scheduler] Starting refresh cycle at {now.isoformat()}")
-        try:
-            results = refresh_featured_topics()
-            success = sum(1 for r in results if r["status"] == "success")
-            failed = sum(1 for r in results if r["status"] == "error")
-            print(f"[Scheduler] Cycle complete: {success} success, {failed} failed")
+        # Find the next event (refresh or post)
+        events = []
+        # Refresh event
+        events.append(("refresh", REFRESH_HOUR_UTC, _seconds_until(REFRESH_HOUR_UTC)))
+        # Post events
+        if os.getenv("ENABLE_PROMO_TWEETS", "false").lower() == "true":
+            for i, hour in enumerate(POST_HOURS_UTC):
+                events.append((f"post_{i}", hour, _seconds_until(hour)))
 
-            # Post a promotional tweet for a random successful topic
-            if os.getenv("ENABLE_PROMO_TWEETS", "false").lower() == "true":
-                successful_slugs = [r["slug"] for r in results if r["status"] == "success"]
-                if successful_slugs:
-                    try:
-                        import random
-                        from promo.tweet_generator import get_topic_stats, generate_tweet, post_tweet
-                        slug = random.choice(successful_slugs)
-                        stats = get_topic_stats(slug)
-                        if stats:
-                            tweet = generate_tweet(stats)
-                            print(f"[Scheduler] Posting promo tweet for {slug}: {tweet[:80]}...")
-                            post_tweet(tweet)
-                    except Exception as e:
-                        print(f"[Scheduler] Promo tweet error (non-fatal): {e}")
-        except Exception as e:
-            print(f"[Scheduler] Cycle error: {e}")
+        # Sort by soonest
+        events.sort(key=lambda e: e[2])
+        next_event, next_hour, wait = events[0]
 
-        wait = _seconds_until_next_run()
-        print(f"[Scheduler] Next run in {wait / 3600:.1f}h")
+        print(f"[Scheduler] Next event: {next_event} at {next_hour}:00 UTC in {wait / 3600:.1f}h")
         time.sleep(wait)
+
+        now = datetime.now(timezone.utc)
+
+        if next_event == "refresh":
+            print(f"[Scheduler] Starting refresh cycle at {now.isoformat()}")
+            try:
+                results = refresh_featured_topics()
+                success = sum(1 for r in results if r["status"] == "success")
+                failed = sum(1 for r in results if r["status"] == "error")
+                print(f"[Scheduler] Cycle complete: {success} success, {failed} failed")
+            except Exception as e:
+                print(f"[Scheduler] Cycle error: {e}")
+
+            # Post slot 0 right after refresh (9am post)
+            if os.getenv("ENABLE_PROMO_TWEETS", "false").lower() == "true":
+                _post_slot(0)
+
+        elif next_event.startswith("post_"):
+            slot = int(next_event.split("_")[1])
+            if slot > 0:  # slot 0 is handled after refresh
+                _post_slot(slot)
+
+        # Small sleep to avoid re-triggering the same event
+        time.sleep(120)
 
 
 def start_scheduler():

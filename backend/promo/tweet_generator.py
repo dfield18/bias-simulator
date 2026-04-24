@@ -200,8 +200,8 @@ def generate_tweet(stats: dict) -> str:
     )
 
 
-def post_tweet(text: str) -> dict | None:
-    """Post a tweet using X API v2 via tweepy."""
+def _get_tweepy_clients() -> tuple:
+    """Return (v2_client, v1_api) for posting tweets with media."""
     import tweepy
 
     api_key = os.getenv("X_API_KEY", "")
@@ -211,8 +211,9 @@ def post_tweet(text: str) -> dict | None:
 
     if not all([api_key, api_secret, access_token, access_secret]):
         print("ERROR: X API credentials not set. Set X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET in .env")
-        return None
+        return None, None
 
+    # v2 client for posting tweets
     client = tweepy.Client(
         consumer_key=api_key,
         consumer_secret=api_secret,
@@ -220,11 +221,35 @@ def post_tweet(text: str) -> dict | None:
         access_token_secret=access_secret,
     )
 
+    # v1.1 API for media upload (v2 doesn't support media upload yet)
+    auth = tweepy.OAuth1UserHandler(api_key, api_secret, access_token, access_secret)
+    api = tweepy.API(auth)
+
+    return client, api
+
+
+def post_tweet(text: str, image_bytes: bytes | None = None) -> dict | None:
+    """Post a tweet with optional image using X API."""
+    client, api = _get_tweepy_clients()
+    if not client:
+        return None
+
     try:
-        response = client.create_tweet(text=text)
+        media_ids = None
+        if image_bytes and api:
+            import tempfile
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+                f.write(image_bytes)
+                tmp_path = f.name
+            media = api.media_upload(filename=tmp_path)
+            media_ids = [media.media_id]
+            os.unlink(tmp_path)
+            print(f"Uploaded media: {media.media_id}")
+
+        response = client.create_tweet(text=text, media_ids=media_ids)
         tweet_id = response.data["id"]
         print(f"Posted tweet: https://x.com/i/status/{tweet_id}")
-        return {"id": tweet_id, "text": text}
+        return {"id": tweet_id, "text": text, "has_image": bool(media_ids)}
     except Exception as e:
         print(f"ERROR posting tweet: {e}")
         return None
@@ -246,6 +271,10 @@ def main():
     parser.add_argument("--topic", help="Specific topic slug (default: random featured topic)")
     parser.add_argument("--post", action="store_true", help="Actually post to X (default: preview only)")
     parser.add_argument("--all", action="store_true", help="Generate tweets for all featured topics")
+    parser.add_argument("--chart", action="store_true", help="Attach a chart image")
+    parser.add_argument("--chart-type", default="auto", choices=["auto", "side_by_side", "disconnect"],
+                        help="Chart type (default: auto-pick best)")
+    parser.add_argument("--save-chart", help="Save chart to file instead of attaching")
     args = parser.parse_args()
 
     if args.all:
@@ -253,7 +282,6 @@ def main():
     elif args.topic:
         slugs = [args.topic]
     else:
-        # Pick a random featured topic
         featured = get_featured_slugs()
         if not featured:
             print("No featured topics found")
@@ -274,8 +302,20 @@ def main():
         print(tweet)
         print(f"[{len(tweet)} chars]")
 
+        chart_bytes = None
+        if args.chart or args.save_chart:
+            from promo.chart_generator import generate_chart
+            chart_bytes, chart_type = generate_chart(stats, args.chart_type)
+            if chart_bytes:
+                print(f"Chart: {chart_type} ({len(chart_bytes)} bytes)")
+                if args.save_chart:
+                    path = args.save_chart if len(slugs) == 1 else f"/tmp/chart_{slug}_{chart_type}.png"
+                    with open(path, "wb") as f:
+                        f.write(chart_bytes)
+                    print(f"Saved → {path}")
+
         if args.post:
-            post_tweet(tweet)
+            post_tweet(tweet, chart_bytes if args.chart else None)
 
 
 if __name__ == "__main__":

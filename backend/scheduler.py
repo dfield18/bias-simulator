@@ -50,6 +50,22 @@ def _scheduler_loop():
             success = sum(1 for r in results if r["status"] == "success")
             failed = sum(1 for r in results if r["status"] == "error")
             print(f"[Scheduler] Cycle complete: {success} success, {failed} failed")
+
+            # Post a promotional tweet for a random successful topic
+            if os.getenv("ENABLE_PROMO_TWEETS", "false").lower() == "true":
+                successful_slugs = [r["slug"] for r in results if r["status"] == "success"]
+                if successful_slugs:
+                    try:
+                        import random
+                        from promo.tweet_generator import get_topic_stats, generate_tweet, post_tweet
+                        slug = random.choice(successful_slugs)
+                        stats = get_topic_stats(slug)
+                        if stats:
+                            tweet = generate_tweet(stats)
+                            print(f"[Scheduler] Posting promo tweet for {slug}: {tweet[:80]}...")
+                            post_tweet(tweet)
+                    except Exception as e:
+                        print(f"[Scheduler] Promo tweet error (non-fatal): {e}")
         except Exception as e:
             print(f"[Scheduler] Cycle error: {e}")
 

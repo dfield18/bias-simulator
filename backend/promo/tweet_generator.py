@@ -272,8 +272,8 @@ def _get_tweepy_clients() -> tuple:
     return client, api
 
 
-def post_tweet(text: str, image_bytes: bytes | None = None) -> dict | None:
-    """Post a tweet with optional image using X API."""
+def post_tweet(text: str, image_bytes: bytes | None = None, media_ext: str = ".png") -> dict | None:
+    """Post a tweet with optional image/GIF using X API."""
     client, api = _get_tweepy_clients()
     if not client:
         return None
@@ -282,7 +282,7 @@ def post_tweet(text: str, image_bytes: bytes | None = None) -> dict | None:
         media_ids = None
         if image_bytes and api:
             import tempfile
-            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+            with tempfile.NamedTemporaryFile(suffix=media_ext, delete=False) as f:
                 f.write(image_bytes)
                 tmp_path = f.name
             media = api.media_upload(filename=tmp_path)
@@ -319,7 +319,8 @@ def main():
     parser.add_argument("--chart-type", default="auto",
                         choices=["auto", "side_by_side", "disconnect", "echo_gauge", "butterfly"],
                         help="Chart type (default: auto-pick best)")
-    parser.add_argument("--save-chart", help="Save chart to file instead of attaching")
+    parser.add_argument("--gif", action="store_true", help="Attach a bias slider GIF")
+    parser.add_argument("--save-chart", help="Save chart/gif to file instead of attaching")
     args = parser.parse_args()
 
     if args.all:
@@ -347,20 +348,28 @@ def main():
         print(tweet)
         print(f"[{len(tweet)} chars]")
 
-        chart_bytes = None
-        if args.chart or args.save_chart:
+        media_bytes = None
+        media_ext = ".png"
+        if args.gif:
+            from promo.gif_generator import generate_slider_gif
+            media_bytes = generate_slider_gif(slug)
+            media_ext = ".gif"
+            if media_bytes:
+                print(f"GIF: {len(media_bytes)} bytes")
+        elif args.chart or args.save_chart:
             from promo.chart_generator import generate_chart
-            chart_bytes, chart_type = generate_chart(stats, args.chart_type)
-            if chart_bytes:
-                print(f"Chart: {chart_type} ({len(chart_bytes)} bytes)")
-                if args.save_chart:
-                    path = args.save_chart if len(slugs) == 1 else f"/tmp/chart_{slug}_{chart_type}.png"
-                    with open(path, "wb") as f:
-                        f.write(chart_bytes)
-                    print(f"Saved → {path}")
+            media_bytes, chart_type = generate_chart(stats, args.chart_type)
+            if media_bytes:
+                print(f"Chart: {chart_type} ({len(media_bytes)} bytes)")
+
+        if args.save_chart and media_bytes:
+            path = args.save_chart if len(slugs) == 1 else f"/tmp/media_{slug}{media_ext}"
+            with open(path, "wb") as f:
+                f.write(media_bytes)
+            print(f"Saved → {path}")
 
         if args.post:
-            post_tweet(tweet, chart_bytes if args.chart else None)
+            post_tweet(tweet, media_bytes if (args.chart or args.gif) else None, media_ext)
 
 
 if __name__ == "__main__":

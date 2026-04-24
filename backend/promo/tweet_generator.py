@@ -204,31 +204,29 @@ def generate_tweet(stats: dict) -> str:
         lambda: (
             f"Right now on X, {dominant_label} posts make up {dominant_pct}% of the conversation about {subject}"
             + (f" — but {eng_winner} content gets {eng_ratio}x more engagement per post." if eng_ratio > 1.3 else ".")
-            + f"\n\nSee the full simulated feed breakdown\n{url}"
         ),
         # Percentage breakdown
         lambda: (
             f"How X talks about {subject} right now:\n\n"
             f"{anti_label}: {anti_pct}% of posts\n"
             f"{pro_label}: {pro_pct}% of posts\n\n"
-            f"See how each side's feed looks different\n{url}"
+            f"Same topic, different realities."
         ),
         # Engagement hook
         lambda: (
             f"Posts about {subject}: {eng_winner} content gets {eng_ratio}x more engagement on X "
-            f"despite being {'the minority' if (eng_winner == pro_label and pro_pct < 50) or (eng_winner == anti_label and anti_pct < 50) else 'the majority'} of the conversation.\n\n"
-            f"Explore the simulated feeds\n{url}"
+            f"despite being {'the minority' if (eng_winner == pro_label and pro_pct < 50) or (eng_winner == anti_label and anti_pct < 50) else 'the majority'} of the conversation."
         ) if eng_ratio > 1.3 else None,
         # Perspective hook
         lambda: (
             f"On X right now, {dominant_pct}% of posts about {subject} lean {dominant_label.lower()}.\n\n"
-            f"We split the real posts into simulated feeds — see what each side sees.\n{url}"
+            f"We split the real posts into simulated feeds — see what each side sees."
         ),
         # Echo chamber / blind spots
         lambda: (
             f"What does the other side see about {subject}? We split real posts from X "
             f"into opposing feeds.\n\n"
-            f"The arguments, the top accounts, the blind spots\n{url}"
+            f"The arguments, the top accounts, the blind spots."
         ),
     ]
 
@@ -242,7 +240,7 @@ def generate_tweet(stats: dict) -> str:
     # Fallback
     return (
         f"How does X talk about {subject}? We split real posts "
-        f"into opposing simulated feeds.\n\n{url}"
+        f"into opposing simulated feeds."
     )
 
 

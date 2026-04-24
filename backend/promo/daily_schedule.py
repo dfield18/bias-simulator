@@ -44,18 +44,15 @@ CHART_ROTATION = [
 TEMPLATES_WITH_EXPLAINER = [
     lambda s, stats: (
         f"We pull the top posts across X on any topic and use AI to classify them by political stance. "
-        f"Here's how each side frames {s['subject']} right now.\n\n"
-        f"dividedview.com/analytics/{s['slug']}"
+        f"Here's how each side frames {s['subject']} right now."
     ),
     lambda s, stats: (
         f"DividedView uses AI to simulate X feeds from both sides of any topic. "
-        f"Here's what the {s['subject']} conversation looks like right now.\n\n"
-        f"dividedview.com/analytics/{s['slug']}"
+        f"Here's what the {s['subject']} conversation looks like right now."
     ),
     lambda s, stats: (
         f"We classify hundreds of real X posts by political stance using AI. "
-        f"This is what each side sees about {s['subject']}.\n\n"
-        f"dividedview.com/analytics/{s['slug']}"
+        f"This is what each side sees about {s['subject']}."
     ),
 ]
 
@@ -95,20 +92,17 @@ def _insight_template(s, stats):
         if vol_winner != eng_winner:
             templates.append(
                 f"On X right now: {vol_winner} posts make up {dominant_pct}% of the conversation about {subject} "
-                f"— but {eng_winner} content gets {eng_ratio}x more engagement per post.\n\n"
-                f"dividedview.com/analytics/{s['slug']}"
+                f"— but {eng_winner} content gets {eng_ratio}x more engagement per post."
             )
 
     templates.append(
         f"How does X talk about {subject}? Right now {dominant_pct}% of posts lean {dominant_label.lower()}.\n\n"
-        f"We split them into simulated feeds — see what each side sees.\n"
-        f"dividedview.com/analytics/{s['slug']}"
+        f"We split them into simulated feeds — see what each side sees."
     )
 
     templates.append(
         f"What does the other side see about {subject}? We split real X posts into opposing feeds "
-        f"to show the arguments, top accounts, and blind spots.\n\n"
-        f"dividedview.com/analytics/{s['slug']}"
+        f"to show the arguments, top accounts, and blind spots."
     )
 
     # Pick one that fits

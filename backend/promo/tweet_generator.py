@@ -87,6 +87,47 @@ def get_topic_stats(topic_slug: str) -> dict | None:
     )
     gap_row = cur.fetchone()
 
+    # Narrative frames per side (for butterfly chart)
+    cur.execute(
+        """
+        SELECT c.effective_political_bent, unnest(c.narrative_frames) AS frame, COUNT(*)
+        FROM tweets t JOIN classifications c ON c.id_str = t.id_str
+        WHERE t.topic_slug = %s
+          AND t.fetched_at >= NOW() - INTERVAL '48 hours'
+          AND c.about_subject = TRUE
+          AND c.narrative_frames IS NOT NULL
+          AND c.effective_political_bent IN (%s, %s)
+        GROUP BY 1, 2 ORDER BY 1, 3 DESC
+        """,
+        (topic_slug, pro_bent, anti_bent),
+    )
+    frame_counts = {"pro": {}, "anti": {}}
+    for bent, frame, count in cur.fetchall():
+        side = "pro" if bent == pro_bent else "anti"
+        frame_counts[side][frame] = count
+
+    # Frame labels
+    cur.execute("SELECT custom_frames FROM topics WHERE slug = %s", (topic_slug,))
+    cf_row = cur.fetchone()
+    frame_labels = {}
+    if cf_row and cf_row[0]:
+        for f in cf_row[0]:
+            frame_labels[f["key"]] = f["label"]
+
+    # Echo chamber score (computed from frame overlap)
+    all_frames = set(list(frame_counts["pro"].keys()) + list(frame_counts["anti"].keys()))
+    if all_frames:
+        pro_total_frames = sum(frame_counts["pro"].values()) or 1
+        anti_total_frames = sum(frame_counts["anti"].values()) or 1
+        overlap = 0
+        for f in all_frames:
+            pro_pct_f = frame_counts["pro"].get(f, 0) / pro_total_frames
+            anti_pct_f = frame_counts["anti"].get(f, 0) / anti_total_frames
+            overlap += min(pro_pct_f, anti_pct_f)
+        echo_score = round(overlap * 100)
+    else:
+        echo_score = None
+
     conn.close()
 
     # tweet_hook > description-derived > name
@@ -111,6 +152,9 @@ def get_topic_stats(topic_slug: str) -> dict | None:
         "anti": anti,
         "total_posts": total_posts,
         "has_gaps": gap_row is not None,
+        "frame_counts": frame_counts,
+        "frame_labels": frame_labels,
+        "echo_score": echo_score,
         "url": f"{SITE_URL}/analytics/{topic_slug}",
     }
 
@@ -272,7 +316,8 @@ def main():
     parser.add_argument("--post", action="store_true", help="Actually post to X (default: preview only)")
     parser.add_argument("--all", action="store_true", help="Generate tweets for all featured topics")
     parser.add_argument("--chart", action="store_true", help="Attach a chart image")
-    parser.add_argument("--chart-type", default="auto", choices=["auto", "side_by_side", "disconnect"],
+    parser.add_argument("--chart-type", default="auto",
+                        choices=["auto", "side_by_side", "disconnect", "echo_gauge", "butterfly"],
                         help="Chart type (default: auto-pick best)")
     parser.add_argument("--save-chart", help="Save chart to file instead of attaching")
     args = parser.parse_args()

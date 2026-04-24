@@ -3,7 +3,7 @@
 import os
 import time
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 REFRESH_INTERVAL_HOURS = int(os.getenv("REFRESH_INTERVAL_HOURS", "24"))
 CRON_SECRET = os.getenv("CRON_SECRET", "")
@@ -37,10 +37,26 @@ def refresh_featured_topics():
     return results
 
 
+SCHEDULE_HOUR_UTC = int(os.getenv("SCHEDULE_HOUR_UTC", "13"))  # 13 UTC = 9am EDT
+
+
+def _seconds_until_next_run() -> float:
+    """Seconds until the next scheduled run time."""
+    now = datetime.now(timezone.utc)
+    target = now.replace(hour=SCHEDULE_HOUR_UTC, minute=0, second=0, microsecond=0)
+    if now >= target:
+        target += timedelta(days=1)
+    wait = (target - now).total_seconds()
+    return wait
+
+
 def _scheduler_loop():
-    """Background loop that refreshes featured topics on a schedule."""
+    """Background loop that refreshes featured topics daily at a fixed time."""
     time.sleep(60)
-    print(f"[Scheduler] Started — will refresh featured topics every {REFRESH_INTERVAL_HOURS}h")
+    wait = _seconds_until_next_run()
+    target_hr = SCHEDULE_HOUR_UTC
+    print(f"[Scheduler] Started — daily refresh at {target_hr}:00 UTC (9am ET). Next run in {wait / 3600:.1f}h")
+    time.sleep(wait)
 
     while True:
         now = datetime.now(timezone.utc)
@@ -69,7 +85,9 @@ def _scheduler_loop():
         except Exception as e:
             print(f"[Scheduler] Cycle error: {e}")
 
-        time.sleep(REFRESH_INTERVAL_HOURS * 3600)
+        wait = _seconds_until_next_run()
+        print(f"[Scheduler] Next run in {wait / 3600:.1f}h")
+        time.sleep(wait)
 
 
 def start_scheduler():

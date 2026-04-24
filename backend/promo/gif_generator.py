@@ -76,6 +76,7 @@ def get_distribution_data(topic_slug: str) -> dict | None:
         FROM tweets t JOIN classifications c ON c.id_str = t.id_str
         WHERE t.topic_slug = %s
           AND t.fetched_at >= NOW() - INTERVAL '48 hours'
+          AND t.created_at >= NOW() - INTERVAL '48 hours'
           AND c.about_subject = TRUE
           AND c.effective_political_bent IN (%s, %s)
           AND c.effective_intensity_score IS NOT NULL

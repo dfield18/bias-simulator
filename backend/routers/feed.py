@@ -95,15 +95,11 @@ router = APIRouter()
 
 
 async def _get_latest_run_since(topic: str, db: AsyncSession, fallback_hours: int = 48) -> datetime:
-    """Rolling lower bound on tweet.fetched_at for analytics queries.
+    """Rolling lower bound for analytics queries.
 
-    Returns now - fallback_hours so consecutive pipeline runs accumulate into
-    a moving window rather than replacing each other. Callers must filter on
-    Tweet.fetched_at >= since (not created_at) — runs can pull old tweets
-    whose created_at wouldn't fall inside a creation-time window.
-
-    `topic` and `db` are kept in the signature for call-site stability; the
-    window is currently topic-independent.
+    Returns now - fallback_hours. Callers filter on both Tweet.fetched_at
+    and Tweet.created_at >= since, ensuring only tweets that were both
+    fetched recently AND created recently appear in results.
     """
     return datetime.now(timezone.utc) - timedelta(hours=fallback_hours)
 
@@ -127,7 +123,7 @@ async def get_feed(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -203,7 +199,7 @@ async def get_feed_all(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -372,7 +368,7 @@ async def get_smart_feed(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -798,7 +794,7 @@ async def get_breakdown(
     # Total tweets
     total_stmt = select(func.count()).select_from(Tweet).where(
         Tweet.topic_slug == topic,
-        Tweet.fetched_at >= since,
+        Tweet.fetched_at >= since, Tweet.created_at >= since,
     )
     total_result = await db.execute(total_stmt)
     total_tweets = total_result.scalar() or 0
@@ -809,7 +805,7 @@ async def get_breakdown(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -948,7 +944,7 @@ async def get_narrative(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
             Classification.narrative_frames != None,
         )
@@ -1096,7 +1092,7 @@ async def get_gap_analysis(
     stmt = (
         select(Tweet, Classification)
         .join(Classification, Tweet.id_str == Classification.id_str)
-        .where(Tweet.topic_slug == topic, Tweet.fetched_at >= since, Classification.about_subject == True)
+        .where(Tweet.topic_slug == topic, Tweet.fetched_at >= since, Tweet.created_at >= since, Classification.about_subject == True)  # noqa: E501
     )
     result = await db.execute(stmt)
     rows = result.all()
@@ -1325,7 +1321,7 @@ async def get_exposure_overlap(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
             Classification.effective_political_bent.in_([anti_bent, pro_bent]),
         )
@@ -1542,7 +1538,7 @@ async def get_paired_stories(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
             Classification.effective_political_bent.in_([anti_bent, pro_bent]),
         )
@@ -1863,7 +1859,7 @@ async def get_recommendations(
     stmt = (
         select(Tweet, Classification)
         .join(Classification, Tweet.id_str == Classification.id_str)
-        .where(Tweet.topic_slug == topic, Tweet.fetched_at >= since, Classification.about_subject == True)
+        .where(Tweet.topic_slug == topic, Tweet.fetched_at >= since, Tweet.created_at >= since, Classification.about_subject == True)  # noqa: E501
     )
     result = await db.execute(stmt)
     rows = result.all()
@@ -1999,7 +1995,7 @@ async def get_analytics(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -2429,7 +2425,7 @@ async def get_pulse_extras(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -2566,7 +2562,7 @@ async def get_narrative_strategy(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
             Classification.narrative_frames != None,
         )
@@ -2685,7 +2681,7 @@ async def get_narrative_depth(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -2880,7 +2876,7 @@ async def get_media_breakdown(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -2964,7 +2960,7 @@ async def get_side_by_side_feed(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -3035,7 +3031,7 @@ async def get_hashtags(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -3152,7 +3148,7 @@ async def get_dunks(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )
@@ -3326,6 +3322,7 @@ async def get_geography(
         JOIN classifications c ON t.id_str = c.id_str
         WHERE t.topic_slug = :topic
           AND t.fetched_at >= :since
+          AND t.created_at >= :since
           AND c.about_subject = TRUE
           AND t.raw_json IS NOT NULL
           AND t.raw_json->'user'->>'location' IS NOT NULL
@@ -3594,7 +3591,7 @@ async def get_geography(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == topic,
-            Tweet.fetched_at >= since,
+            Tweet.fetched_at >= since, Tweet.created_at >= since,
             Classification.about_subject == True,
         )
     )

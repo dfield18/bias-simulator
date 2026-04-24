@@ -274,8 +274,9 @@ def _get_tweepy_clients() -> tuple:
     return client, api
 
 
-def post_tweet(text: str, image_bytes: bytes | None = None, media_ext: str = ".png") -> dict | None:
-    """Post a tweet with optional image/GIF using X API."""
+def post_tweet(text: str, image_bytes: bytes | None = None, media_ext: str = ".png",
+               quote_tweet_id: str | None = None) -> dict | None:
+    """Post a tweet with optional image/GIF and optional quote tweet."""
     client, api = _get_tweepy_clients()
     if not client:
         return None
@@ -292,7 +293,9 @@ def post_tweet(text: str, image_bytes: bytes | None = None, media_ext: str = ".p
             os.unlink(tmp_path)
             print(f"Uploaded media: {media.media_id}")
 
-        response = client.create_tweet(text=text, media_ids=media_ids)
+        response = client.create_tweet(
+            text=text, media_ids=media_ids, quote_tweet_id=quote_tweet_id,
+        )
         tweet_id = response.data["id"]
         print(f"Posted tweet: https://x.com/i/status/{tweet_id}")
         return {"id": tweet_id, "text": text, "has_image": bool(media_ids)}
@@ -322,6 +325,7 @@ def main():
                         choices=["auto", "side_by_side", "disconnect", "echo_gauge", "butterfly"],
                         help="Chart type (default: auto-pick best)")
     parser.add_argument("--gif", action="store_true", help="Attach a bias slider GIF")
+    parser.add_argument("--quote", help="Quote tweet URL or ID (e.g. https://x.com/user/status/123 or just 123)")
     parser.add_argument("--save-chart", help="Save chart/gif to file instead of attaching")
     args = parser.parse_args()
 
@@ -371,7 +375,14 @@ def main():
             print(f"Saved → {path}")
 
         if args.post:
-            post_tweet(tweet, media_bytes if (args.chart or args.gif) else None, media_ext)
+            quote_id = None
+            if args.quote:
+                # Extract tweet ID from URL or use as-is
+                import re
+                m = re.search(r'status/(\d+)', args.quote)
+                quote_id = m.group(1) if m else args.quote
+                print(f"Quoting tweet: {quote_id}")
+            post_tweet(tweet, media_bytes if (args.chart or args.gif) else None, media_ext, quote_id)
 
 
 if __name__ == "__main__":

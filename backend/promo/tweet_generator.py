@@ -34,14 +34,14 @@ def get_topic_stats(topic_slug: str) -> dict | None:
 
     # Topic info
     cur.execute(
-        "SELECT name, pro_label, anti_label, topic_type FROM topics WHERE slug = %s AND is_active = TRUE",
+        "SELECT name, pro_label, anti_label, topic_type, description, tweet_hook FROM topics WHERE slug = %s AND is_active = TRUE",
         (topic_slug,),
     )
     row = cur.fetchone()
     if not row:
         conn.close()
         return None
-    name, pro_label, anti_label, topic_type = row
+    name, pro_label, anti_label, topic_type, description, tweet_hook = row
 
     pro_bent = pro_label.lower().replace(" ", "-")
     anti_bent = anti_label.lower().replace(" ", "-")
@@ -89,9 +89,21 @@ def get_topic_stats(topic_slug: str) -> dict | None:
 
     conn.close()
 
+    # tweet_hook > description-derived > name
+    if tweet_hook:
+        subject = tweet_hook
+    elif description:
+        # Extract a short phrase from description
+        subject = description.split(".")[0].split(",")[0].strip()
+        if len(subject) > 50:
+            subject = name
+    else:
+        subject = name
+
     return {
         "slug": topic_slug,
         "name": name,
+        "subject": subject,
         "pro_label": pro_label,
         "anti_label": anti_label,
         "topic_type": topic_type,
@@ -114,6 +126,7 @@ def fmt(n: int) -> str:
 def generate_tweet(stats: dict) -> str:
     """Generate a promotional tweet from topic stats."""
     name = stats["name"]
+    subject = stats["subject"]
     pro = stats["pro"]
     anti = stats["anti"]
     pro_label = stats["pro_label"]
@@ -143,32 +156,32 @@ def generate_tweet(stats: dict) -> str:
     templates = [
         # Volume + engagement split
         lambda: (
-            f"Right now on X, {dominant_label} posts make up {dominant_pct}% of the {name} conversation"
+            f"Right now on X, {dominant_label} posts make up {dominant_pct}% of the conversation about {subject}"
             + (f" — but {eng_winner} content gets {eng_ratio}x more engagement per post." if eng_ratio > 1.3 else ".")
             + f"\n\nSee the full simulated feed breakdown\n{url}"
         ),
         # Raw numbers
         lambda: (
-            f"We analyzed {total} posts about {name} from X in the last 48 hours.\n\n"
+            f"We analyzed {total} posts about {subject} from X in the last 48 hours.\n\n"
             f"{anti_label}: {anti['posts']} posts, {fmt(anti['total_eng'])} engagements\n"
             f"{pro_label}: {pro['posts']} posts, {fmt(pro['total_eng'])} engagements\n\n"
             f"See how each side's feed looks different\n{url}"
         ),
         # Engagement hook
         lambda: (
-            f"On {name}: {eng_winner} posts get {eng_ratio}x more engagement on X "
+            f"Posts about {subject}: {eng_winner} content gets {eng_ratio}x more engagement on X "
             f"despite being {'the minority' if (eng_winner == pro_label and pro_pct < 50) or (eng_winner == anti_label and anti_pct < 50) else 'the majority'} of the conversation.\n\n"
             f"Explore the simulated feeds\n{url}"
         ) if eng_ratio > 1.3 else None,
         # Views hook
         lambda: (
-            f"{fmt(total_views)} views across {total} posts about {name} on X in the last 48 hours.\n\n"
-            f"We split them by political bias into simulated feeds — see what each side sees.\n{url}"
+            f"{fmt(total_views)} views across {total} posts about {subject} on X in the last 48 hours.\n\n"
+            f"We split them by stance into simulated feeds — see what each side sees.\n{url}"
         ) if total_views > 100_000 else None,
         # Echo chamber / blind spots
         lambda: (
-            f"What does the other side see about {name}? We pulled {total} real posts from X "
-            f"and rebuilt the feed from both perspectives.\n\n"
+            f"What does the other side see about {subject}? We pulled {total} real posts from X "
+            f"and split them into opposing feeds.\n\n"
             f"The arguments, the top accounts, the blind spots\n{url}"
         ),
     ]
@@ -182,7 +195,7 @@ def generate_tweet(stats: dict) -> str:
 
     # Fallback
     return (
-        f"How does X talk about {name}? We analyzed {total} real posts and split them "
+        f"How does X talk about {subject}? We analyzed {total} real posts and split them "
         f"into opposing simulated feeds.\n\n{url}"
     )
 

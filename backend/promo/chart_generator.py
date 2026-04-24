@@ -324,7 +324,7 @@ def generate_butterfly(stats: dict) -> bytes:
     pro_pcts = [pro_frames.get(f, 0) / pro_total * 100 for f in top_frames]
     anti_pcts = [anti_frames.get(f, 0) / anti_total * 100 for f in top_frames]
 
-    fig, ax = _setup_figure(width=9, height=5.5)
+    fig, ax = _setup_figure(width=9, height=6)
 
     y = list(range(len(top_frames)))
     bar_height = 0.55
@@ -358,17 +358,15 @@ def generate_butterfly(stats: dict) -> bytes:
     ax.spines["bottom"].set_visible(False)
     ax.spines["left"].set_visible(False)
 
-    # Side labels at top
-    ax.text(-max_val / 2, -0.8, anti_label, fontsize=12, fontweight="bold",
-            color=BRAND_BLUE, ha="center", va="bottom")
-    ax.text(max_val / 2, -0.8, pro_label, fontsize=12, fontweight="bold",
-            color=BRAND_RED, ha="center", va="bottom")
-
-    # Title
+    # Title + subtitle with enough spacing
     fig.text(0.5, 0.97, f"What each side argues about {subject}", fontsize=15,
              fontweight="bold", color=BRAND_TEXT, ha="center", va="top")
-    fig.text(0.5, 0.92, "Share of each side's narrative by argument type", fontsize=10,
-             color=BRAND_MUTED, ha="center", va="top")
+
+    # Side labels below title, above chart
+    fig.text(0.35, 0.91, anti_label, fontsize=12, fontweight="bold",
+             color=BRAND_BLUE, ha="center", va="top")
+    fig.text(0.65, 0.91, pro_label, fontsize=12, fontweight="bold",
+             color=BRAND_RED, ha="center", va="top")
 
     _add_branding(fig, subject)
     return _save(fig)

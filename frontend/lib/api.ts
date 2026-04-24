@@ -227,7 +227,7 @@ export async function fetchFeed(
   topic: string,
   bias: number,
   limit = 20,
-  hours = 24
+  hours = 48
 ): Promise<FeedItem[]> {
   const params = new URLSearchParams({
     topic,
@@ -884,7 +884,7 @@ export async function fetchSummaries(
 
 export async function fetchAllTweets(
   topic: string,
-  hours = 24
+  hours = 48
 ): Promise<RawFeedItem[]> {
   const params = new URLSearchParams({ topic, hours: String(hours) });
   const res = await apiFetch(`${API_URL}/api/feed/all?${params}`, { cache: "no-store" });
@@ -982,7 +982,7 @@ export function scoreFeed(
 
 export async function fetchBreakdown(
   topic: string,
-  hours = 24
+  hours = 48
 ): Promise<BreakdownData> {
   const params = new URLSearchParams({ topic, hours: String(hours) });
   const res = await apiFetch(`${API_URL}/api/breakdown?${params}`, { cache: "no-store" });

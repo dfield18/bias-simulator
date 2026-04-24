@@ -81,7 +81,7 @@ export default function FeedPage() {
   const loadTweets = () => {
     setLoading(true);
     setFeedError(false);
-    return fetchAllTweets(topicSlug, 720)
+    return fetchAllTweets(topicSlug, 48)
       .then(setAllTweets)
       .catch(() => setFeedError(true))
       .finally(() => setLoading(false));
@@ -95,7 +95,7 @@ export default function FeedPage() {
   useEffect(() => {
     if (!polling) return;
     const interval = setInterval(() => {
-      fetchAllTweets(topicSlug, 720).then((data) => {
+      fetchAllTweets(topicSlug, 48).then((data) => {
         setAllTweets(data);
         if (data.length > 0) setPolling(false);
       });

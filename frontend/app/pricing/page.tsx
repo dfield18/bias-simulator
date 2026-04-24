@@ -21,7 +21,7 @@ export default function PricingPage() {
 
   const handleUpgrade = async () => {
     if (!isSignedIn) {
-      window.location.href = "/sign-up";
+      window.location.href = "/dashboard";
       return;
     }
     setLoading(true);
@@ -86,7 +86,7 @@ export default function PricingPage() {
             </Link>
           ) : (
             <Link
-              href="/sign-up"
+              href="/dashboard"
               className="block text-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm font-medium transition-colors"
             >
               Get started

@@ -40,6 +40,7 @@ async def get_landing_data(
         .join(Classification, Tweet.id_str == Classification.id_str)
         .where(
             Tweet.topic_slug == slug,
+            Tweet.fetched_at >= since,
             Tweet.created_at >= since,
             Classification.about_subject == True,
         )

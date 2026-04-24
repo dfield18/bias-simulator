@@ -37,7 +37,7 @@ def refresh_featured_topics():
     return results
 
 
-REFRESH_HOUR_UTC = int(os.getenv("REFRESH_HOUR_UTC", "13"))  # 13 UTC = 9am EDT
+REFRESH_HOUR_UTC = int(os.getenv("REFRESH_HOUR_UTC", "12"))  # 12 UTC = 8am EDT
 
 # Post schedule: 9am ET (13 UTC), 12pm ET (16 UTC), 5pm ET (21 UTC)
 POST_HOURS_UTC = [13, 16, 21]

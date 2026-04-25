@@ -80,5 +80,12 @@ async def cron_refresh_featured(request: Request):
         from fastapi import HTTPException
         raise HTTPException(status_code=403, detail="Invalid cron secret")
     import threading
-    threading.Thread(target=refresh_featured_topics, daemon=True).start()
-    return {"status": "started", "message": "Refreshing featured topics in background"}
+    def _refresh_all():
+        refresh_featured_topics()
+        try:
+            from routers.pulse import refresh_trending_cache
+            refresh_trending_cache()
+        except Exception as e:
+            print(f"[Cron] Trending refresh error: {e}")
+    threading.Thread(target=_refresh_all, daemon=True).start()
+    return {"status": "started", "message": "Refreshing featured topics + trending in background"}

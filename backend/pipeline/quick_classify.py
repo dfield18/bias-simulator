@@ -18,8 +18,8 @@ SOCIALDATA_API_KEY = os.getenv("SOCIALDATA_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 
-def fetch_tweets_for_topic(search_query: str, max_results: int = 100) -> list[dict]:
-    """Fetch top tweets for a topic via SocialData."""
+def fetch_tweets_for_topic(search_query: str, max_pages: int = 5, max_results: int = 200) -> list[dict]:
+    """Fetch top tweets for a topic via SocialData, paginating for more volume."""
     if not SOCIALDATA_API_KEY:
         return []
 
@@ -28,29 +28,48 @@ def fetch_tweets_for_topic(search_query: str, max_results: int = 100) -> list[di
         "Accept": "application/json",
     }
 
-    try:
-        resp = requests.get(
-            "https://api.socialdata.tools/twitter/search",
-            headers=headers,
-            params={"query": f"{search_query} lang:en", "type": "Top"},
-            timeout=15,
-        )
-        resp.raise_for_status()
-        tweets = resp.json().get("tweets", [])
+    results = []
+    next_cursor = None
 
-        results = []
-        for t in tweets[:max_results]:
-            eng = (t.get("favorite_count", 0) or 0) + (t.get("retweet_count", 0) or 0) + (t.get("reply_count", 0) or 0)
-            results.append({
-                "text": (t.get("full_text", "") or "")[:250],
-                "engagement": eng,
-                "views": t.get("views_count", 0) or 0,
-                "author": t.get("user", {}).get("screen_name", ""),
-            })
-        return results
-    except Exception as e:
-        print(f"[QuickClassify] Fetch error: {e}")
-        return []
+    for page in range(max_pages):
+        try:
+            params = {"query": f"{search_query} lang:en", "type": "Top"}
+            if next_cursor:
+                params["cursor"] = next_cursor
+
+            resp = requests.get(
+                "https://api.socialdata.tools/twitter/search",
+                headers=headers,
+                params=params,
+                timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            tweets = data.get("tweets", [])
+
+            if not tweets:
+                break
+
+            for t in tweets:
+                eng = (t.get("favorite_count", 0) or 0) + (t.get("retweet_count", 0) or 0) + (t.get("reply_count", 0) or 0)
+                results.append({
+                    "text": (t.get("full_text", "") or "")[:250],
+                    "engagement": eng,
+                    "views": t.get("views_count", 0) or 0,
+                    "author": t.get("user", {}).get("screen_name", ""),
+                })
+
+            next_cursor = data.get("next_cursor")
+            if not next_cursor or len(results) >= max_results:
+                break
+
+            time.sleep(0.15)
+        except Exception as e:
+            print(f"[QuickClassify] Fetch error (page {page}): {e}")
+            break
+
+    print(f"[QuickClassify] Fetched {len(results)} tweets across {page + 1} pages")
+    return results[:max_results]
 
 
 def classify_tweets_batch(
@@ -77,7 +96,7 @@ def classify_tweets_batch(
 
     # Build classification prompt
     tweets_text = ""
-    for i, t in enumerate(tweets[:60]):
+    for i, t in enumerate(tweets[:120]):
         tweets_text += f"\n[{i}] @{t['author']}: {t['text']}"
 
     prompt = f"""Classify each tweet about "{topic_name}" into one of these categories:
@@ -123,7 +142,7 @@ IMPORTANT: Return ONLY valid JSON."""
 
     class_by_idx = {c.get("idx", -1): c.get("class", "") for c in classifications}
 
-    for i, tweet in enumerate(tweets[:60]):
+    for i, tweet in enumerate(tweets[:120]):
         cls = class_by_idx.get(i, "off-topic")
         if cls == pro_bent:
             result["pro_count"] += 1

@@ -169,6 +169,19 @@ class TopicSummary(Base):
     generated_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
 
 
+class TrendingPulse(Base):
+    __tablename__ = "trending_pulse"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(Text, nullable=False)  # "2026-04-25"
+    data = Column(JSONB, nullable=False)  # list of analyzed trending topics
+    updated_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+
+    __table_args__ = (
+        Index("idx_trending_pulse_date", date, unique=True),
+    )
+
+
 # ─── Pydantic Response Models ────────────────────────────────────────────────
 
 class TopicResponse(BaseModel):

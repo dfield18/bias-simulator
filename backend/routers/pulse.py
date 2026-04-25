@@ -2,15 +2,13 @@
 Daily Pulse API — shows all curated + trending topics at a glance.
 
 GET /api/pulse → returns curated topics (from DB) + trending topics
-(from discovery cache), each with volume/engagement/sentiment summary.
+(persisted in trending_pulse table), each with volume/engagement/sentiment.
 """
 
-import os
-import time
-import threading
+import json
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select, func
+from fastapi import APIRouter, Depends
+from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -19,31 +17,12 @@ from models import Tweet, Classification, Topic
 
 router = APIRouter()
 
-# In-memory cache for trending topic results
-_trending_cache: dict = {
-    "topics": [],
-    "updated_at": None,
-}
-_trending_lock = threading.Lock()
-
-
-def get_trending_cache() -> list[dict]:
-    """Get cached trending topics."""
-    with _trending_lock:
-        return list(_trending_cache["topics"])
-
-
-def set_trending_cache(topics: list[dict]):
-    """Update the trending cache."""
-    with _trending_lock:
-        _trending_cache["topics"] = topics
-        _trending_cache["updated_at"] = datetime.now(timezone.utc).isoformat()
-
 
 def refresh_trending_cache():
-    """Run discovery + quick classify for trending topics. Call from scheduler."""
+    """Run discovery + quick classify, persist to DB. Called from scheduler."""
     from pipeline.trending import discover_trending_topics
     from pipeline.quick_classify import quick_analyze_topic
+    from pipeline.run import get_sync_connection
 
     print("[Pulse] Starting trending topic discovery...")
     topics = discover_trending_topics(max_topics=5)
@@ -60,8 +39,31 @@ def refresh_trending_cache():
         except Exception as e:
             print(f"[Pulse] Error analyzing {topic.get('name', '?')}: {e}")
 
-    set_trending_cache(analyzed)
-    print(f"[Pulse] Cached {len(analyzed)} trending topics")
+    if not analyzed:
+        print("[Pulse] No topics with data")
+        return
+
+    # Persist to DB
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    conn = get_sync_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO trending_pulse (date, data, updated_at)
+            VALUES (%s, %s, NOW())
+            ON CONFLICT (date) DO UPDATE SET
+                data = EXCLUDED.data,
+                updated_at = NOW()
+            """,
+            (today, json.dumps(analyzed)),
+        )
+        conn.commit()
+        print(f"[Pulse] Persisted {len(analyzed)} trending topics to DB for {today}")
+    except Exception as e:
+        print(f"[Pulse] DB persist error: {e}")
+    finally:
+        conn.close()
 
 
 @router.get("/pulse")
@@ -82,7 +84,6 @@ async def get_pulse(
         pro_bent = topic.pro_label.lower().replace(" ", "-")
         anti_bent = topic.anti_label.lower().replace(" ", "-")
 
-        # Get counts per side
         stats_stmt = (
             select(
                 Classification.effective_political_bent,
@@ -136,39 +137,45 @@ async def get_pulse(
             "url": f"/analytics/{topic.slug}",
         })
 
-    # Sort curated by total engagement
     curated.sort(key=lambda x: x["total_engagement"], reverse=True)
 
-    # Get trending topics from cache
-    trending_raw = get_trending_cache()
+    # Get trending topics from DB (today or most recent)
+    trending_result = await db.execute(
+        text("SELECT data, date, updated_at FROM trending_pulse ORDER BY date DESC LIMIT 1")
+    )
+    trending_row = trending_result.one_or_none()
+
     trending = []
-    for t in trending_raw:
-        s = t.get("stats", {})
-        total = s.get("total", 0)
-        if total == 0:
-            continue
-        trending.append({
-            "slug": t["slug"],
-            "name": t["name"],
-            "pro_label": t["pro_label"],
-            "anti_label": t["anti_label"],
-            "description": t.get("description", ""),
-            "heat": t.get("heat", 5),
-            "total_posts": total,
-            "pro_pct": round(s["pro_count"] / total * 100),
-            "anti_pct": round(s["anti_count"] / total * 100),
-            "pro_engagement": s.get("pro_engagement", 0),
-            "anti_engagement": s.get("anti_engagement", 0),
-            "total_engagement": s.get("pro_engagement", 0) + s.get("anti_engagement", 0),
-            "total_views": s.get("pro_views", 0) + s.get("anti_views", 0),
-            "has_page": False,
-            "sample_pro": s.get("sample_pro", []),
-            "sample_anti": s.get("sample_anti", []),
-        })
+    trending_updated_at = None
+    if trending_row:
+        trending_data = trending_row[0] if isinstance(trending_row[0], list) else json.loads(trending_row[0])
+        trending_updated_at = trending_row[2].isoformat() if trending_row[2] else None
+
+        for t in trending_data:
+            s = t.get("stats", {})
+            total = s.get("total", 0)
+            if total == 0:
+                continue
+            trending.append({
+                "slug": t["slug"],
+                "name": t["name"],
+                "pro_label": t["pro_label"],
+                "anti_label": t["anti_label"],
+                "description": t.get("description", ""),
+                "heat": t.get("heat", 5),
+                "total_posts": total,
+                "pro_pct": round(s["pro_count"] / total * 100),
+                "anti_pct": round(s["anti_count"] / total * 100),
+                "pro_engagement": s.get("pro_engagement", 0),
+                "anti_engagement": s.get("anti_engagement", 0),
+                "total_engagement": s.get("pro_engagement", 0) + s.get("anti_engagement", 0),
+                "total_views": s.get("pro_views", 0) + s.get("anti_views", 0),
+                "has_page": False,
+            })
 
     return {
         "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "curated": curated,
         "trending": trending,
-        "trending_updated_at": _trending_cache.get("updated_at"),
+        "trending_updated_at": trending_updated_at,
     }

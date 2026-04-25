@@ -1,0 +1,174 @@
+"""
+Daily Pulse API — shows all curated + trending topics at a glance.
+
+GET /api/pulse → returns curated topics (from DB) + trending topics
+(from discovery cache), each with volume/engagement/sentiment summary.
+"""
+
+import os
+import time
+import threading
+from datetime import datetime, timezone, timedelta
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database import get_db
+from auth import optional_user
+from models import Tweet, Classification, Topic
+
+router = APIRouter()
+
+# In-memory cache for trending topic results
+_trending_cache: dict = {
+    "topics": [],
+    "updated_at": None,
+}
+_trending_lock = threading.Lock()
+
+
+def get_trending_cache() -> list[dict]:
+    """Get cached trending topics."""
+    with _trending_lock:
+        return list(_trending_cache["topics"])
+
+
+def set_trending_cache(topics: list[dict]):
+    """Update the trending cache."""
+    with _trending_lock:
+        _trending_cache["topics"] = topics
+        _trending_cache["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+
+def refresh_trending_cache():
+    """Run discovery + quick classify for trending topics. Call from scheduler."""
+    from pipeline.trending import discover_trending_topics
+    from pipeline.quick_classify import quick_analyze_topic
+
+    print("[Pulse] Starting trending topic discovery...")
+    topics = discover_trending_topics(max_topics=5)
+    if not topics:
+        print("[Pulse] No trending topics found")
+        return
+
+    analyzed = []
+    for topic in topics:
+        try:
+            result = quick_analyze_topic(topic)
+            if result["stats"]["total"] > 0:
+                analyzed.append(result)
+        except Exception as e:
+            print(f"[Pulse] Error analyzing {topic.get('name', '?')}: {e}")
+
+    set_trending_cache(analyzed)
+    print(f"[Pulse] Cached {len(analyzed)} trending topics")
+
+
+@router.get("/pulse")
+async def get_pulse(
+    db: AsyncSession = Depends(get_db),
+    user: dict | None = Depends(optional_user),
+):
+    """Return the daily pulse: curated topics + trending topics."""
+    since = datetime.now(timezone.utc) - timedelta(hours=48)
+
+    # Get curated (featured) topics with stats
+    stmt = select(Topic).where(Topic.featured == True, Topic.is_active == True).order_by(Topic.name)
+    result = await db.execute(stmt)
+    featured_topics = result.scalars().all()
+
+    curated = []
+    for topic in featured_topics:
+        pro_bent = topic.pro_label.lower().replace(" ", "-")
+        anti_bent = topic.anti_label.lower().replace(" ", "-")
+
+        # Get counts per side
+        stats_stmt = (
+            select(
+                Classification.effective_political_bent,
+                func.count().label("count"),
+                func.coalesce(func.sum(Tweet.engagement), 0).label("engagement"),
+                func.coalesce(func.sum(Tweet.views), 0).label("views"),
+            )
+            .select_from(Tweet)
+            .join(Classification, Tweet.id_str == Classification.id_str)
+            .where(
+                Tweet.topic_slug == topic.slug,
+                Tweet.fetched_at >= since,
+                Tweet.created_at >= since,
+                Classification.about_subject == True,
+                Classification.effective_political_bent.in_([pro_bent, anti_bent]),
+            )
+            .group_by(Classification.effective_political_bent)
+        )
+        stats_result = await db.execute(stats_stmt)
+        rows = stats_result.all()
+
+        pro_stats = {"count": 0, "engagement": 0, "views": 0}
+        anti_stats = {"count": 0, "engagement": 0, "views": 0}
+
+        for bent, count, eng, views in rows:
+            if bent == pro_bent:
+                pro_stats = {"count": count, "engagement": int(eng), "views": int(views)}
+            elif bent == anti_bent:
+                anti_stats = {"count": count, "engagement": int(eng), "views": int(views)}
+
+        total = pro_stats["count"] + anti_stats["count"]
+        if total == 0:
+            continue
+
+        total_eng = pro_stats["engagement"] + anti_stats["engagement"]
+
+        curated.append({
+            "slug": topic.slug,
+            "name": topic.name,
+            "pro_label": topic.pro_label,
+            "anti_label": topic.anti_label,
+            "topic_type": topic.topic_type or "political",
+            "total_posts": total,
+            "pro_pct": round(pro_stats["count"] / total * 100),
+            "anti_pct": round(anti_stats["count"] / total * 100),
+            "pro_engagement": pro_stats["engagement"],
+            "anti_engagement": anti_stats["engagement"],
+            "total_engagement": total_eng,
+            "total_views": pro_stats["views"] + anti_stats["views"],
+            "has_page": True,
+            "url": f"/analytics/{topic.slug}",
+        })
+
+    # Sort curated by total engagement
+    curated.sort(key=lambda x: x["total_engagement"], reverse=True)
+
+    # Get trending topics from cache
+    trending_raw = get_trending_cache()
+    trending = []
+    for t in trending_raw:
+        s = t.get("stats", {})
+        total = s.get("total", 0)
+        if total == 0:
+            continue
+        trending.append({
+            "slug": t["slug"],
+            "name": t["name"],
+            "pro_label": t["pro_label"],
+            "anti_label": t["anti_label"],
+            "description": t.get("description", ""),
+            "heat": t.get("heat", 5),
+            "total_posts": total,
+            "pro_pct": round(s["pro_count"] / total * 100),
+            "anti_pct": round(s["anti_count"] / total * 100),
+            "pro_engagement": s.get("pro_engagement", 0),
+            "anti_engagement": s.get("anti_engagement", 0),
+            "total_engagement": s.get("pro_engagement", 0) + s.get("anti_engagement", 0),
+            "total_views": s.get("pro_views", 0) + s.get("anti_views", 0),
+            "has_page": False,
+            "sample_pro": s.get("sample_pro", []),
+            "sample_anti": s.get("sample_anti", []),
+        })
+
+    return {
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "curated": curated,
+        "trending": trending,
+        "trending_updated_at": _trending_cache.get("updated_at"),
+    }

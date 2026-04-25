@@ -8,7 +8,7 @@ load_dotenv()
 
 from database import init_db
 from auth import get_current_user
-from routers import feed, topics, overrides, billing, demo, account
+from routers import feed, topics, overrides, billing, demo, account, pulse
 from routers.feed import client_ip_var
 from scheduler import start_scheduler, refresh_featured_topics, CRON_SECRET
 
@@ -58,6 +58,7 @@ app.include_router(overrides.router, prefix="/api")
 app.include_router(billing.router, prefix="/api")
 app.include_router(demo.router, prefix="/api")
 app.include_router(account.router, prefix="/api")
+app.include_router(pulse.router, prefix="/api")
 
 
 @app.get("/health")

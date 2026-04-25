@@ -108,6 +108,13 @@ def _scheduler_loop():
             except Exception as e:
                 print(f"[Scheduler] Cycle error: {e}")
 
+            # Refresh trending topics for the pulse page
+            try:
+                from routers.pulse import refresh_trending_cache
+                refresh_trending_cache()
+            except Exception as e:
+                print(f"[Scheduler] Pulse trending refresh error (non-fatal): {e}")
+
             # Post slot 0 right after refresh (9am post)
             if os.getenv("ENABLE_PROMO_TWEETS", "false").lower() == "true":
                 _post_slot(0)

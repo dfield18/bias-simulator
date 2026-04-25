@@ -125,4 +125,4 @@ def start_scheduler():
     """Start the background scheduler thread (daemon so it dies with the process)."""
     t = threading.Thread(target=_scheduler_loop, daemon=True, name="topic-scheduler")
     t.start()
-    print(f"[Scheduler] Background thread started (interval: {REFRESH_INTERVAL_HOURS}h)")
+    print(f"[Scheduler] Background thread started (refresh at {REFRESH_HOUR_UTC}:00 UTC, posts at {POST_HOURS_UTC} UTC)")

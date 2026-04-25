@@ -1,12 +1,14 @@
-"""Background scheduler for automatic topic refreshes."""
+"""Background scheduler for automatic topic refreshes and daily posts."""
 
 import os
 import time
 import threading
 from datetime import datetime, timezone, timedelta
 
-REFRESH_INTERVAL_HOURS = int(os.getenv("REFRESH_INTERVAL_HOURS", "24"))
 CRON_SECRET = os.getenv("CRON_SECRET", "")
+
+# Track which slots have been posted today to prevent duplicates on restart
+_posted_today: dict[str, set[int]] = {}  # {"2026-04-25": {0, 1, 2}}
 
 
 def refresh_featured_topics():
@@ -53,10 +55,19 @@ def _seconds_until(hour_utc: int) -> float:
 
 
 def _post_slot(slot: int):
-    """Post a tweet for a specific daily slot."""
+    """Post a tweet for a specific daily slot. Skips if already posted today."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if today not in _posted_today:
+        _posted_today.clear()  # clear old days
+        _posted_today[today] = set()
+    if slot in _posted_today[today]:
+        print(f"[Scheduler] Slot {slot} already posted today, skipping")
+        return
     try:
         from promo.daily_schedule import post_daily_slot
         success = post_daily_slot(slot)
+        if success:
+            _posted_today[today].add(slot)
         print(f"[Scheduler] Daily post slot {slot}: {'success' if success else 'failed'}")
     except Exception as e:
         print(f"[Scheduler] Daily post slot {slot} error: {e}")

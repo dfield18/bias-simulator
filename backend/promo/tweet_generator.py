@@ -30,6 +30,16 @@ def get_topic_stats(topic_slug: str) -> dict | None:
     from pipeline.run import get_sync_connection
 
     conn = get_sync_connection()
+    try:
+        return _get_topic_stats_inner(conn, topic_slug)
+    except Exception as e:
+        print(f"[TweetGen] Error getting stats for {topic_slug}: {e}")
+        return None
+    finally:
+        conn.close()
+
+
+def _get_topic_stats_inner(conn, topic_slug: str) -> dict | None:
     cur = conn.cursor()
 
     # Topic info
@@ -39,7 +49,6 @@ def get_topic_stats(topic_slug: str) -> dict | None:
     )
     row = cur.fetchone()
     if not row:
-        conn.close()
         return None
     name, pro_label, anti_label, topic_type, description, tweet_hook = row
 
@@ -78,7 +87,6 @@ def get_topic_stats(topic_slug: str) -> dict | None:
 
     total_posts = pro["posts"] + anti["posts"]
     if total_posts == 0:
-        conn.close()
         return None
 
     # Echo chamber score
@@ -129,8 +137,6 @@ def get_topic_stats(topic_slug: str) -> dict | None:
         echo_score = round(overlap * 100)
     else:
         echo_score = None
-
-    conn.close()
 
     # tweet_hook > description-derived > name
     if tweet_hook:

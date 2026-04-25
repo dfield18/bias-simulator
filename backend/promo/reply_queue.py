@@ -207,15 +207,10 @@ def generate_reply_queue(topics: list[str] | None = None, output_dir: str | None
             if len(reply_text) > 280:
                 reply_text = reply_text[:277] + "..."
 
-            # Save target tweet + reply text in one file
             info_path = reply_dir / "reply_info.txt"
             info_path.write_text(
-                f"REPLY TO: {tweet['url']}\n"
-                f"Author: @{tweet['author']} ({tweet['author_name']})\n"
-                f"Followers: {tweet['followers']:,} | Engagement: {tweet['engagement']:,} | Views: {tweet['views']:,}\n"
-                f"\nTHEIR TWEET:\n{tweet['text']}\n"
-                f"\n{'='*40}\n"
-                f"\nYOUR REPLY (copy this):\n{reply_text}\n"
+                f"URL: {tweet['url']}\n\n"
+                f"REPLY: {reply_text}\n"
             )
 
             # Save chart

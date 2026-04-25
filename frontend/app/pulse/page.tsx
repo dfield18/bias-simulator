@@ -80,8 +80,17 @@ function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number 
           <span className="text-red-400 font-medium">{topic.pro_label} {proWidth}%</span>
         </div>
         <div className="h-3 bg-gray-800 rounded-full overflow-hidden flex">
-          <div className="bg-blue-500/70 h-full" style={{ width: `${antiWidth}%` }} />
-          <div className="bg-red-500/70 h-full" style={{ width: `${proWidth}%` }} />
+          {(() => {
+            const combined = antiWidth + proWidth || 1;
+            const antiBar = Math.round(antiWidth / combined * 100);
+            const proBar = 100 - antiBar;
+            return (
+              <>
+                <div className="bg-blue-500/70 h-full" style={{ width: `${antiBar}%` }} />
+                <div className="bg-red-500/70 h-full" style={{ width: `${proBar}%` }} />
+              </>
+            );
+          })()}
         </div>
       </div>
 

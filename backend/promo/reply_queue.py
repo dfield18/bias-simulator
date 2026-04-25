@@ -201,25 +201,22 @@ def generate_reply_queue(topics: list[str] | None = None, output_dir: str | None
             reply_dir = day_dir / f"{i+1:02d}_{slug}" / f"reply_{j+1}"
             reply_dir.mkdir(parents=True, exist_ok=True)
 
-            # Save target tweet info
-            target_path = reply_dir / "target_tweet.txt"
-            target_path.write_text(
-                f"URL: {tweet['url']}\n"
-                f"Author: @{tweet['author']} ({tweet['author_name']})\n"
-                f"Followers: {tweet['followers']:,}\n"
-                f"Engagement: {tweet['engagement']:,}\n"
-                f"Views: {tweet['views']:,}\n"
-                f"\n{tweet['text']}\n"
-            )
-
             # Generate reply text
             template = random.choice(REPLY_TEMPLATES)
             reply_text = template(subject, stats)
             if len(reply_text) > 280:
                 reply_text = reply_text[:277] + "..."
 
-            reply_path = reply_dir / "reply_text.txt"
-            reply_path.write_text(reply_text)
+            # Save target tweet + reply text in one file
+            info_path = reply_dir / "reply_info.txt"
+            info_path.write_text(
+                f"REPLY TO: {tweet['url']}\n"
+                f"Author: @{tweet['author']} ({tweet['author_name']})\n"
+                f"Followers: {tweet['followers']:,} | Engagement: {tweet['engagement']:,} | Views: {tweet['views']:,}\n"
+                f"\nTHEIR TWEET:\n{tweet['text']}\n"
+                f"\n{'='*40}\n"
+                f"\nYOUR REPLY (copy this):\n{reply_text}\n"
+            )
 
             # Save chart
             if chart_bytes:

@@ -152,6 +152,20 @@ export default function Home() {
         )}
       </div>
 
+      {/* Pulse link */}
+      <Link
+        href="/pulse"
+        className="block bg-gray-900 border border-gray-800 rounded-xl p-4 mb-6 hover:border-gray-600 transition-colors"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-gray-200">Today&apos;s Pulse</p>
+            <p className="text-xs text-gray-500 mt-0.5">See what X is debating right now — trending topics and real-time sentiment</p>
+          </div>
+          <span className="text-gray-500 text-sm">&rarr;</span>
+        </div>
+      </Link>
+
       {/* Upgrade success banner */}
       {upgraded && (
         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6 flex items-center justify-between">

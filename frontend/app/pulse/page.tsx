@@ -239,7 +239,11 @@ export default function PulsePage() {
                           <div key={topic.slug}>
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-sm font-medium text-gray-200">{topic.name}</span>
-                              <span className="text-xs text-gray-600">{topic.anti_pct}% / {topic.pro_pct}%</span>
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className="text-blue-400">{topic.anti_label} {topic.anti_pct}%</span>
+                                <span className="text-gray-700">/</span>
+                                <span className="text-red-400">{topic.pro_label} {topic.pro_pct}%</span>
+                              </div>
                             </div>
                             <div className="h-4 bg-gray-800/30 rounded-sm overflow-hidden" style={{ width: `${widthPct}%` }}>
                               <div className="flex h-full">
@@ -253,10 +257,6 @@ export default function PulsePage() {
                     </div>
                   );
                 })()}
-                <div className="flex justify-between mt-3 text-[10px] text-gray-600">
-                  <span>← {data.trending[0]?.anti_label || "Side A"}</span>
-                  <span>{data.trending[0]?.pro_label || "Side B"} →</span>
-                </div>
               </div>
 
               <div className="space-y-3">

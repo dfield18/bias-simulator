@@ -224,37 +224,93 @@ export default function PulsePage() {
             <section className="mb-10">
               <h2 className="text-lg font-semibold text-gray-300 mb-4">What X is debating right now</h2>
 
-              {/* Overview bar chart */}
+              {/* Overview: ranked sentiment bars */}
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-5">
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-4 font-medium">Relative engagement across trending topics</p>
-                {(() => {
-                  const maxEng = Math.max(...data.trending.map(t => t.total_engagement), 1);
-                  return (
-                    <div className="space-y-3">
-                      {data.trending.map((topic, i) => {
-                        const widthPct = Math.max(8, Math.round(topic.total_engagement / maxEng * 100));
-                        const combined = topic.anti_pct + topic.pro_pct || 1;
-                        const antiBar = Math.round(topic.anti_pct / combined * 100);
-                        const proBar = 100 - antiBar;
-                        return (
-                          <div key={topic.slug}>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-sm font-medium text-gray-200">{topic.name}</span>
-                              <div className="flex items-center gap-2 text-xs">
-                                <span className="text-blue-400">{topic.anti_label} {topic.anti_pct}%</span>
-                                <span className="text-gray-700">/</span>
-                                <span className="text-red-400">{topic.pro_label} {topic.pro_pct}%</span>
-                              </div>
-                            </div>
-                            <div className="h-4 bg-gray-800/30 rounded-sm overflow-hidden" style={{ width: `${widthPct}%` }}>
-                              <div className="flex h-full">
-                                <div className="bg-blue-500/70 h-full" style={{ width: `${antiBar}%` }} />
-                                <div className="bg-red-500/70 h-full" style={{ width: `${proBar}%` }} />
-                              </div>
-                            </div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-4 font-medium">Sentiment by topic — ranked by engagement</p>
+                <div className="space-y-3">
+                  {data.trending.map((topic) => {
+                    const combined = topic.anti_pct + topic.pro_pct || 1;
+                    const antiBar = Math.round(topic.anti_pct / combined * 100);
+                    const proBar = 100 - antiBar;
+                    return (
+                      <div key={topic.slug}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-gray-200">{topic.name}</span>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-blue-400">{topic.anti_label} {topic.anti_pct}%</span>
+                            <span className="text-gray-700">/</span>
+                            <span className="text-red-400">{topic.pro_label} {topic.pro_pct}%</span>
                           </div>
-                        );
-                      })}
+                        </div>
+                        <div className="h-3.5 bg-gray-800 rounded-full overflow-hidden flex">
+                          <div className="bg-blue-500/70 h-full" style={{ width: `${antiBar}%` }} />
+                          <div className="bg-red-500/70 h-full" style={{ width: `${proBar}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Overview: donut chart — share of engagement */}
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-5">
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-4 font-medium">Share of total engagement</p>
+                {(() => {
+                  const totalEng = data.trending.reduce((s, t) => s + t.total_engagement, 0) || 1;
+                  const segments = data.trending.map(t => ({
+                    name: t.name,
+                    pct: Math.round(t.total_engagement / totalEng * 100),
+                  }));
+                  const colors = ["#3b82f6", "#ef4444", "#22c55e", "#eab308", "#a855f7", "#f97316", "#06b6d4"];
+                  const size = 160;
+                  const cx = size / 2;
+                  const cy = size / 2;
+                  const r = 60;
+                  const inner = 35;
+                  let cumAngle = -90;
+
+                  return (
+                    <div className="flex items-center gap-6">
+                      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+                        {segments.map((seg, i) => {
+                          const angle = (seg.pct / 100) * 360;
+                          const startAngle = cumAngle;
+                          const endAngle = cumAngle + angle;
+                          cumAngle = endAngle;
+
+                          const startRad = (startAngle * Math.PI) / 180;
+                          const endRad = (endAngle * Math.PI) / 180;
+                          const largeArc = angle > 180 ? 1 : 0;
+
+                          const x1 = cx + r * Math.cos(startRad);
+                          const y1 = cy + r * Math.sin(startRad);
+                          const x2 = cx + r * Math.cos(endRad);
+                          const y2 = cy + r * Math.sin(endRad);
+                          const ix1 = cx + inner * Math.cos(endRad);
+                          const iy1 = cy + inner * Math.sin(endRad);
+                          const ix2 = cx + inner * Math.cos(startRad);
+                          const iy2 = cy + inner * Math.sin(startRad);
+
+                          const d = [
+                            `M ${x1} ${y1}`,
+                            `A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`,
+                            `L ${ix1} ${iy1}`,
+                            `A ${inner} ${inner} 0 ${largeArc} 0 ${ix2} ${iy2}`,
+                            "Z",
+                          ].join(" ");
+
+                          return <path key={i} d={d} fill={colors[i % colors.length]} opacity={0.8} />;
+                        })}
+                      </svg>
+                      <div className="space-y-1.5">
+                        {segments.map((seg, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length], opacity: 0.8 }} />
+                            <span className="text-xs text-gray-400">{seg.name}</span>
+                            <span className="text-xs text-gray-600">{seg.pct}%</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   );
                 })()}

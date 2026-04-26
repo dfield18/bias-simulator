@@ -271,7 +271,7 @@ export default function LandingPage() {
               {/* Custom title for landing page */}
               <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-1">
                 <div className="text-xs sm:text-sm text-gray-300 font-semibold">Simulated X Feed — Iran War</div>
-                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">This reconstruction shows how the same posts get prioritized differently based on political leaning.</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">This reconstruction shows how the same posts get prioritized differently based on political leaning</p>
               </div>
 
               {/* Chart */}

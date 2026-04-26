@@ -189,33 +189,76 @@ def _render_frame(tweets, bias, pro_label, anti_label, pro_bent, anti_bent, subj
     if max_global > 0:
         dist = dist / max_global
 
-    colors = []
-    for i in range(21):
-        if i < 9:
-            t = i / 9
-            r = _hex_to_rgb(BRAND_BLUE)
-            colors.append((*r, 0.5 + 0.4 * (1 - t)))
-        elif i > 11:
-            t = (i - 11) / 9
-            r = _hex_to_rgb(BRAND_RED)
-            colors.append((*r, 0.5 + 0.4 * t))
+    # Smooth interpolation for continuous curve
+    from scipy.interpolate import make_interp_spline
+    x_smooth = np.linspace(0, 20, 200)
+    try:
+        spl = make_interp_spline(x, dist, k=3)
+        y_smooth = np.clip(spl(x_smooth), 0, None)
+    except Exception:
+        y_smooth = np.interp(x_smooth, x, dist)
+
+    # Draw filled area with gradient: blue left, gray middle, red right
+    for i in range(len(x_smooth) - 1):
+        xi = x_smooth[i]
+        pos = xi / 20  # 0 to 1
+        if pos < 0.4:
+            t = pos / 0.4
+            r, g, b = _hex_to_rgb(BRAND_BLUE)
+            alpha = 0.7 - 0.2 * t
+        elif pos > 0.6:
+            t = (pos - 0.6) / 0.4
+            r, g, b = _hex_to_rgb(BRAND_RED)
+            alpha = 0.5 + 0.2 * t
         else:
-            colors.append((*_hex_to_rgb(BRAND_GRAY), 0.6))
+            r, g, b = _hex_to_rgb(BRAND_MUTED)
+            alpha = 0.4
+        ax.fill_between(
+            x_smooth[i:i+2], 0, y_smooth[i:i+2],
+            color=(r, g, b, alpha), zorder=2, linewidth=0,
+        )
 
-    ax.bar(x, dist, width=0.85, color=colors, edgecolor="none", zorder=3)
+    # Outline curve
+    ax.plot(x_smooth, y_smooth, color="#9ca3af", linewidth=1.2, alpha=0.6, zorder=3)
 
+    # Slider line + dot
     slider_x = 10 + bias
-    ax.axvline(slider_x, color=BRAND_TEXT, linewidth=2, alpha=0.8, zorder=5, linestyle="--")
-    ax.plot(slider_x, -0.03, marker="o", color=BRAND_TEXT, markersize=10, zorder=6, clip_on=False)
+    # Interpolate y at slider position
+    slider_y = float(np.interp(slider_x, x_smooth, y_smooth))
+    ax.plot([slider_x, slider_x], [0, slider_y + 0.05], color=BRAND_TEXT,
+            linewidth=1.5, alpha=0.8, zorder=5)
+    ax.plot(slider_x, slider_y + 0.07, marker="o", color=BRAND_TEXT,
+            markersize=8, zorder=6, clip_on=False)
 
     ax.set_xlim(-0.5, 20.5)
-    ax.set_ylim(0, 1.1)
-    ax.set_xticks([0, 10, 20])
-    ax.set_xticklabels([anti_label, "Neutral", pro_label], fontsize=10, color=BRAND_MUTED)
+    ax.set_ylim(0, 1.15)
+    ax.set_xticks([2.5, 10, 17.5])
+    ax.set_xticklabels(["-5", "0", "+5"], fontsize=9, color=BRAND_MUTED)
     ax.yaxis.set_visible(False)
-    for s in ["top", "right", "left"]:
+    for s in ["top", "right", "left", "bottom"]:
         ax.spines[s].set_visible(False)
-    ax.spines["bottom"].set_color(BRAND_GRAY)
+    ax.tick_params(axis="x", colors=BRAND_MUTED, length=0)
+
+    # Side labels below chart
+    ax.text(0, -0.08, anti_label, fontsize=11, fontweight="bold",
+            color=BRAND_BLUE, ha="left", va="top", transform=ax.get_xaxis_transform())
+    ax.text(20, -0.08, pro_label, fontsize=11, fontweight="bold",
+            color=BRAND_RED, ha="right", va="top", transform=ax.get_xaxis_transform())
+
+    # Bottom slider bar (blue→red gradient)
+    bar_y = -0.18
+    for i in range(200):
+        bx = i / 200 * 20
+        t = i / 200
+        if t < 0.5:
+            r, g, b = _hex_to_rgb(BRAND_BLUE)
+        else:
+            r, g, b = _hex_to_rgb(BRAND_RED)
+        ax.plot(bx, bar_y, "s", color=(r, g, b, 0.7), markersize=2,
+                transform=ax.get_xaxis_transform(), clip_on=False, zorder=4)
+    # Slider dot on the bar
+    ax.plot(slider_x, bar_y, "o", color=BRAND_TEXT, markersize=7,
+            transform=ax.get_xaxis_transform(), clip_on=False, zorder=5)
 
     # Bias label
     abs_bias = abs(bias)

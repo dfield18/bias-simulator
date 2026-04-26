@@ -120,6 +120,30 @@ async def get_pulse(
 
         total_eng = pro_stats["engagement"] + anti_stats["engagement"]
 
+        # Top tweet per side
+        sample_pro = []
+        sample_anti = []
+        for bent, label, samples in [(pro_bent, topic.pro_label, sample_pro), (anti_bent, topic.anti_label, sample_anti)]:
+            sample_stmt = (
+                select(Tweet.full_text)
+                .join(Classification, Tweet.id_str == Classification.id_str)
+                .where(
+                    Tweet.topic_slug == topic.slug,
+                    Tweet.fetched_at >= since,
+                    Tweet.created_at >= since,
+                    Classification.about_subject == True,
+                    Classification.effective_political_bent == bent,
+                )
+                .order_by(Tweet.engagement.desc())
+                .limit(1)
+            )
+            sample_result = await db.execute(sample_stmt)
+            row = sample_result.scalar_one_or_none()
+            if row:
+                import re
+                clean = re.sub(r'https?://\S+', '', row).strip()[:150]
+                samples.append(clean)
+
         curated.append({
             "slug": topic.slug,
             "name": topic.name,
@@ -132,6 +156,8 @@ async def get_pulse(
             "pro_engagement": pro_stats["engagement"],
             "anti_engagement": anti_stats["engagement"],
             "total_engagement": total_eng,
+            "sample_pro": sample_pro,
+            "sample_anti": sample_anti,
             "total_views": pro_stats["views"] + anti_stats["views"],
             "has_page": True,
             "url": f"/analytics/{topic.slug}",

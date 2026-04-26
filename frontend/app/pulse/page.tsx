@@ -12,7 +12,6 @@ interface TopicCard {
   anti_label: string;
   topic_type?: string;
   description?: string;
-  heat?: number;
   total_posts: number;
   pro_pct: number;
   anti_pct: number;
@@ -39,34 +38,69 @@ function fmt(n: number): string {
   return String(n);
 }
 
-function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number }) {
-  const total = topic.total_posts;
-  const proWidth = topic.pro_pct;
-  const antiWidth = topic.anti_pct;
-  const totalEng = topic.total_engagement;
+function generateSummary(topic: TopicCard): string {
+  const dominant = topic.anti_pct > topic.pro_pct ? topic.anti_label : topic.pro_label;
+  const dominantPct = Math.max(topic.anti_pct, topic.pro_pct);
+  const minor = topic.anti_pct > topic.pro_pct ? topic.pro_label : topic.anti_label;
 
-  // Determine engagement winner
-  let engInsight = "";
-  if (topic.pro_engagement > 0 && topic.anti_engagement > 0) {
-    const ratio = topic.pro_engagement > topic.anti_engagement
-      ? (topic.pro_engagement / topic.anti_engagement).toFixed(1)
-      : (topic.anti_engagement / topic.pro_engagement).toFixed(1);
-    const winner = topic.pro_engagement > topic.anti_engagement ? topic.pro_label : topic.anti_label;
-    if (parseFloat(ratio) > 1.3) {
-      engInsight = `${winner} gets ${ratio}x more engagement`;
+  // Check engagement disconnect
+  const proEng = topic.pro_engagement;
+  const antiEng = topic.anti_engagement;
+  let engWinner = "";
+  let engRatio = 0;
+  if (proEng > 0 && antiEng > 0) {
+    if (proEng > antiEng) {
+      engRatio = Math.round(proEng / antiEng * 10) / 10;
+      engWinner = topic.pro_label;
+    } else {
+      engRatio = Math.round(antiEng / proEng * 10) / 10;
+      engWinner = topic.anti_label;
     }
   }
 
+  const volWinner = topic.anti_pct > topic.pro_pct ? topic.anti_label : topic.pro_label;
+
+  if (engRatio > 1.3 && engWinner !== volWinner) {
+    return `${volWinner} dominates the conversation (${dominantPct}%), but ${engWinner} content gets ${engRatio}x more engagement per post`;
+  }
+  if (dominantPct >= 65) {
+    return `${dominant} overwhelmingly leads the conversation at ${dominantPct}% of posts`;
+  }
+  if (dominantPct >= 55) {
+    return `${dominant} leads the conversation, but ${minor} is not far behind`;
+  }
+  return `The conversation is closely split between ${topic.anti_label} and ${topic.pro_label}`;
+}
+
+function EngagementDot({ topic }: { topic: TopicCard }) {
+  const total = topic.total_engagement;
+  // Relative to a "high" baseline of 1M
+  const pct = Math.min(100, Math.max(5, Math.round(Math.log10(Math.max(total, 1)) / 7 * 100)));
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+        <div className="h-full bg-yellow-500/60 rounded-full" style={{ width: `${pct}%` }} />
+      </div>
+      <span className="text-xs text-gray-600">{fmt(total)}</span>
+    </div>
+  );
+}
+
+function TopicCardComponent({ topic }: { topic: TopicCard }) {
+  const proWidth = topic.pro_pct;
+  const antiWidth = topic.anti_pct;
+  const summary = generateSummary(topic);
+
   const inner = (
     <div className={`bg-gray-900 border border-gray-800 rounded-xl p-5 transition-colors ${topic.has_page ? "hover:border-gray-600" : ""}`}>
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-base font-bold text-gray-100">{topic.name}</h3>
-          {topic.description && (
-            <p className="text-xs text-gray-500 mt-0.5">{topic.description}</p>
-          )}
-        </div>
+      {/* Header: name + engagement spark */}
+      <div className="flex items-start justify-between mb-2">
+        <h3 className="text-lg font-bold text-gray-100">{topic.name}</h3>
+        <EngagementDot topic={topic} />
       </div>
+
+      {/* AI summary */}
+      <p className="text-sm text-gray-400 mb-3">{summary}</p>
 
       {/* Volume bar */}
       <div className="mb-3">
@@ -89,21 +123,25 @@ function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number 
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="flex items-center gap-4 text-xs text-gray-500">
-        <span>{total} posts</span>
-        <span>{fmt(totalEng)} engagements</span>
-        {topic.total_views > 0 && <span>{fmt(topic.total_views)} views</span>}
-      </div>
-
-      {/* Engagement insight */}
-      {engInsight && (
-        <p className="text-xs text-gray-400 mt-2 italic">{engInsight}</p>
-      )}
+      {/* Top quote per side */}
+      {(topic.sample_anti?.length || topic.sample_pro?.length) ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+          {topic.sample_anti?.[0] && (
+            <div className="text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2">
+              &ldquo;{topic.sample_anti[0]}&rdquo;
+            </div>
+          )}
+          {topic.sample_pro?.[0] && (
+            <div className="text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2">
+              &ldquo;{topic.sample_pro[0]}&rdquo;
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {/* Explore link for curated */}
       {topic.has_page && (
-        <div className="text-xs text-blue-400 mt-3 font-medium">
+        <div className="text-xs text-blue-400 mt-2 font-medium">
           Explore full analysis →
         </div>
       )}
@@ -159,10 +197,11 @@ export default function PulsePage() {
       {loading && (
         <div className="space-y-4 animate-pulse">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-5 h-32">
-              <div className="h-4 w-40 bg-gray-800 rounded mb-3" />
+            <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-5 h-40">
+              <div className="h-5 w-48 bg-gray-800 rounded mb-3" />
               <div className="h-3 w-full bg-gray-800 rounded mb-2" />
-              <div className="h-2 w-32 bg-gray-800 rounded" />
+              <div className="h-3 w-3/4 bg-gray-800 rounded mb-3" />
+              <div className="h-2.5 w-full bg-gray-800 rounded" />
             </div>
           ))}
         </div>
@@ -179,13 +218,10 @@ export default function PulsePage() {
           {/* Trending topics */}
           {data.trending.length > 0 && (
             <section className="mb-10">
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-lg font-semibold text-gray-300">Trending Now</h2>
-                <span className="text-xs text-gray-600">Auto-discovered from X</span>
-              </div>
+              <h2 className="text-lg font-semibold text-gray-300 mb-4">What X is debating right now</h2>
               <div className="space-y-3">
                 {data.trending.map((topic, i) => (
-                  <TopicCardComponent key={topic.slug} topic={topic} index={i} />
+                  <TopicCardComponent key={topic.slug} topic={topic} />
                 ))}
               </div>
             </section>
@@ -194,13 +230,10 @@ export default function PulsePage() {
           {/* Curated topics */}
           {data.curated.length > 0 && (
             <section>
-              <div className="flex items-center gap-2 mb-4">
-                <h2 className="text-lg font-semibold text-gray-300">Always Tracking</h2>
-                <span className="text-xs text-gray-600">Updated daily</span>
-              </div>
+              <h2 className="text-lg font-semibold text-gray-300 mb-4">Ongoing conversations</h2>
               <div className="space-y-3">
                 {data.curated.map((topic, i) => (
-                  <TopicCardComponent key={topic.slug} topic={topic} index={i} />
+                  <TopicCardComponent key={topic.slug} topic={topic} />
                 ))}
               </div>
             </section>

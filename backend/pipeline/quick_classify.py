@@ -162,7 +162,7 @@ IMPORTANT: Return ONLY valid JSON."""
             if len(result["sample_pro"]) < 2:
                 import re
                 clean = re.sub(r'https?://\S+', '', tweet["text"]).strip()[:150]
-                result["sample_pro"].append({"text": clean, "url": tweet.get("url")})
+                result["sample_pro"].append({"text": clean, "author": f"@{tweet['author']}" if tweet.get("author") else None, "url": tweet.get("url")})
         elif cls == anti_bent:
             result["anti_count"] += 1
             result["anti_engagement"] += tweet["engagement"]
@@ -171,7 +171,7 @@ IMPORTANT: Return ONLY valid JSON."""
             if len(result["sample_anti"]) < 2:
                 import re
                 clean = re.sub(r'https?://\S+', '', tweet["text"]).strip()[:150]
-                result["sample_anti"].append({"text": clean, "url": tweet.get("url")})
+                result["sample_anti"].append({"text": clean, "author": f"@{tweet['author']}" if tweet.get("author") else None, "url": tweet.get("url")})
         else:
             result["neutral_count"] += 1
             result["total"] += 1

@@ -21,8 +21,8 @@ interface TopicCard {
   total_views: number;
   has_page: boolean;
   url?: string;
-  sample_pro?: (string | { text: string; url: string | null })[];
-  sample_anti?: (string | { text: string; url: string | null })[];
+  sample_pro?: (string | { text: string; author?: string | null; url: string | null })[];
+  sample_anti?: (string | { text: string; author?: string | null; url: string | null })[];
 }
 
 interface PulseData {
@@ -124,30 +124,34 @@ function TopicCardComponent({ topic, isLoudest = false }: { topic: TopicCard; is
           {topic.sample_anti?.[0] && (() => {
             const sample = topic.sample_anti![0];
             const text = typeof sample === "string" ? sample : sample.text;
+            const author = typeof sample === "object" ? sample.author : null;
             const url = typeof sample === "object" && sample.url ? sample.url : null;
+            const content = <>{author && <span className="text-blue-400/70 font-medium">{author}: </span>}&ldquo;{text}&rdquo;</>;
             return url ? (
               <a href={url} target="_blank" rel="noopener noreferrer"
                 className="text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
-                &ldquo;{text}&rdquo;
+                {content}
               </a>
             ) : (
               <div className="text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2">
-                &ldquo;{text}&rdquo;
+                {content}
               </div>
             );
           })()}
           {topic.sample_pro?.[0] && (() => {
             const sample = topic.sample_pro![0];
             const text = typeof sample === "string" ? sample : sample.text;
+            const author = typeof sample === "object" ? sample.author : null;
             const url = typeof sample === "object" && sample.url ? sample.url : null;
+            const content = <>{author && <span className="text-red-400/70 font-medium">{author}: </span>}&ldquo;{text}&rdquo;</>;
             return url ? (
               <a href={url} target="_blank" rel="noopener noreferrer"
                 className="text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
-                &ldquo;{text}&rdquo;
+                {content}
               </a>
             ) : (
               <div className="text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2">
-                &ldquo;{text}&rdquo;
+                {content}
               </div>
             );
           })()}

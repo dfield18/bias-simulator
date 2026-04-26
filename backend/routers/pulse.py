@@ -124,6 +124,13 @@ async def get_pulse(
         sample_pro = []
         sample_anti = []
         import re as _re
+        def _is_english(text: str) -> bool:
+            """Check if text is primarily English (Latin characters)."""
+            if not text:
+                return False
+            latin = sum(1 for c in text if c.isascii() or c in '""''–—…')
+            return latin / max(len(text), 1) > 0.7
+
         for bent, label, samples in [(pro_bent, topic.pro_label, sample_pro), (anti_bent, topic.anti_label, sample_anti)]:
             sample_stmt = (
                 select(Tweet.full_text, Tweet.screen_name, Tweet.id_str)
@@ -136,18 +143,21 @@ async def get_pulse(
                     Classification.effective_political_bent == bent,
                 )
                 .order_by(Tweet.engagement.desc())
-                .limit(1)
+                .limit(5)
             )
             sample_result = await db.execute(sample_stmt)
-            row = sample_result.one_or_none()
-            if row:
+            for row in sample_result.all():
                 clean = _re.sub(r'https?://\S+', '', row[0] or "").strip()[:150]
+                if not _is_english(clean):
+                    continue
                 screen = row[1] or ""
                 tid = row[2] or ""
                 samples.append({
                     "text": clean,
+                    "author": f"@{screen}" if screen else None,
                     "url": f"https://x.com/{screen}/status/{tid}" if screen and tid else None,
                 })
+                break
 
         curated.append({
             "slug": topic.slug,

@@ -18,7 +18,7 @@ SOCIALDATA_API_KEY = os.getenv("SOCIALDATA_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 
-def fetch_tweets_for_topic(search_query: str, max_pages: int = 5, max_results: int = 200) -> list[dict]:
+def fetch_tweets_for_topic(search_query: str, max_pages: int = 25, max_results: int = 500) -> list[dict]:
     """Fetch top tweets for a topic via SocialData, paginating for more volume."""
     if not SOCIALDATA_API_KEY:
         return []
@@ -96,7 +96,7 @@ def classify_tweets_batch(
 
     # Build classification prompt
     tweets_text = ""
-    for i, t in enumerate(tweets[:120]):
+    for i, t in enumerate(tweets[:500]):
         tweets_text += f"\n[{i}] @{t['author']}: {t['text']}"
 
     prompt = f"""Classify each tweet's stance on "{topic_name}" into one of these categories:
@@ -113,7 +113,7 @@ Guidelines:
 
 For each tweet index, return a classification.
 Return a JSON array: [{{"idx": 0, "class": "{pro_bent}"}}, ...]
-You MUST return exactly {min(len(tweets), 120)} entries, one for each tweet.
+You MUST return exactly {min(len(tweets), 500)} entries, one for each tweet.
 
 IMPORTANT: Return ONLY valid JSON."""
 
@@ -149,7 +149,7 @@ IMPORTANT: Return ONLY valid JSON."""
 
     class_by_idx = {c.get("idx", -1): c.get("class", "") for c in classifications}
 
-    for i, tweet in enumerate(tweets[:120]):
+    for i, tweet in enumerate(tweets[:500]):
         cls = class_by_idx.get(i, "neutral")
         if cls == pro_bent:
             result["pro_count"] += 1

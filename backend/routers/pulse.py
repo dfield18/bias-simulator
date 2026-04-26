@@ -196,6 +196,8 @@ async def get_pulse(
                 "anti_engagement": s.get("anti_engagement", 0),
                 "total_engagement": s.get("pro_engagement", 0) + s.get("anti_engagement", 0),
                 "total_views": s.get("pro_views", 0) + s.get("anti_views", 0),
+                "sample_pro": s.get("sample_pro", []),
+                "sample_anti": s.get("sample_anti", []),
                 "has_page": False,
             })
 

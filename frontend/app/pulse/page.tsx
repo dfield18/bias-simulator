@@ -72,31 +72,26 @@ function generateSummary(topic: TopicCard): string {
   return `The conversation is closely split between ${topic.anti_label} and ${topic.pro_label}`;
 }
 
-function EngagementDot({ topic }: { topic: TopicCard }) {
-  const total = topic.total_engagement;
-  // Relative to a "high" baseline of 1M
-  const pct = Math.min(100, Math.max(5, Math.round(Math.log10(Math.max(total, 1)) / 7 * 100)));
+function EngagementLabel({ isLoudest }: { isLoudest: boolean }) {
+  if (!isLoudest) return null;
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-16 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-        <div className="h-full bg-yellow-500/60 rounded-full" style={{ width: `${pct}%` }} />
-      </div>
-      <span className="text-xs text-gray-600">{fmt(total)}</span>
-    </div>
+    <span className="text-xs text-yellow-400/80 font-medium shrink-0 ml-2">
+      Loudest topic today
+    </span>
   );
 }
 
-function TopicCardComponent({ topic }: { topic: TopicCard }) {
+function TopicCardComponent({ topic, isLoudest = false }: { topic: TopicCard; isLoudest?: boolean }) {
   const proWidth = topic.pro_pct;
   const antiWidth = topic.anti_pct;
   const summary = generateSummary(topic);
 
   const inner = (
     <div className={`bg-gray-900 border border-gray-800 rounded-xl p-5 transition-colors ${topic.has_page ? "hover:border-gray-600" : ""}`}>
-      {/* Header: name + engagement spark */}
+      {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <h3 className="text-lg font-bold text-gray-100">{topic.name}</h3>
-        <EngagementDot topic={topic} />
+        <EngagementLabel isLoudest={isLoudest} />
       </div>
 
       {/* AI summary */}
@@ -221,7 +216,7 @@ export default function PulsePage() {
               <h2 className="text-lg font-semibold text-gray-300 mb-4">What X is debating right now</h2>
               <div className="space-y-3">
                 {data.trending.map((topic, i) => (
-                  <TopicCardComponent key={topic.slug} topic={topic} />
+                  <TopicCardComponent key={topic.slug} topic={topic} isLoudest={i === 0} />
                 ))}
               </div>
             </section>
@@ -233,7 +228,7 @@ export default function PulsePage() {
               <h2 className="text-lg font-semibold text-gray-300 mb-4">Ongoing conversations</h2>
               <div className="space-y-3">
                 {data.curated.map((topic, i) => (
-                  <TopicCardComponent key={topic.slug} topic={topic} />
+                  <TopicCardComponent key={topic.slug} topic={topic} isLoudest={i === 0 && data.trending.length === 0} />
                 ))}
               </div>
             </section>

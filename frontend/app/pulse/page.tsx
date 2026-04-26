@@ -238,6 +238,41 @@ export default function PulsePage() {
           {data.trending.length > 0 && (
             <section className="mb-10">
               <h2 className="text-lg font-semibold text-gray-300 mb-4">What X is debating right now</h2>
+
+              {/* Overview bar chart */}
+              <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-5">
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-4 font-medium">Relative engagement across trending topics</p>
+                {(() => {
+                  const maxEng = Math.max(...data.trending.map(t => t.total_engagement), 1);
+                  return (
+                    <div className="space-y-3">
+                      {data.trending.map((topic, i) => {
+                        const pct = Math.max(3, Math.round(topic.total_engagement / maxEng * 100));
+                        const combined = topic.anti_pct + topic.pro_pct || 1;
+                        const antiBar = Math.round(topic.anti_pct / combined * pct);
+                        const proBar = pct - antiBar;
+                        return (
+                          <div key={topic.slug}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-medium text-gray-200">{topic.name}</span>
+                              <span className="text-xs text-gray-600">{topic.anti_pct}% / {topic.pro_pct}%</span>
+                            </div>
+                            <div className="flex h-4 rounded-sm overflow-hidden bg-gray-800">
+                              <div className="bg-blue-500/60 h-full transition-all" style={{ width: `${antiBar}%` }} />
+                              <div className="bg-red-500/60 h-full transition-all" style={{ width: `${proBar}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+                <div className="flex justify-between mt-3 text-[10px] text-gray-600">
+                  <span>← {data.trending[0]?.anti_label || "Side A"}</span>
+                  <span>{data.trending[0]?.pro_label || "Side B"} →</span>
+                </div>
+              </div>
+
               <div className="space-y-3">
                 {data.trending.map((topic, i) => (
                   <TopicCardComponent key={topic.slug} topic={topic} isLoudest={i === 0} />

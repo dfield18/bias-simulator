@@ -80,8 +80,9 @@ def classify_tweets_batch(
     pro_label: str,
     anti_label: str,
     topic_name: str,
+    batch_size: int = 50,
 ) -> dict:
-    """Classify a batch of tweets into pro/anti/neutral using Gemini.
+    """Classify tweets in batches of batch_size, merge results.
 
     Returns {
         "pro_count": int, "anti_count": int, "neutral_count": int,
@@ -94,15 +95,32 @@ def classify_tweets_batch(
     if not GEMINI_API_KEY or not tweets:
         return _empty_result()
 
+    import re as _re
+    from google import genai
+
     pro_bent = pro_label.lower().replace(" ", "-")
     anti_bent = anti_label.lower().replace(" ", "-")
+    client = genai.Client(api_key=GEMINI_API_KEY)
 
-    # Build classification prompt
-    tweets_text = ""
-    for i, t in enumerate(tweets[:500]):
-        tweets_text += f"\n[{i}] @{t['author']}: {t['text']}"
+    # Aggregate results across all batches
+    result = {
+        "pro_count": 0, "anti_count": 0, "neutral_count": 0,
+        "pro_engagement": 0, "anti_engagement": 0,
+        "pro_views": 0, "anti_views": 0,
+        "total": 0,
+        "sample_pro": [], "sample_anti": [],
+    }
 
-    prompt = f"""Classify each tweet's stance on "{topic_name}" into one of these categories:
+    # Process in batches
+    all_tweets = tweets[:500]
+    for batch_start in range(0, len(all_tweets), batch_size):
+        batch = all_tweets[batch_start:batch_start + batch_size]
+
+        tweets_text = ""
+        for i, t in enumerate(batch):
+            tweets_text += f"\n[{i}] @{t['author']}: {t['text']}"
+
+        prompt = f"""Classify each tweet's stance on "{topic_name}" into one of these categories:
 - "{pro_bent}": supports, agrees with, or leans toward the {pro_label} perspective
 - "{anti_bent}": supports, agrees with, or leans toward the {anti_label} perspective
 - "neutral": factual reporting without clear editorial lean, or genuinely balanced
@@ -114,66 +132,55 @@ Guidelines:
 - If a tweet is about this topic and has any opinion, it is NOT neutral.
 - If a tweet is completely unrelated to {topic_name}, classify as neutral.
 
+Tweets:
+{tweets_text}
+
 For each tweet index, return a classification.
 Return a JSON array: [{{"idx": 0, "class": "{pro_bent}"}}, ...]
-You MUST return exactly {min(len(tweets), 500)} entries, one for each tweet.
+You MUST return exactly {len(batch)} entries, one for each tweet.
 
 IMPORTANT: Return ONLY valid JSON."""
 
-    from google import genai
-
-    client = genai.Client(api_key=GEMINI_API_KEY)
-
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt,
-            config={
-                "response_mime_type": "application/json",
-                "temperature": 0.1,
-            },
-        )
-        text = (response.text or "").strip()
-        classifications = json.loads(text)
-        if not isinstance(classifications, list):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "temperature": 0.1,
+                },
+            )
+            text = (response.text or "").strip()
+            classifications = json.loads(text)
+            if not isinstance(classifications, list):
+                classifications = []
+        except Exception as e:
+            print(f"[QuickClassify] Gemini error on batch {batch_start}: {e}")
             classifications = []
-    except Exception as e:
-        print(f"[QuickClassify] Gemini error: {e}")
-        return _empty_result()
 
-    # Aggregate results
-    result = {
-        "pro_count": 0, "anti_count": 0, "neutral_count": 0,
-        "pro_engagement": 0, "anti_engagement": 0,
-        "pro_views": 0, "anti_views": 0,
-        "total": 0,
-        "sample_pro": [], "sample_anti": [],
-    }
+        class_by_idx = {c.get("idx", -1): c.get("class", "") for c in classifications}
 
-    class_by_idx = {c.get("idx", -1): c.get("class", "") for c in classifications}
-
-    for i, tweet in enumerate(tweets[:500]):
-        cls = class_by_idx.get(i, "neutral")
-        if cls == pro_bent:
-            result["pro_count"] += 1
-            result["pro_engagement"] += tweet["engagement"]
-            result["pro_views"] += tweet["views"]
-            result["total"] += 1
-            if len(result["sample_pro"]) < 2:
-                import re
-                clean = re.sub(r'https?://\S+', '', tweet["text"]).strip()[:150]
-                result["sample_pro"].append({"text": clean, "author": f"@{tweet['author']}" if tweet.get("author") else None, "url": tweet.get("url")})
-        elif cls == anti_bent:
-            result["anti_count"] += 1
-            result["anti_engagement"] += tweet["engagement"]
-            result["anti_views"] += tweet["views"]
-            result["total"] += 1
-            if len(result["sample_anti"]) < 2:
-                import re
-                clean = re.sub(r'https?://\S+', '', tweet["text"]).strip()[:150]
-                result["sample_anti"].append({"text": clean, "author": f"@{tweet['author']}" if tweet.get("author") else None, "url": tweet.get("url")})
-        else:
-            result["neutral_count"] += 1
+        for i, tweet in enumerate(batch):
+            cls = class_by_idx.get(i, "neutral")
+            if cls == pro_bent:
+                result["pro_count"] += 1
+                result["pro_engagement"] += tweet["engagement"]
+                result["pro_views"] += tweet["views"]
+                result["total"] += 1
+                if len(result["sample_pro"]) < 2:
+                    clean = _re.sub(r'https?://\S+', '', tweet["text"]).strip()[:150]
+                    result["sample_pro"].append({"text": clean, "author": f"@{tweet['author']}" if tweet.get("author") else None, "url": tweet.get("url")})
+            elif cls == anti_bent:
+                result["anti_count"] += 1
+                result["anti_engagement"] += tweet["engagement"]
+                result["anti_views"] += tweet["views"]
+                result["total"] += 1
+                if len(result["sample_anti"]) < 2:
+                    clean = _re.sub(r'https?://\S+', '', tweet["text"]).strip()[:150]
+                    result["sample_anti"].append({"text": clean, "author": f"@{tweet['author']}" if tweet.get("author") else None, "url": tweet.get("url")})
+            else:
+                result["neutral_count"] += 1
+                result["total"] += 1
             result["total"] += 1
 
     return result

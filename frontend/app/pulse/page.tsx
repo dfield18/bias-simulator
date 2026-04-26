@@ -66,11 +66,6 @@ function TopicCardComponent({ topic, index }: { topic: TopicCard; index: number 
             <p className="text-xs text-gray-500 mt-0.5">{topic.description}</p>
           )}
         </div>
-        {topic.heat && (
-          <span className="text-xs text-orange-400 font-medium shrink-0 ml-2">
-            {"🔥".repeat(Math.min(topic.heat, 5))}
-          </span>
-        )}
       </div>
 
       {/* Volume bar */}

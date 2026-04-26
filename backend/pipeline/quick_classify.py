@@ -99,14 +99,21 @@ def classify_tweets_batch(
     for i, t in enumerate(tweets[:120]):
         tweets_text += f"\n[{i}] @{t['author']}: {t['text']}"
 
-    prompt = f"""Classify each tweet about "{topic_name}" into one of these categories:
-- "{pro_bent}": supports or agrees with the {pro_label} position
-- "{anti_bent}": supports or agrees with the {anti_label} position
-- "neutral": factual, balanced, or unclear stance
-- "off-topic": not actually about this topic
+    prompt = f"""Classify each tweet's stance on "{topic_name}" into one of these categories:
+- "{pro_bent}": supports, agrees with, or leans toward the {pro_label} perspective
+- "{anti_bent}": supports, agrees with, or leans toward the {anti_label} perspective
+- "neutral": factual reporting without clear editorial lean, or genuinely balanced
 
-For each tweet, return its index and classification.
+Guidelines:
+- Most political tweets have a lean — classify them as {pro_bent} or {anti_bent}, not neutral.
+- Use neutral ONLY for wire-service-style factual reporting or genuinely mixed takes.
+- Sarcasm, criticism, and emotional framing all indicate a lean.
+- If a tweet is about this topic and has any opinion, it is NOT neutral.
+- If a tweet is completely unrelated to {topic_name}, classify as neutral.
+
+For each tweet index, return a classification.
 Return a JSON array: [{{"idx": 0, "class": "{pro_bent}"}}, ...]
+You MUST return exactly {min(len(tweets), 120)} entries, one for each tweet.
 
 IMPORTANT: Return ONLY valid JSON."""
 
@@ -143,7 +150,7 @@ IMPORTANT: Return ONLY valid JSON."""
     class_by_idx = {c.get("idx", -1): c.get("class", "") for c in classifications}
 
     for i, tweet in enumerate(tweets[:120]):
-        cls = class_by_idx.get(i, "off-topic")
+        cls = class_by_idx.get(i, "neutral")
         if cls == pro_bent:
             result["pro_count"] += 1
             result["pro_engagement"] += tweet["engagement"]
@@ -158,7 +165,7 @@ IMPORTANT: Return ONLY valid JSON."""
             result["total"] += 1
             if len(result["sample_anti"]) < 2:
                 result["sample_anti"].append(tweet["text"][:120])
-        elif cls == "neutral":
+        else:
             result["neutral_count"] += 1
             result["total"] += 1
 

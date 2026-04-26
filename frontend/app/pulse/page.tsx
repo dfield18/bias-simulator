@@ -121,40 +121,24 @@ function TopicCardComponent({ topic, isLoudest = false }: { topic: TopicCard; is
       {/* Top quote per side */}
       {(topic.sample_anti?.length || topic.sample_pro?.length) ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-          {topic.sample_anti?.[0] && (() => {
-            const sample = topic.sample_anti![0];
+          {[
+            { sample: topic.sample_anti?.[0], borderColor: "border-blue-500/40", authorColor: "text-blue-400/70" },
+            { sample: topic.sample_pro?.[0], borderColor: "border-red-500/40", authorColor: "text-red-400/70" },
+          ].map(({ sample, borderColor, authorColor }, idx) => {
+            if (!sample) return null;
             const text = typeof sample === "string" ? sample : sample.text;
             const author = typeof sample === "object" ? sample.author : null;
-            const url = typeof sample === "object" && sample.url ? sample.url : null;
-            const content = <>{author && <span className="text-blue-400/70 font-medium">{author}: </span>}&ldquo;{text}&rdquo;</>;
-            return url ? (
-              <a href={url} target="_blank" rel="noopener noreferrer"
-                className="text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
+            const directUrl = typeof sample === "object" && sample.url ? sample.url : null;
+            // Fallback: search X for the tweet text if no direct URL
+            const url = directUrl || `https://x.com/search?q=${encodeURIComponent(text.slice(0, 60))}`;
+            const content = <>{author && <span className={`${authorColor} font-medium`}>{author}: </span>}&ldquo;{text}&rdquo;</>;
+            return (
+              <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
+                className={`text-xs text-gray-500 border-l-2 ${borderColor} pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors`}>
                 {content}
               </a>
-            ) : (
-              <div className="text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2">
-                {content}
-              </div>
             );
-          })()}
-          {topic.sample_pro?.[0] && (() => {
-            const sample = topic.sample_pro![0];
-            const text = typeof sample === "string" ? sample : sample.text;
-            const author = typeof sample === "object" ? sample.author : null;
-            const url = typeof sample === "object" && sample.url ? sample.url : null;
-            const content = <>{author && <span className="text-red-400/70 font-medium">{author}: </span>}&ldquo;{text}&rdquo;</>;
-            return url ? (
-              <a href={url} target="_blank" rel="noopener noreferrer"
-                className="text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
-                {content}
-              </a>
-            ) : (
-              <div className="text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2">
-                {content}
-              </div>
-            );
-          })()}
+          })}
         </div>
       ) : null}
 

@@ -21,8 +21,8 @@ interface TopicCard {
   total_views: number;
   has_page: boolean;
   url?: string;
-  sample_pro?: string[];
-  sample_anti?: string[];
+  sample_pro?: (string | { text: string; url: string | null })[];
+  sample_anti?: (string | { text: string; url: string | null })[];
 }
 
 interface PulseData {
@@ -121,16 +121,36 @@ function TopicCardComponent({ topic, isLoudest = false }: { topic: TopicCard; is
       {/* Top quote per side */}
       {(topic.sample_anti?.length || topic.sample_pro?.length) ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-          {topic.sample_anti?.[0] && (
-            <div className="text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2">
-              &ldquo;{topic.sample_anti[0]}&rdquo;
-            </div>
-          )}
-          {topic.sample_pro?.[0] && (
-            <div className="text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2">
-              &ldquo;{topic.sample_pro[0]}&rdquo;
-            </div>
-          )}
+          {topic.sample_anti?.[0] && (() => {
+            const sample = topic.sample_anti![0];
+            const text = typeof sample === "string" ? sample : sample.text;
+            const url = typeof sample === "object" && sample.url ? sample.url : null;
+            return url ? (
+              <a href={url} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
+                &ldquo;{text}&rdquo;
+              </a>
+            ) : (
+              <div className="text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2">
+                &ldquo;{text}&rdquo;
+              </div>
+            );
+          })()}
+          {topic.sample_pro?.[0] && (() => {
+            const sample = topic.sample_pro![0];
+            const text = typeof sample === "string" ? sample : sample.text;
+            const url = typeof sample === "object" && sample.url ? sample.url : null;
+            return url ? (
+              <a href={url} target="_blank" rel="noopener noreferrer"
+                className="text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
+                &ldquo;{text}&rdquo;
+              </a>
+            ) : (
+              <div className="text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2">
+                &ldquo;{text}&rdquo;
+              </div>
+            );
+          })()}
         </div>
       ) : null}
 

@@ -123,9 +123,10 @@ async def get_pulse(
         # Top tweet per side
         sample_pro = []
         sample_anti = []
+        import re as _re
         for bent, label, samples in [(pro_bent, topic.pro_label, sample_pro), (anti_bent, topic.anti_label, sample_anti)]:
             sample_stmt = (
-                select(Tweet.full_text)
+                select(Tweet.full_text, Tweet.screen_name, Tweet.id_str)
                 .join(Classification, Tweet.id_str == Classification.id_str)
                 .where(
                     Tweet.topic_slug == topic.slug,
@@ -138,11 +139,15 @@ async def get_pulse(
                 .limit(1)
             )
             sample_result = await db.execute(sample_stmt)
-            row = sample_result.scalar_one_or_none()
+            row = sample_result.one_or_none()
             if row:
-                import re
-                clean = re.sub(r'https?://\S+', '', row).strip()[:150]
-                samples.append(clean)
+                clean = _re.sub(r'https?://\S+', '', row[0] or "").strip()[:150]
+                screen = row[1] or ""
+                tid = row[2] or ""
+                samples.append({
+                    "text": clean,
+                    "url": f"https://x.com/{screen}/status/{tid}" if screen and tid else None,
+                })
 
         curated.append({
             "slug": topic.slug,

@@ -175,7 +175,7 @@ def generate_disconnect(stats: dict) -> bytes:
 
     ax.set_xticks(x)
     ax.set_xticklabels(categories, fontsize=12, color=BRAND_TEXT, fontweight="medium")
-    ax.set_ylim(0, max(max(anti_vals), max(pro_vals)) + 15)
+    ax.set_ylim(0, max(max(anti_vals), max(pro_vals)) + 20)
     ax.yaxis.set_visible(False)
     ax.grid(axis="y", color=BRAND_GRAY, alpha=0.3, zorder=0)
 
@@ -192,14 +192,15 @@ def generate_disconnect(stats: dict) -> bytes:
     fig.text(0.5, 0.91, subtitle, fontsize=11,
              color=BRAND_MUTED, ha="center", va="top", fontstyle="italic")
 
-    # Legend
+    # Legend — placed below the subtitle, above the chart
     from matplotlib.patches import Patch
     legend_elements = [
         Patch(facecolor=BRAND_BLUE, alpha=0.85, label=anti_label),
         Patch(facecolor=BRAND_RED, alpha=0.85, label=pro_label),
     ]
-    ax.legend(handles=legend_elements, loc="upper right", fontsize=10,
-              facecolor=BRAND_BG, edgecolor=BRAND_GRAY, labelcolor=BRAND_TEXT)
+    fig.legend(handles=legend_elements, loc="upper center", fontsize=9,
+               ncol=2, bbox_to_anchor=(0.5, 0.88),
+               facecolor=BRAND_BG, edgecolor=BRAND_GRAY, labelcolor=BRAND_TEXT)
 
     _add_branding(fig, subject)
     return _save(fig)

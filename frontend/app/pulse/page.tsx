@@ -247,19 +247,21 @@ export default function PulsePage() {
                   return (
                     <div className="space-y-3">
                       {data.trending.map((topic, i) => {
-                        const pct = Math.max(3, Math.round(topic.total_engagement / maxEng * 100));
+                        const widthPct = Math.max(8, Math.round(topic.total_engagement / maxEng * 100));
                         const combined = topic.anti_pct + topic.pro_pct || 1;
-                        const antiBar = Math.round(topic.anti_pct / combined * pct);
-                        const proBar = pct - antiBar;
+                        const antiBar = Math.round(topic.anti_pct / combined * 100);
+                        const proBar = 100 - antiBar;
                         return (
                           <div key={topic.slug}>
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-sm font-medium text-gray-200">{topic.name}</span>
                               <span className="text-xs text-gray-600">{topic.anti_pct}% / {topic.pro_pct}%</span>
                             </div>
-                            <div className="flex h-4 rounded-sm overflow-hidden bg-gray-800">
-                              <div className="bg-blue-500/60 h-full transition-all" style={{ width: `${antiBar}%` }} />
-                              <div className="bg-red-500/60 h-full transition-all" style={{ width: `${proBar}%` }} />
+                            <div className="h-4 bg-gray-800/30 rounded-sm overflow-hidden" style={{ width: `${widthPct}%` }}>
+                              <div className="flex h-full">
+                                <div className="bg-blue-500/70 h-full" style={{ width: `${antiBar}%` }} />
+                                <div className="bg-red-500/70 h-full" style={{ width: `${proBar}%` }} />
+                              </div>
                             </div>
                           </div>
                         );

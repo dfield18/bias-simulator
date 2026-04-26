@@ -52,11 +52,14 @@ def fetch_tweets_for_topic(search_query: str, max_pages: int = 25, max_results: 
 
             for t in tweets:
                 eng = (t.get("favorite_count", 0) or 0) + (t.get("retweet_count", 0) or 0) + (t.get("reply_count", 0) or 0)
+                screen = t.get("user", {}).get("screen_name", "")
+                tid = t.get("id_str", t.get("id", ""))
                 results.append({
                     "text": (t.get("full_text", "") or "")[:250],
                     "engagement": eng,
                     "views": t.get("views_count", 0) or 0,
-                    "author": t.get("user", {}).get("screen_name", ""),
+                    "author": screen,
+                    "url": f"https://x.com/{screen}/status/{tid}" if screen and tid else None,
                 })
 
             next_cursor = data.get("next_cursor")
@@ -157,14 +160,18 @@ IMPORTANT: Return ONLY valid JSON."""
             result["pro_views"] += tweet["views"]
             result["total"] += 1
             if len(result["sample_pro"]) < 2:
-                result["sample_pro"].append(tweet["text"][:120])
+                import re
+                clean = re.sub(r'https?://\S+', '', tweet["text"]).strip()[:150]
+                result["sample_pro"].append({"text": clean, "url": tweet.get("url")})
         elif cls == anti_bent:
             result["anti_count"] += 1
             result["anti_engagement"] += tweet["engagement"]
             result["anti_views"] += tweet["views"]
             result["total"] += 1
             if len(result["sample_anti"]) < 2:
-                result["sample_anti"].append(tweet["text"][:120])
+                import re
+                clean = re.sub(r'https?://\S+', '', tweet["text"]).strip()[:150]
+                result["sample_anti"].append({"text": clean, "url": tweet.get("url")})
         else:
             result["neutral_count"] += 1
             result["total"] += 1

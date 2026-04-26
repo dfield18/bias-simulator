@@ -134,6 +134,7 @@ function TopicCardComponent({ topic, isLoudest = false }: { topic: TopicCard; is
             const content = <>{author && <span className={`${authorColor} font-medium`}>{author}: </span>}&ldquo;{text}&rdquo;</>;
             return (
               <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
                 className={`text-xs text-gray-500 border-l-2 ${borderColor} pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors`}>
                 {content}
               </a>

@@ -382,7 +382,12 @@ export default function PulsePage() {
                             "Z",
                           ].join(" ");
 
-                          return <path key={i} d={d} fill={colors[i % colors.length]} opacity={0.8} />;
+                          return (
+                            <path key={i} d={d} fill={colors[i % colors.length]} opacity={0.8}
+                              className="hover:opacity-100 transition-opacity cursor-default">
+                              <title>{seg.name}: {seg.pct}%</title>
+                            </path>
+                          );
                         })}
                       </svg>
                       <div className="space-y-2">

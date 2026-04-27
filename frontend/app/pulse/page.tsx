@@ -321,9 +321,11 @@ export default function PulsePage() {
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-4 font-medium">Sentiment by topic — ranked by engagement</p>
                 <div className="space-y-3">
                   {data.trending.map((topic) => {
-                    const combined = topic.anti_pct + topic.pro_pct || 1;
-                    const antiBar = Math.round(topic.anti_pct / combined * 100);
-                    const proBar = 100 - antiBar;
+                    const neutralPct = Math.max(0, 100 - topic.anti_pct - topic.pro_pct);
+                    const total = topic.anti_pct + neutralPct + topic.pro_pct || 1;
+                    const antiBar = Math.round(topic.anti_pct / total * 100);
+                    const neutralBar = Math.round(neutralPct / total * 100);
+                    const proBar = 100 - antiBar - neutralBar;
                     return (
                       <div key={topic.slug}>
                         <div className="mb-1">
@@ -331,6 +333,7 @@ export default function PulsePage() {
                         </div>
                         <div className="h-3.5 bg-gray-800 rounded-full overflow-hidden flex">
                           <div className="bg-blue-500/70 h-full" style={{ width: `${antiBar}%` }} />
+                          {neutralBar > 0 && <div className="bg-gray-600/50 h-full" style={{ width: `${neutralBar}%` }} />}
                           <div className="bg-red-500/70 h-full" style={{ width: `${proBar}%` }} />
                         </div>
                         <div className="flex justify-between mt-1 text-xs">

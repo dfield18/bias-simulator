@@ -253,6 +253,10 @@ export default function LandingPage() {
     frames?: { key: string; label: string; anti_pct: number; pro_pct: number }[];
   } | null>(null);
 
+  // Dynamic trending topic feed
+  const [liveFeedItems, setLiveFeedItems] = useState<RawFeedItem[]>([]);
+  const [liveTopic, setLiveTopic] = useState<{ slug: string; name: string; pro_label: string; anti_label: string } | null>(null);
+
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     fetch(`${API}/api/demo/landing`)
@@ -266,6 +270,25 @@ export default function LandingPage() {
         }
       })
       .catch(e => console.error("[Landing] Demo data fetch failed:", e));
+
+    // Fetch hottest trending topic's feed for the live demo
+    fetch(`${API}/api/pulse`, { cache: "no-store" })
+      .then(r => r.ok ? r.json() : null)
+      .then(pulse => {
+        if (!pulse?.trending?.length) return;
+        // Pick the hottest trending topic that has a real page
+        const hot = pulse.trending.find((t: { has_page: boolean; url?: string }) => t.has_page && t.url);
+        if (!hot) return;
+        const slug = hot.url.replace("/analytics/", "");
+        setLiveTopic({ slug, name: hot.name, pro_label: hot.pro_label, anti_label: hot.anti_label });
+        // Fetch its feed
+        return fetch(`${API}/api/feed/all?topic=${slug}&hours=48`);
+      })
+      .then(r => r?.ok ? r.json() : null)
+      .then(items => {
+        if (items && items.length > 5) setLiveFeedItems(items);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -433,60 +456,97 @@ export default function LandingPage() {
         <p className="text-xs sm:text-sm text-gray-500 mt-6 sm:mt-14 mb-2 sm:mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
         <p className="text-base sm:text-xl text-gray-300 mb-4 sm:mb-6 font-medium">Slide to see how a user&apos;s political bias reshapes their simulated feed.</p>
 
-        {/* Interactive demo — Iran War feed */}
+        {/* Interactive demo — live trending topic or Iran War fallback */}
         {(() => {
-          const sortedTweets = [...DEMO_TWEETS].sort((a, b) => {
-            const scoreA = (() => {
-              const bent = a.classification.effective_political_bent || "";
-              const intensity = Math.abs(a.classification.effective_intensity_score || 0);
-              if (demoBias === 0) return a.score;
-              if (demoBias < 0 && bent === "anti-war") return a.score + Math.abs(demoBias) * intensity * 2;
-              if (demoBias > 0 && bent === "pro-war") return a.score + demoBias * intensity * 2;
-              if (bent === "neutral") return a.score * 0.8;
-              return a.score * Math.max(0.2, 1 - Math.abs(demoBias) * 0.08);
-            })();
-            const scoreB = (() => {
-              const bent = b.classification.effective_political_bent || "";
-              const intensity = Math.abs(b.classification.effective_intensity_score || 0);
-              if (demoBias === 0) return b.score;
-              if (demoBias < 0 && bent === "anti-war") return b.score + Math.abs(demoBias) * intensity * 2;
-              if (demoBias > 0 && bent === "pro-war") return b.score + demoBias * intensity * 2;
-              if (bent === "neutral") return b.score * 0.8;
-              return b.score * Math.max(0.2, 1 - Math.abs(demoBias) * 0.08);
-            })();
-            return scoreB - scoreA;
-          });
+          const useLive = liveFeedItems.length > 5 && liveTopic;
+          const feedItems = useLive ? liveFeedItems : DEMO_ITEMS;
+          const proLabel = useLive ? liveTopic!.pro_label : "Pro-War";
+          const antiLabel = useLive ? liveTopic!.anti_label : "Anti-War";
+          const topicName = useLive ? liveTopic!.name : "Iran War";
+          const topicSlug = useLive ? liveTopic!.slug : "iran-conflict";
+          const proBent = proLabel.toLowerCase().replace(/\s+/g, "-");
+          const antiBent = antiLabel.toLowerCase().replace(/\s+/g, "-");
+
+          // Sort tweets for the feed cards (only show DEMO_TWEETS for Iran fallback, or top live tweets)
+          const feedTweets = useLive
+            ? liveFeedItems
+                .filter(item => item.classification.about_subject)
+                .sort((a, b) => {
+                  const engA = a.tweet.engagement || 0;
+                  const engB = b.tweet.engagement || 0;
+                  const biasBoostA = (() => {
+                    const bent = a.classification.effective_political_bent || "";
+                    if (demoBias < 0 && bent === antiBent) return Math.abs(demoBias) * 5;
+                    if (demoBias > 0 && bent === proBent) return demoBias * 5;
+                    return 0;
+                  })();
+                  const biasBoostB = (() => {
+                    const bent = b.classification.effective_political_bent || "";
+                    if (demoBias < 0 && bent === antiBent) return Math.abs(demoBias) * 5;
+                    if (demoBias > 0 && bent === proBent) return demoBias * 5;
+                    return 0;
+                  })();
+                  return (engB + biasBoostB) - (engA + biasBoostA);
+                })
+                .slice(0, 8)
+            : [...DEMO_TWEETS].sort((a, b) => {
+                const scoreA = (() => {
+                  const bent = a.classification.effective_political_bent || "";
+                  const intensity = Math.abs(a.classification.effective_intensity_score || 0);
+                  if (demoBias === 0) return a.score;
+                  if (demoBias < 0 && bent === "anti-war") return a.score + Math.abs(demoBias) * intensity * 2;
+                  if (demoBias > 0 && bent === "pro-war") return a.score + demoBias * intensity * 2;
+                  if (bent === "neutral") return a.score * 0.8;
+                  return a.score * Math.max(0.2, 1 - Math.abs(demoBias) * 0.08);
+                })();
+                const scoreB = (() => {
+                  const bent = b.classification.effective_political_bent || "";
+                  const intensity = Math.abs(b.classification.effective_intensity_score || 0);
+                  if (demoBias === 0) return b.score;
+                  if (demoBias < 0 && bent === "anti-war") return b.score + Math.abs(demoBias) * intensity * 2;
+                  if (demoBias > 0 && bent === "pro-war") return b.score + demoBias * intensity * 2;
+                  if (bent === "neutral") return b.score * 0.8;
+                  return b.score * Math.max(0.2, 1 - Math.abs(demoBias) * 0.08);
+                })();
+                return scoreB - scoreA;
+              });
 
           return (
             <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl overflow-hidden">
-              {/* Custom title for landing page */}
               <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-1">
-                <div className="text-xs sm:text-sm text-gray-300 font-semibold">Simulated X Feed — Iran War</div>
-                <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">This reconstruction shows how the same posts get prioritized differently based on political leaning</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs sm:text-sm text-gray-300 font-semibold">Simulated X Feed — {topicName}</div>
+                    <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">This reconstruction shows how the same posts get prioritized differently based on political leaning</p>
+                  </div>
+                  {useLive && (
+                    <Link href={`/analytics/${topicSlug}`} className="text-[10px] text-blue-400 hover:text-blue-300 shrink-0 ml-2">
+                      Full analysis →
+                    </Link>
+                  )}
+                </div>
               </div>
 
-              {/* Chart */}
               <div className="px-4 sm:px-5">
                 <SentimentDistribution
-                  items={DEMO_ITEMS}
-                  antiLabel="Anti-War"
-                  proLabel="Pro-War"
+                  items={feedItems}
+                  antiLabel={antiLabel}
+                  proLabel={proLabel}
                   bias={demoBias}
                   onChange={setDemoBias}
                   hideTitle
                 />
               </div>
 
-              {/* Scrollable feed */}
               <div className="px-4 sm:px-5 pb-4 sm:pb-5">
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
-                  {sortedTweets.map((item) => (
+                  {feedTweets.map((item) => (
                     <TweetCard
                       key={item.tweet.id_str}
                       tweet={item.tweet}
                       classification={item.classification}
-                      proLabel="Pro-War"
-                      antiLabel="Anti-War"
+                      proLabel={proLabel}
+                      antiLabel={antiLabel}
                     />
                   ))}
                 </div>

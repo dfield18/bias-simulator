@@ -25,7 +25,7 @@ def refresh_trending_cache():
     from pipeline.run import get_sync_connection
 
     print("[Pulse] Starting trending topic discovery...")
-    topics = discover_trending_topics(max_topics=5)
+    topics = discover_trending_topics(max_topics=10)
     if not topics:
         print("[Pulse] No trending topics found")
         return

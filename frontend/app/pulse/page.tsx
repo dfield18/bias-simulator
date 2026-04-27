@@ -185,6 +185,87 @@ function TopicCardComponent({ topic, isLoudest = false, isMostControversial = fa
   return inner;
 }
 
+function DonutChart({ topics }: { topics: TopicCard[] }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+  const totalEng = topics.reduce((s, t) => s + t.total_engagement, 0) || 1;
+  const segments = topics.map(t => ({
+    name: t.name,
+    pct: Math.round(t.total_engagement / totalEng * 100),
+  }));
+  const colors = ["#3b82f6", "#ef4444", "#22c55e", "#eab308", "#a855f7", "#f97316", "#06b6d4"];
+  const size = 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 85;
+  const inner = 50;
+  let cumAngle = -90;
+
+  return (
+    <div className="flex items-center gap-6">
+      <div className="relative shrink-0" style={{ width: size, height: size }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {segments.map((seg, i) => {
+            const angle = (seg.pct / 100) * 360;
+            const startAngle = cumAngle;
+            const endAngle = cumAngle + angle;
+            cumAngle = endAngle;
+
+            const startRad = (startAngle * Math.PI) / 180;
+            const endRad = (endAngle * Math.PI) / 180;
+            const largeArc = angle > 180 ? 1 : 0;
+
+            const x1 = cx + r * Math.cos(startRad);
+            const y1 = cy + r * Math.sin(startRad);
+            const x2 = cx + r * Math.cos(endRad);
+            const y2 = cy + r * Math.sin(endRad);
+            const ix1 = cx + inner * Math.cos(endRad);
+            const iy1 = cy + inner * Math.sin(endRad);
+            const ix2 = cx + inner * Math.cos(startRad);
+            const iy2 = cy + inner * Math.sin(startRad);
+
+            const d = [
+              `M ${x1} ${y1}`,
+              `A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`,
+              `L ${ix1} ${iy1}`,
+              `A ${inner} ${inner} 0 ${largeArc} 0 ${ix2} ${iy2}`,
+              "Z",
+            ].join(" ");
+
+            return (
+              <path key={i} d={d} fill={colors[i % colors.length]}
+                opacity={hovered === null || hovered === i ? 0.85 : 0.3}
+                className="transition-opacity duration-150 cursor-pointer"
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+              />
+            );
+          })}
+        </svg>
+        {/* Center label on hover */}
+        {hovered !== null && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className="text-xl font-bold text-gray-100">{segments[hovered].pct}%</span>
+            <span className="text-[10px] text-gray-400 text-center max-w-[70px] leading-tight">{segments[hovered].name}</span>
+          </div>
+        )}
+      </div>
+      <div className="space-y-2">
+        {segments.map((seg, i) => (
+          <div key={i}
+            className={`flex items-center gap-2 transition-opacity duration-150 ${hovered !== null && hovered !== i ? "opacity-40" : ""}`}
+            onMouseEnter={() => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}
+          >
+            <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length], opacity: 0.8 }} />
+            <span className="text-sm text-gray-300">{seg.name}</span>
+            <span className="text-sm text-gray-500">{seg.pct}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function PulsePage() {
   const [data, setData] = useState<PulseData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -338,70 +419,7 @@ export default function PulsePage() {
               {/* Overview: donut chart — share of engagement */}
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-5">
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-4 font-medium">Share of total engagement</p>
-                {(() => {
-                  const totalEng = data.trending.reduce((s, t) => s + t.total_engagement, 0) || 1;
-                  const segments = data.trending.map(t => ({
-                    name: t.name,
-                    pct: Math.round(t.total_engagement / totalEng * 100),
-                  }));
-                  const colors = ["#3b82f6", "#ef4444", "#22c55e", "#eab308", "#a855f7", "#f97316", "#06b6d4"];
-                  const size = 220;
-                  const cx = size / 2;
-                  const cy = size / 2;
-                  const r = 85;
-                  const inner = 50;
-                  let cumAngle = -90;
-
-                  return (
-                    <div className="flex items-center gap-6">
-                      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-                        {segments.map((seg, i) => {
-                          const angle = (seg.pct / 100) * 360;
-                          const startAngle = cumAngle;
-                          const endAngle = cumAngle + angle;
-                          cumAngle = endAngle;
-
-                          const startRad = (startAngle * Math.PI) / 180;
-                          const endRad = (endAngle * Math.PI) / 180;
-                          const largeArc = angle > 180 ? 1 : 0;
-
-                          const x1 = cx + r * Math.cos(startRad);
-                          const y1 = cy + r * Math.sin(startRad);
-                          const x2 = cx + r * Math.cos(endRad);
-                          const y2 = cy + r * Math.sin(endRad);
-                          const ix1 = cx + inner * Math.cos(endRad);
-                          const iy1 = cy + inner * Math.sin(endRad);
-                          const ix2 = cx + inner * Math.cos(startRad);
-                          const iy2 = cy + inner * Math.sin(startRad);
-
-                          const d = [
-                            `M ${x1} ${y1}`,
-                            `A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`,
-                            `L ${ix1} ${iy1}`,
-                            `A ${inner} ${inner} 0 ${largeArc} 0 ${ix2} ${iy2}`,
-                            "Z",
-                          ].join(" ");
-
-                          return (
-                            <path key={i} d={d} fill={colors[i % colors.length]} opacity={0.8}
-                              className="hover:opacity-100 transition-opacity cursor-default">
-                              <title>{seg.name}: {seg.pct}%</title>
-                            </path>
-                          );
-                        })}
-                      </svg>
-                      <div className="space-y-2">
-                        {segments.map((seg, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length], opacity: 0.8 }} />
-                            <span className="text-sm text-gray-300">{seg.name}</span>
-                            <span className="text-sm text-gray-500">{seg.pct}%</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
+                <DonutChart topics={data.trending} />
               </div>
 
               <div className="border-t border-gray-800 pt-5 mt-5" />

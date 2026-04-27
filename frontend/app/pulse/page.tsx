@@ -26,17 +26,129 @@ interface TopicCard {
   sample_anti?: (string | { text: string; author?: string | null; url: string | null })[];
 }
 
+interface FeaturedTweet {
+  text: string;
+  author: string | null;
+  author_name: string;
+  engagement: number;
+  views: number;
+  url: string | null;
+  topic: string;
+}
+
+interface KeywordEntry {
+  word: string;
+  count: number;
+}
+
 interface PulseData {
   date: string;
   curated: TopicCard[];
   trending: TopicCard[];
   trending_updated_at: string | null;
+  featured_tweet: FeaturedTweet | null;
+  keywords: KeywordEntry[];
 }
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return String(n);
+}
+
+// #2 Word cloud
+function WordCloud({ keywords }: { keywords: KeywordEntry[] }) {
+  if (!keywords || keywords.length === 0) return null;
+  const maxCount = Math.max(...keywords.map(k => k.count), 1);
+  const colors = ["text-blue-400", "text-red-400", "text-green-400", "text-yellow-400", "text-purple-400", "text-orange-400", "text-cyan-400"];
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-5">
+      <p className="text-xs text-gray-500 uppercase tracking-wider mb-4 font-medium">What people are talking about</p>
+      <div className="flex flex-wrap gap-x-3 gap-y-1.5 justify-center">
+        {keywords.slice(0, 25).map((k, i) => {
+          const scale = 0.7 + (k.count / maxCount) * 1.3;
+          const fontSize = Math.round(scale * 14);
+          return (
+            <span key={i} className={`${colors[i % colors.length]} font-medium opacity-80 hover:opacity-100 transition-opacity`}
+              style={{ fontSize: `${fontSize}px` }}>
+              {k.word}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// #3 Featured tweet card
+function FeaturedTweetCard({ tweet }: { tweet: FeaturedTweet }) {
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6 mb-5">
+      <p className="text-xs text-gray-500 uppercase tracking-wider mb-3 font-medium">Most engaged post today</p>
+      <a href={tweet.url || "#"} target="_blank" rel="noopener noreferrer"
+        className="block hover:bg-gray-800/30 rounded-lg -mx-2 px-2 py-1 transition-colors">
+        <blockquote className="text-base sm:text-lg text-gray-200 leading-relaxed mb-3">
+          &ldquo;{tweet.text}&rdquo;
+        </blockquote>
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm font-medium text-gray-300">{tweet.author_name}</span>
+            {tweet.author && <span className="text-sm text-gray-500 ml-1">{tweet.author}</span>}
+          </div>
+          <div className="flex items-center gap-3 text-xs text-gray-500">
+            <span>{fmt(tweet.engagement)} engagements</span>
+            {tweet.views > 0 && <span>{fmt(tweet.views)} views</span>}
+          </div>
+        </div>
+      </a>
+    </div>
+  );
+}
+
+// #4 Topic pills
+function TopicPills({ topics, colors }: { topics: TopicCard[]; colors: string[] }) {
+  const pillColors = colors || ["bg-blue-500/20 text-blue-300", "bg-red-500/20 text-red-300", "bg-green-500/20 text-green-300", "bg-yellow-500/20 text-yellow-300", "bg-purple-500/20 text-purple-300"];
+  return (
+    <div className="flex flex-wrap gap-2 mb-5">
+      {topics.map((t, i) => (
+        <a key={t.slug} href={`#topic-${t.slug}`}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors hover:brightness-125 ${pillColors[i % pillColors.length]}`}
+          onClick={(e) => { e.preventDefault(); document.getElementById(`topic-${t.slug}`)?.scrollIntoView({ behavior: "smooth", block: "center" }); }}>
+          {t.name}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// #7 Large quote highlight cards
+function QuoteHighlightCards({ topic }: { topic: TopicCard }) {
+  const antiSample = topic.sample_anti?.[0];
+  const proSample = topic.sample_pro?.[0];
+  if (!antiSample && !proSample) return null;
+
+  const renderQuote = (sample: typeof antiSample, borderColor: string, labelColor: string, label: string) => {
+    if (!sample) return null;
+    const text = typeof sample === "string" ? sample : sample.text;
+    const author = typeof sample === "object" ? sample.author : null;
+    const url = typeof sample === "object" && sample.url ? sample.url : `https://x.com/search?q=${encodeURIComponent(text.slice(0, 60))}`;
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className={`block border-l-4 ${borderColor} bg-gray-800/30 rounded-r-lg p-3 hover:bg-gray-800/50 transition-colors`}>
+        <p className={`text-[10px] ${labelColor} uppercase tracking-wider font-medium mb-1.5`}>{label}</p>
+        <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">&ldquo;{text}&rdquo;</p>
+        {author && <p className="text-xs text-gray-500 mt-1.5">{author}</p>}
+      </a>
+    );
+  };
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+      {renderQuote(antiSample, "border-blue-500", "text-blue-400", topic.anti_label)}
+      {renderQuote(proSample, "border-red-500", "text-red-400", topic.pro_label)}
+    </div>
+  );
 }
 
 function generateSummary(topic: TopicCard): string {
@@ -103,7 +215,7 @@ function TopicCardComponent({ topic, isLoudest = false, isMostControversial = fa
   const summary = generateSummary(topic);
 
   const inner = (
-    <div className={`bg-gray-900 border border-gray-800 rounded-xl p-4 transition-colors ${topic.has_page ? "hover:border-gray-600" : ""}`}>
+    <div id={`topic-${topic.slug}`} className={`bg-gray-900 border border-gray-800 rounded-xl p-4 transition-colors scroll-mt-16 ${topic.has_page ? "hover:border-gray-600" : ""}`}>
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <h3 className="text-lg font-bold text-gray-100">{topic.name}</h3>
@@ -134,41 +246,8 @@ function TopicCardComponent({ topic, isLoudest = false, isMostControversial = fa
         </div>
       </div>
 
-      {/* Top quotes per side */}
-      {(topic.sample_anti?.length || topic.sample_pro?.length) ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-          <div className="space-y-2">
-            {(topic.sample_anti || []).map((sample, idx) => {
-              const text = typeof sample === "string" ? sample : sample.text;
-              const author = typeof sample === "object" ? sample.author : null;
-              const directUrl = typeof sample === "object" && sample.url ? sample.url : null;
-              const url = directUrl || `https://x.com/search?q=${encodeURIComponent(text.slice(0, 60))}`;
-              return (
-                <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="block text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
-                  {author && <span className="text-blue-400/70 font-medium">{author}: </span>}&ldquo;{text}&rdquo;
-                </a>
-              );
-            })}
-          </div>
-          <div className="space-y-2">
-            {(topic.sample_pro || []).map((sample, idx) => {
-              const text = typeof sample === "string" ? sample : sample.text;
-              const author = typeof sample === "object" ? sample.author : null;
-              const directUrl = typeof sample === "object" && sample.url ? sample.url : null;
-              const url = directUrl || `https://x.com/search?q=${encodeURIComponent(text.slice(0, 60))}`;
-              return (
-                <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="block text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
-                  {author && <span className="text-red-400/70 font-medium">{author}: </span>}&ldquo;{text}&rdquo;
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
+      {/* Quote highlight cards (#7) */}
+      <QuoteHighlightCards topic={topic} />
 
       {/* Explore link for curated */}
       {topic.has_page && (
@@ -266,6 +345,32 @@ function DonutChart({ topics }: { topics: TopicCard[] }) {
   );
 }
 
+// #8 Sticky topic nav
+function StickyTopicNav({ topics }: { topics: TopicCard[] }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => setVisible(window.scrollY > 400);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+  if (!visible || topics.length === 0) return null;
+  const pillColors = ["bg-blue-500/20 text-blue-300", "bg-red-500/20 text-red-300", "bg-green-500/20 text-green-300", "bg-yellow-500/20 text-yellow-300", "bg-purple-500/20 text-purple-300"];
+  return (
+    <div className="fixed top-0 left-0 right-0 z-40 bg-gray-950/90 backdrop-blur border-b border-gray-800/50 py-2 px-4">
+      <div className="max-w-4xl mx-auto flex items-center gap-2 overflow-x-auto">
+        <span className="text-xs text-gray-500 shrink-0">Jump to:</span>
+        {topics.map((t, i) => (
+          <button key={t.slug}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-medium shrink-0 ${pillColors[i % pillColors.length]}`}
+            onClick={() => document.getElementById(`topic-${t.slug}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}>
+            {t.name}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function PulsePage() {
   const [data, setData] = useState<PulseData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -320,6 +425,8 @@ export default function PulsePage() {
   };
 
   return (
+    <>
+    {data && <StickyTopicNav topics={data.trending} />}
     <main className="max-w-4xl mx-auto px-4 py-10 sm:py-16">
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
@@ -361,6 +468,19 @@ export default function PulsePage() {
           {data.trending.length > 0 && (
             <section className="mb-10">
               <h2 className="text-lg font-semibold text-gray-300 mb-4">What X is debating right now</h2>
+
+              {/* Topic pills (#4) */}
+              <TopicPills topics={data.trending} colors={[
+                "bg-blue-500/20 text-blue-300", "bg-red-500/20 text-red-300",
+                "bg-green-500/20 text-green-300", "bg-yellow-500/20 text-yellow-300",
+                "bg-purple-500/20 text-purple-300"
+              ]} />
+
+              {/* Featured tweet (#3) */}
+              {data.featured_tweet && <FeaturedTweetCard tweet={data.featured_tweet} />}
+
+              {/* Word cloud (#2) */}
+              {data.keywords && data.keywords.length > 0 && <WordCloud keywords={data.keywords} />}
 
               {/* Daily takeaway — trending only */}
               {(() => {
@@ -477,5 +597,6 @@ export default function PulsePage() {
         </div>
       )}
     </main>
+    </>
   );
 }

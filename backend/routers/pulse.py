@@ -228,9 +228,66 @@ async def get_pulse(
                 "has_page": False,
             })
 
+    # Featured tweet: highest engagement across all curated topics
+    featured_tweet = None
+    feat_stmt = (
+        select(Tweet.full_text, Tweet.screen_name, Tweet.author_name,
+               Tweet.engagement, Tweet.views, Tweet.id_str, Tweet.topic_slug)
+        .join(Classification, Tweet.id_str == Classification.id_str)
+        .where(
+            Tweet.fetched_at >= since,
+            Tweet.created_at >= since,
+            Classification.about_subject == True,
+        )
+        .order_by(Tweet.engagement.desc())
+        .limit(5)
+    )
+    feat_result = await db.execute(feat_stmt)
+    import re as _re2
+    for row in feat_result.all():
+        clean = _re2.sub(r'https?://\S+', '', row[0] or "").strip()
+        if len(clean) > 30:
+            featured_tweet = {
+                "text": clean[:250],
+                "author": f"@{row[1]}" if row[1] else None,
+                "author_name": row[2] or row[1] or "",
+                "engagement": row[3] or 0,
+                "views": row[4] or 0,
+                "url": f"https://x.com/{row[1]}/status/{row[5]}" if row[1] and row[5] else None,
+                "topic": row[6],
+            }
+            break
+
+    # Keywords from trending topic names + descriptions for word cloud
+    keywords: list[str] = []
+    for t in trending:
+        for word in t["name"].split():
+            if len(word) > 3:
+                keywords.append(word)
+        if t.get("description"):
+            for word in t["description"].split():
+                if len(word) > 4 and word.lower() not in ("about", "their", "which", "would", "should", "could", "being", "after", "other", "those", "these", "there", "where", "while"):
+                    keywords.append(word)
+    # Also pull keywords from trending sample tweets
+    for t in trending:
+        for side in ["sample_pro", "sample_anti"]:
+            for s in t.get(side, []):
+                txt = s.get("text", s) if isinstance(s, dict) else s
+                for word in str(txt).split():
+                    clean_w = _re2.sub(r'[^a-zA-Z]', '', word)
+                    if len(clean_w) > 5 and clean_w.lower() not in ("https", "would", "should", "could", "their", "there", "about", "which", "these", "those", "after", "being", "before", "because"):
+                        keywords.append(clean_w)
+
+    # Count keyword frequency
+    from collections import Counter
+    word_counts = Counter(w.lower() for w in keywords)
+    top_words = [{"word": w, "count": c} for w, c in word_counts.most_common(30)]
+
     return {
         "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "curated": curated,
         "trending": trending,
         "trending_updated_at": trending_updated_at,
+        "featured_tweet": featured_tweet,
+        "keywords": top_words,
     }

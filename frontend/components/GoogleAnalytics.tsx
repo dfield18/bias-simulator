@@ -30,16 +30,16 @@ export default function GoogleAnalytics() {
       }
     };
 
-    // Check on mount
-    updateConsent();
-
-    // Listen for consent changes
     const handler = () => updateConsent();
-    window.addEventListener("cookie-consent-change", handler);
-    window.addEventListener("storage", (e) => {
+    const storageHandler = (e: StorageEvent) => {
       if (e.key === "cookie-consent") updateConsent();
-    });
-    return () => window.removeEventListener("cookie-consent-change", handler);
+    };
+    window.addEventListener("cookie-consent-change", handler);
+    window.addEventListener("storage", storageHandler);
+    return () => {
+      window.removeEventListener("cookie-consent-change", handler);
+      window.removeEventListener("storage", storageHandler);
+    };
   }, []);
 
   // Track client-side route changes
@@ -67,23 +67,6 @@ export default function GoogleAnalytics() {
       <Script id="ga-init" strategy="afterInteractive">{`
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
-
-        // Default: denied. GA loads but doesn't set cookies.
-        // Page views and engagement time are still measured.
-        gtag('consent', 'default', {
-          analytics_storage: 'denied',
-          ad_storage: 'denied',
-          wait_for_update: 500,
-        });
-
-        // Check if already consented
-        if (localStorage.getItem('cookie-consent') === 'accepted') {
-          gtag('consent', 'update', {
-            analytics_storage: 'granted',
-            ad_storage: 'granted',
-          });
-        }
-
         gtag('js', new Date());
         gtag('config', '${GA_ID}');
         gtag('config', '${AW_ID}');

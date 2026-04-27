@@ -59,7 +59,23 @@ export default function RootLayout({
     }}>
       <html lang="en">
         <head>
-          {/* GTM loads unconditionally on every page */}
+          {/* Consent defaults MUST be set before GTM loads */}
+          <script dangerouslySetInnerHTML={{ __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              analytics_storage: 'denied',
+              ad_storage: 'denied',
+              wait_for_update: 500
+            });
+            if (typeof localStorage !== 'undefined' && localStorage.getItem('cookie-consent') === 'accepted') {
+              gtag('consent', 'update', {
+                analytics_storage: 'granted',
+                ad_storage: 'granted'
+              });
+            }
+          `}} />
+          {/* GTM loads after consent defaults are set */}
           <script dangerouslySetInnerHTML={{ __html: `
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],

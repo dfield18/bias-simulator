@@ -287,37 +287,34 @@ export default function PulsePage() {
 
       {data && (
         <div ref={pulseRef}>
-          {/* Daily takeaway */}
-          {(() => {
-            const allTopics = [...data.trending, ...data.curated];
-            if (allTopics.length === 0) return null;
-
-            // Find loudest and most contested
-            const loudest = allTopics.reduce((a, b) => a.total_engagement > b.total_engagement ? a : b);
-            const mostContested = allTopics.reduce((a, b) => {
-              const aDiff = Math.abs(a.anti_pct - a.pro_pct);
-              const bDiff = Math.abs(b.anti_pct - b.pro_pct);
-              return aDiff < bDiff ? a : b;
-            });
-
-            let takeaway = "";
-            if (loudest.slug === mostContested.slug) {
-              takeaway = `${loudest.name} is dominating X today — and it's the most contested debate, split ${mostContested.anti_pct}% to ${mostContested.pro_pct}%.`;
-            } else {
-              takeaway = `${loudest.name} is generating the most engagement on X today, while ${mostContested.name} is the most contested debate.`;
-            }
-
-            return (
-              <div className="bg-gray-900/50 border border-gray-800/50 rounded-xl p-4 mb-6">
-                <p className="text-base sm:text-lg text-gray-200 font-medium leading-relaxed">{takeaway}</p>
-              </div>
-            );
-          })()}
-
           {/* Trending topics */}
           {data.trending.length > 0 && (
             <section className="mb-10">
               <h2 className="text-lg font-semibold text-gray-300 mb-4">What X is debating right now</h2>
+
+              {/* Daily takeaway — trending only */}
+              {(() => {
+                if (data.trending.length === 0) return null;
+                const loudest = data.trending.reduce((a, b) => a.total_engagement > b.total_engagement ? a : b);
+                const mostContested = data.trending.reduce((a, b) => {
+                  const aDiff = Math.abs(a.anti_pct - a.pro_pct);
+                  const bDiff = Math.abs(b.anti_pct - b.pro_pct);
+                  return aDiff < bDiff ? a : b;
+                });
+
+                let takeaway = "";
+                if (loudest.slug === mostContested.slug) {
+                  takeaway = `${loudest.name} is dominating X today — and it's the most contested debate, split ${mostContested.anti_pct}% to ${mostContested.pro_pct}%.`;
+                } else {
+                  takeaway = `${loudest.name} is generating the most engagement on X today, while ${mostContested.name} is the most contested debate.`;
+                }
+
+                return (
+                  <div className="bg-gray-900/50 border border-gray-800/50 rounded-xl p-4 mb-5">
+                    <p className="text-base sm:text-lg text-gray-200 font-medium leading-relaxed">{takeaway}</p>
+                  </div>
+                );
+              })()}
 
               {/* Overview: ranked sentiment bars */}
               <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-5">
@@ -411,9 +408,8 @@ export default function PulsePage() {
               </div>
 
               {(() => {
-                const allTopics = [...data.trending, ...data.curated];
-                const mostContestedSlug = allTopics.length > 0
-                  ? allTopics.reduce((a, b) => Math.abs(a.anti_pct - a.pro_pct) < Math.abs(b.anti_pct - b.pro_pct) ? a : b).slug
+                const mostContestedSlug = data.trending.length > 0
+                  ? data.trending.reduce((a, b) => Math.abs(a.anti_pct - a.pro_pct) < Math.abs(b.anti_pct - b.pro_pct) ? a : b).slug
                   : "";
                 return (
                   <div className="space-y-3">
@@ -436,24 +432,14 @@ export default function PulsePage() {
           {data.curated.length > 0 && (
             <section>
               <h2 className="text-lg font-semibold text-gray-300 mb-4">Ongoing conversations</h2>
-              {(() => {
-                const allTopics = [...data.trending, ...data.curated];
-                const mostContestedSlug = allTopics.length > 0
-                  ? allTopics.reduce((a, b) => Math.abs(a.anti_pct - a.pro_pct) < Math.abs(b.anti_pct - b.pro_pct) ? a : b).slug
-                  : "";
-                return (
-                  <div className="space-y-3">
-                    {data.curated.map((topic, i) => (
-                      <TopicCardComponent
-                        key={topic.slug}
-                        topic={topic}
-                        isLoudest={i === 0 && data.trending.length === 0}
-                        isMostControversial={topic.slug === mostContestedSlug}
-                      />
-                    ))}
-                  </div>
-                );
-              })()}
+              <div className="space-y-3">
+                {data.curated.map((topic) => (
+                  <TopicCardComponent
+                    key={topic.slug}
+                    topic={topic}
+                  />
+                ))}
+              </div>
             </section>
           )}
 

@@ -428,22 +428,7 @@ export default function PulsePage() {
             </section>
           )}
 
-          {/* Curated topics */}
-          {data.curated.length > 0 && (
-            <section>
-              <h2 className="text-lg font-semibold text-gray-300 mb-4">Ongoing conversations</h2>
-              <div className="space-y-3">
-                {data.curated.map((topic) => (
-                  <TopicCardComponent
-                    key={topic.slug}
-                    topic={topic}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {data.curated.length === 0 && data.trending.length === 0 && (
+          {data.trending.length === 0 && (
             <p className="text-gray-500 text-center py-12">
               No pulse data available yet. Check back after the next data refresh.
             </p>

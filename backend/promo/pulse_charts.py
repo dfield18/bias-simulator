@@ -120,7 +120,7 @@ def generate_pulse_donut(data: dict) -> bytes:
         if pct > 0:
             segments.append({"name": t["name"], "pct": pct})
 
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(8, 8))
     fig.patch.set_facecolor(BRAND_BG)
     ax.set_facecolor(BRAND_BG)
 
@@ -134,14 +134,15 @@ def generate_pulse_donut(data: dict) -> bytes:
     for w in wedges:
         w.set_alpha(0.85)
 
-    # Legend
+    # Legend below the chart
     legend_labels = [f'{s["name"]} ({s["pct"]}%)' for s in segments]
-    ax.legend(wedges, legend_labels, loc="center left", bbox_to_anchor=(1, 0.5),
-              fontsize=10, facecolor=BRAND_BG, edgecolor=BRAND_GRAY, labelcolor=BRAND_TEXT)
+    ax.legend(wedges, legend_labels, loc="upper center", bbox_to_anchor=(0.5, -0.05),
+              fontsize=10, facecolor=BRAND_BG, edgecolor=BRAND_GRAY, labelcolor=BRAND_TEXT,
+              ncol=2, columnspacing=1.5)
 
-    fig.text(0.35, 0.95, "What X is debating today", fontsize=16,
+    fig.text(0.5, 0.96, "What X is debating today", fontsize=16,
              fontweight="bold", color=BRAND_TEXT, ha="center", va="top")
-    fig.text(0.35, 0.90, f"Share of engagement — {data['date']}", fontsize=10,
+    fig.text(0.5, 0.92, f"Share of engagement — {data['date']}", fontsize=10,
              color=BRAND_MUTED, ha="center", va="top")
     fig.text(0.02, 0.02, BRAND_URL, fontsize=7, color=BRAND_MUTED, ha="left")
 

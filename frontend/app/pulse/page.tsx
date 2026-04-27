@@ -103,7 +103,7 @@ function TopicCardComponent({ topic, isLoudest = false, isMostControversial = fa
   const summary = generateSummary(topic);
 
   const inner = (
-    <div className={`bg-gray-900 border border-gray-800 rounded-xl p-5 transition-colors ${topic.has_page ? "hover:border-gray-600" : ""}`}>
+    <div className={`bg-gray-900 border border-gray-800 rounded-xl p-4 transition-colors ${topic.has_page ? "hover:border-gray-600" : ""}`}>
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <h3 className="text-lg font-bold text-gray-100">{topic.name}</h3>
@@ -111,10 +111,10 @@ function TopicCardComponent({ topic, isLoudest = false, isMostControversial = fa
       </div>
 
       {/* AI summary */}
-      <p className="text-sm text-gray-400 mb-3">{summary}</p>
+      <p className="text-sm text-gray-400 mb-2">{summary}</p>
 
       {/* Volume bar */}
-      <div className="mb-3">
+      <div className="mb-2">
         <div className="flex justify-between text-xs mb-1">
           <span className="text-blue-400 font-medium">{topic.anti_label} {antiWidth}%</span>
           <span className="text-red-400 font-medium">{topic.pro_label} {proWidth}%</span>
@@ -246,20 +246,9 @@ export default function PulsePage() {
             &larr; Dashboard
           </Link>
         </div>
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-100">
-            Today&apos;s Pulse
-          </h1>
-          {data && (
-            <button
-              onClick={handleShare}
-              disabled={sharing}
-              className="px-4 py-2 text-xs font-medium text-gray-400 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
-            >
-              {sharing ? "Generating..." : "Share as image"}
-            </button>
-          )}
-        </div>
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-100">
+          Today&apos;s Pulse
+        </h1>
         <p className="text-sm text-gray-500 mt-1">{today}</p>
         <p className="text-base text-gray-400 mt-3 max-w-xl">
           What&apos;s happening on X right now — the top political conversations ranked by engagement, with real-time sentiment from both sides.
@@ -356,11 +345,11 @@ export default function PulsePage() {
                     pct: Math.round(t.total_engagement / totalEng * 100),
                   }));
                   const colors = ["#3b82f6", "#ef4444", "#22c55e", "#eab308", "#a855f7", "#f97316", "#06b6d4"];
-                  const size = 160;
+                  const size = 220;
                   const cx = size / 2;
                   const cy = size / 2;
-                  const r = 60;
-                  const inner = 35;
+                  const r = 85;
+                  const inner = 50;
                   let cumAngle = -90;
 
                   return (
@@ -396,12 +385,12 @@ export default function PulsePage() {
                           return <path key={i} d={d} fill={colors[i % colors.length]} opacity={0.8} />;
                         })}
                       </svg>
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         {segments.map((seg, i) => (
                           <div key={i} className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length], opacity: 0.8 }} />
-                            <span className="text-xs text-gray-400">{seg.name}</span>
-                            <span className="text-xs text-gray-600">{seg.pct}%</span>
+                            <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length], opacity: 0.8 }} />
+                            <span className="text-sm text-gray-300">{seg.name}</span>
+                            <span className="text-sm text-gray-500">{seg.pct}%</span>
                           </div>
                         ))}
                       </div>
@@ -409,6 +398,8 @@ export default function PulsePage() {
                   );
                 })()}
               </div>
+
+              <div className="border-t border-gray-800 pt-5 mt-5" />
 
               {(() => {
                 const mostContestedSlug = data.trending.length > 0
@@ -442,6 +433,15 @@ export default function PulsePage() {
       {/* Footer CTA */}
       {data && (
         <div className="text-center mt-12 pt-8 border-t border-gray-800">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              className="px-4 py-2 text-xs font-medium text-gray-400 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {sharing ? "Generating..." : "Share as image"}
+            </button>
+          </div>
           <p className="text-sm text-gray-500 mb-3">
             Want deeper analysis? Click any topic above, or create your own.
           </p>

@@ -18,11 +18,88 @@ from models import Tweet, Classification, Topic
 router = APIRouter()
 
 
+def _create_trending_topic_in_db(conn, topic: dict) -> bool:
+    """Create a trending topic as a real topic in the DB with generated prompts."""
+    from psycopg2.extras import Json
+    import time as _t
+
+    slug = f"trending-{topic['slug']}"
+    cur = conn.cursor()
+
+    # Check if already exists
+    cur.execute("SELECT slug FROM topics WHERE slug = %s", (slug,))
+    if cur.fetchone():
+        print(f"[Pulse] Topic {slug} already exists, updating...")
+        cur.execute(
+            "UPDATE topics SET is_active = TRUE, search_query = %s WHERE slug = %s",
+            (topic["search_query"], slug),
+        )
+        conn.commit()
+        return True
+
+    pro_label = topic["pro_label"]
+    anti_label = topic["anti_label"]
+    name = topic["name"]
+
+    classification_prompt = (
+        f'Classify the stance of the following tweet on "{name}". '
+        f'"{pro_label.lower()}" = the person supports, agrees with, or leans toward the {pro_label} position. '
+        f'"{anti_label.lower()}" = the person supports, agrees with, or leans toward the {anti_label} position. '
+        f'Also classify tweets as "neutral" (factual reporting, balanced) or "unclear". '
+        f'CRITICAL: about_subject must be FALSE if the tweet does not express an opinion about {name}. '
+        f'Classify each tweet\'s political_bent (use "{pro_label.lower().replace(" ", "-")}" or '
+        f'"{anti_label.lower().replace(" ", "-")}"), about_subject, author_lean, classification_basis, confidence.'
+    )
+
+    intensity_prompt = (
+        f'Score the intensity of the stance on "{name}" from -10 to +10. '
+        f'Mild {anti_label} sentiment: slight disagreement (-1 to -3). '
+        f'Moderate {anti_label}: clear opposition (-4 to -6). '
+        f'Extreme {anti_label}: strong condemnation, outrage (-7 to -10). '
+        f'Mild {pro_label}: slight support (+1 to +3). '
+        f'Moderate {pro_label}: clear endorsement (+4 to +6). '
+        f'Extreme {pro_label}: passionate advocacy (+7 to +10).'
+    )
+
+    try:
+        cur.execute(
+            """
+            INSERT INTO topics (slug, name, description, pro_label, anti_label, search_query,
+                classification_prompt, intensity_prompt, target_language, target_country,
+                topic_type, color_scheme, visibility, featured, is_active)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+            """,
+            (slug, name, topic.get("description", ""), pro_label, anti_label,
+             topic["search_query"], classification_prompt, intensity_prompt,
+             "en", "United States", "political", "political", "public", False),
+        )
+        conn.commit()
+        print(f"[Pulse] Created topic {slug}")
+        return True
+    except Exception as e:
+        conn.rollback()
+        print(f"[Pulse] Error creating topic {slug}: {e}")
+        return False
+
+
+def _deactivate_old_trending_topics(conn, current_slugs: set[str]):
+    """Deactivate trending topics that are no longer trending."""
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT slug FROM topics WHERE slug LIKE 'trending-%%' AND is_active = TRUE"
+    )
+    for row in cur.fetchall():
+        if row[0] not in current_slugs:
+            cur.execute("UPDATE topics SET is_active = FALSE WHERE slug = %s", (row[0],))
+            print(f"[Pulse] Deactivated old trending topic {row[0]}")
+    conn.commit()
+
+
 def refresh_trending_cache():
-    """Run discovery + quick classify, persist to DB. Called from scheduler."""
+    """Discover trending topics, create as real topics, run full pipeline, persist to DB."""
     from pipeline.trending import discover_trending_topics
     from pipeline.quick_classify import quick_analyze_topic
-    from pipeline.run import get_sync_connection
+    from pipeline.run import get_sync_connection, run_pipeline
 
     print("[Pulse] Starting trending topic discovery...")
     topics = discover_trending_topics(max_topics=10)
@@ -30,14 +107,38 @@ def refresh_trending_cache():
         print("[Pulse] No trending topics found")
         return
 
+    conn = get_sync_connection()
+    current_slugs = set()
+
+    # Create topics in DB and run full pipeline
     analyzed = []
     for topic in topics:
+        slug = f"trending-{topic['slug']}"
+        current_slugs.add(slug)
+
+        # Create/update topic in DB
+        if _create_trending_topic_in_db(conn, topic):
+            # Run full pipeline
+            try:
+                print(f"[Pulse] Running full pipeline for {slug}...")
+                run_pipeline(slug, hours=48, max_pages=10, classification_model="fast")
+                print(f"[Pulse] Pipeline complete for {slug}")
+            except Exception as e:
+                print(f"[Pulse] Pipeline error for {slug}: {e}")
+
+        # Quick classify for pulse card stats (faster, used for the pulse page summary)
         try:
             result = quick_analyze_topic(topic)
             if result["stats"]["total"] > 0:
+                # Add the real slug so the pulse page can link to the analytics page
+                result["real_slug"] = slug
                 analyzed.append(result)
         except Exception as e:
-            print(f"[Pulse] Error analyzing {topic.get('name', '?')}: {e}")
+            print(f"[Pulse] Quick analyze error for {topic.get('name', '?')}: {e}")
+
+    # Deactivate topics no longer trending
+    _deactivate_old_trending_topics(conn, current_slugs)
+    conn.close()
 
     if not analyzed:
         print("[Pulse] No topics with data")
@@ -45,9 +146,9 @@ def refresh_trending_cache():
 
     # Persist to DB
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    conn = get_sync_connection()
+    conn2 = get_sync_connection()
     try:
-        cur = conn.cursor()
+        cur = conn2.cursor()
         cur.execute(
             """
             INSERT INTO trending_pulse (date, data, updated_at)
@@ -58,12 +159,12 @@ def refresh_trending_cache():
             """,
             (today, json.dumps(analyzed)),
         )
-        conn.commit()
+        conn2.commit()
         print(f"[Pulse] Persisted {len(analyzed)} trending topics to DB for {today}")
     except Exception as e:
         print(f"[Pulse] DB persist error: {e}")
     finally:
-        conn.close()
+        conn2.close()
 
 
 @router.get("/pulse")
@@ -225,7 +326,8 @@ async def get_pulse(
                 "sample_pro": s.get("sample_pro", []),
                 "sample_anti": s.get("sample_anti", []),
                 "is_new": t["slug"] not in yesterday_slugs,
-                "has_page": False,
+                "has_page": True,
+                "url": f"/analytics/trending-{t['slug']}",
             })
 
     # Featured tweet: highest engagement across all curated topics

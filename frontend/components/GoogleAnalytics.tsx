@@ -59,6 +59,11 @@ export default function GoogleAnalytics() {
     });
   }, [pathname, searchParams]);
 
+  // Skip Clerk internal pages (service worker iframes)
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/_/")) {
+    return null;
+  }
+
   // Always render — GA loads in consent mode (denied by default),
   // upgrades to full tracking when user accepts cookies
   return (

@@ -81,7 +81,8 @@ async def cron_refresh_featured(request: Request):
         raise HTTPException(status_code=403, detail="Invalid cron secret")
     import threading
     def _refresh_all():
-        refresh_featured_topics()
+        # Only run trending topics (full pipeline for each)
+        # Curated topics retain their existing data
         try:
             from routers.pulse import refresh_trending_cache
             refresh_trending_cache()

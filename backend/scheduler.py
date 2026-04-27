@@ -99,21 +99,15 @@ def _scheduler_loop():
         now = datetime.now(timezone.utc)
 
         if next_event == "refresh":
-            print(f"[Scheduler] Starting refresh cycle at {now.isoformat()}")
-            try:
-                results = refresh_featured_topics()
-                success = sum(1 for r in results if r["status"] == "success")
-                failed = sum(1 for r in results if r["status"] == "error")
-                print(f"[Scheduler] Cycle complete: {success} success, {failed} failed")
-            except Exception as e:
-                print(f"[Scheduler] Cycle error: {e}")
+            print(f"[Scheduler] Starting trending-only refresh at {now.isoformat()}")
 
-            # Refresh trending topics for the pulse page
+            # Only refresh trending topics (full pipeline for each)
+            # Curated topics retain their existing data — refresh manually when needed
             try:
                 from routers.pulse import refresh_trending_cache
                 refresh_trending_cache()
             except Exception as e:
-                print(f"[Scheduler] Pulse trending refresh error (non-fatal): {e}")
+                print(f"[Scheduler] Trending refresh error: {e}")
 
             # Post slot 0 right after refresh (9am post)
             if os.getenv("ENABLE_PROMO_TWEETS", "false").lower() == "true":

@@ -234,17 +234,16 @@ export default function PulsePage() {
                     const proBar = 100 - antiBar;
                     return (
                       <div key={topic.slug}>
-                        <div className="flex items-center justify-between mb-1">
+                        <div className="mb-1">
                           <span className="text-sm font-medium text-gray-200">{topic.name}</span>
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-blue-400">{topic.anti_label} {topic.anti_pct}%</span>
-                            <span className="text-gray-700">/</span>
-                            <span className="text-red-400">{topic.pro_label} {topic.pro_pct}%</span>
-                          </div>
                         </div>
                         <div className="h-3.5 bg-gray-800 rounded-full overflow-hidden flex">
                           <div className="bg-blue-500/70 h-full" style={{ width: `${antiBar}%` }} />
                           <div className="bg-red-500/70 h-full" style={{ width: `${proBar}%` }} />
+                        </div>
+                        <div className="flex justify-between mt-1 text-xs">
+                          <span className="text-blue-400">{topic.anti_label} {topic.anti_pct}%</span>
+                          <span className="text-red-400">{topic.pro_label} {topic.pro_pct}%</span>
                         </div>
                       </div>
                     );

@@ -454,7 +454,7 @@ export default function LandingPage() {
         </div>
 
         <p className="text-xs sm:text-sm text-gray-500 mt-6 sm:mt-14 mb-2 sm:mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
-        <p className="text-base sm:text-xl text-gray-300 mb-4 sm:mb-6 font-medium">Slide to see how a user&apos;s political bias reshapes their simulated feed.</p>
+        <p className="text-base sm:text-xl text-gray-300 mb-4 sm:mb-6 font-medium">Slide to see how a user&apos;s political bias shapes their simulated feed.</p>
 
         {/* Interactive demo — live trending topic or Iran War fallback */}
         {(() => {

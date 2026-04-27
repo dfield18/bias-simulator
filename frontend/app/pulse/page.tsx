@@ -84,7 +84,7 @@ function WordCloud({ keywords }: { keywords: KeywordEntry[] }) {
 function FeaturedTweetCard({ tweet }: { tweet: FeaturedTweet }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6 mb-5">
-      <p className="text-xs text-gray-500 uppercase tracking-wider mb-3 font-medium">Most engaged post today</p>
+      <p className="text-xs text-gray-500 uppercase tracking-wider mb-3 font-medium">Most engaged X post today</p>
       <a href={tweet.url || "#"} target="_blank" rel="noopener noreferrer"
         className="block hover:bg-gray-800/30 rounded-lg -mx-2 px-2 py-1 transition-colors">
         <blockquote className="text-base sm:text-lg text-gray-200 leading-relaxed mb-3">

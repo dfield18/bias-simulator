@@ -374,6 +374,22 @@ export default function LandingPage() {
         <p className="text-[10px] text-gray-600 text-center mt-3">Live data from Iran War analysis</p>
       </section>
 
+      {/* Pulse CTA */}
+      <section className="max-w-5xl mx-auto px-5 sm:px-8 py-8">
+        <Link
+          href="/pulse"
+          className="block bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6 hover:border-gray-600 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-100">Today&apos;s Pulse</h2>
+              <p className="text-sm text-gray-400 mt-1">See what X is debating right now — trending topics, real-time sentiment, and the top posts from both sides</p>
+            </div>
+            <span className="text-gray-500 text-xl shrink-0 ml-4">&rarr;</span>
+          </div>
+        </Link>
+      </section>
+
       {/* FAQ Section */}
       <section className="max-w-3xl mx-auto px-5 sm:px-8 py-16">
         <h2 className="text-2xl font-bold text-center mb-10">Frequently Asked Questions</h2>

@@ -143,12 +143,12 @@ async def get_pulse(
                     Classification.effective_political_bent == bent,
                 )
                 .order_by(Tweet.engagement.desc())
-                .limit(5)
+                .limit(10)
             )
             sample_result = await db.execute(sample_stmt)
             for row in sample_result.all():
                 clean = _re.sub(r'https?://\S+', '', row[0] or "").strip()[:150]
-                if not _is_english(clean):
+                if not _is_english(clean) or len(clean) < 20:
                     continue
                 screen = row[1] or ""
                 tid = row[2] or ""
@@ -157,7 +157,8 @@ async def get_pulse(
                     "author": f"@{screen}" if screen else None,
                     "url": f"https://x.com/{screen}/status/{tid}" if screen and tid else None,
                 })
-                break
+                if len(samples) >= 2:
+                    break
 
         curated.append({
             "slug": topic.slug,
@@ -188,6 +189,16 @@ async def get_pulse(
 
     trending = []
     trending_updated_at = None
+    # Get yesterday's trending slugs for "New today" tag
+    yesterday_slugs: set[str] = set()
+    yesterday_result = await db.execute(
+        text("SELECT data FROM trending_pulse ORDER BY date DESC LIMIT 1 OFFSET 1")
+    )
+    yesterday_row = yesterday_result.one_or_none()
+    if yesterday_row:
+        yd = yesterday_row[0] if isinstance(yesterday_row[0], list) else json.loads(yesterday_row[0])
+        yesterday_slugs = {t.get("slug", "") for t in yd}
+
     if trending_row:
         trending_data = trending_row[0] if isinstance(trending_row[0], list) else json.loads(trending_row[0])
         trending_updated_at = trending_row[2].isoformat() if trending_row[2] else None
@@ -213,6 +224,7 @@ async def get_pulse(
                 "total_views": s.get("pro_views", 0) + s.get("anti_views", 0),
                 "sample_pro": s.get("sample_pro", []),
                 "sample_anti": s.get("sample_anti", []),
+                "is_new": t["slug"] not in yesterday_slugs,
                 "has_page": False,
             })
 

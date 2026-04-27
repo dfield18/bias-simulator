@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -21,6 +21,7 @@ interface TopicCard {
   total_views: number;
   has_page: boolean;
   url?: string;
+  is_new?: boolean;
   sample_pro?: (string | { text: string; author?: string | null; url: string | null })[];
   sample_anti?: (string | { text: string; author?: string | null; url: string | null })[];
 }
@@ -72,16 +73,31 @@ function generateSummary(topic: TopicCard): string {
   return `The conversation is closely split between ${topic.anti_label} and ${topic.pro_label}`;
 }
 
-function EngagementLabel({ isLoudest }: { isLoudest: boolean }) {
-  if (!isLoudest) return null;
+function TopicBadges({ isLoudest, isMostControversial, isNew }: { isLoudest: boolean; isMostControversial: boolean; isNew: boolean }) {
   return (
-    <span className="text-xs text-yellow-400/80 font-medium shrink-0 ml-2">
-      Loudest topic today
-    </span>
+    <div className="flex items-center gap-2 shrink-0 ml-2 flex-wrap justify-end">
+      {isLoudest && (
+        <span className="text-[10px] text-yellow-400/80 font-medium bg-yellow-400/10 px-2 py-0.5 rounded-full">
+          Loudest topic
+        </span>
+      )}
+      {isMostControversial && (
+        <span className="text-[10px] text-purple-400/80 font-medium bg-purple-400/10 px-2 py-0.5 rounded-full">
+          Most contested
+        </span>
+      )}
+      {isNew && (
+        <span className="text-[10px] text-green-400/80 font-medium bg-green-400/10 px-2 py-0.5 rounded-full">
+          New today
+        </span>
+      )}
+    </div>
   );
 }
 
-function TopicCardComponent({ topic, isLoudest = false }: { topic: TopicCard; isLoudest?: boolean }) {
+function TopicCardComponent({ topic, isLoudest = false, isMostControversial = false, isNew = false }: {
+  topic: TopicCard; isLoudest?: boolean; isMostControversial?: boolean; isNew?: boolean;
+}) {
   const proWidth = topic.pro_pct;
   const antiWidth = topic.anti_pct;
   const summary = generateSummary(topic);
@@ -91,7 +107,7 @@ function TopicCardComponent({ topic, isLoudest = false }: { topic: TopicCard; is
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <h3 className="text-lg font-bold text-gray-100">{topic.name}</h3>
-        <EngagementLabel isLoudest={isLoudest} />
+        <TopicBadges isLoudest={isLoudest} isMostControversial={isMostControversial} isNew={isNew} />
       </div>
 
       {/* AI summary */}
@@ -118,28 +134,39 @@ function TopicCardComponent({ topic, isLoudest = false }: { topic: TopicCard; is
         </div>
       </div>
 
-      {/* Top quote per side */}
+      {/* Top quotes per side */}
       {(topic.sample_anti?.length || topic.sample_pro?.length) ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
-          {[
-            { sample: topic.sample_anti?.[0], borderColor: "border-blue-500/40", authorColor: "text-blue-400/70" },
-            { sample: topic.sample_pro?.[0], borderColor: "border-red-500/40", authorColor: "text-red-400/70" },
-          ].map(({ sample, borderColor, authorColor }, idx) => {
-            if (!sample) return null;
-            const text = typeof sample === "string" ? sample : sample.text;
-            const author = typeof sample === "object" ? sample.author : null;
-            const directUrl = typeof sample === "object" && sample.url ? sample.url : null;
-            // Fallback: search X for the tweet text if no direct URL
-            const url = directUrl || `https://x.com/search?q=${encodeURIComponent(text.slice(0, 60))}`;
-            const content = <>{author && <span className={`${authorColor} font-medium`}>{author}: </span>}&ldquo;{text}&rdquo;</>;
-            return (
-              <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className={`text-xs text-gray-500 border-l-2 ${borderColor} pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors`}>
-                {content}
-              </a>
-            );
-          })}
+          <div className="space-y-2">
+            {(topic.sample_anti || []).map((sample, idx) => {
+              const text = typeof sample === "string" ? sample : sample.text;
+              const author = typeof sample === "object" ? sample.author : null;
+              const directUrl = typeof sample === "object" && sample.url ? sample.url : null;
+              const url = directUrl || `https://x.com/search?q=${encodeURIComponent(text.slice(0, 60))}`;
+              return (
+                <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="block text-xs text-gray-500 border-l-2 border-blue-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
+                  {author && <span className="text-blue-400/70 font-medium">{author}: </span>}&ldquo;{text}&rdquo;
+                </a>
+              );
+            })}
+          </div>
+          <div className="space-y-2">
+            {(topic.sample_pro || []).map((sample, idx) => {
+              const text = typeof sample === "string" ? sample : sample.text;
+              const author = typeof sample === "object" ? sample.author : null;
+              const directUrl = typeof sample === "object" && sample.url ? sample.url : null;
+              const url = directUrl || `https://x.com/search?q=${encodeURIComponent(text.slice(0, 60))}`;
+              return (
+                <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="block text-xs text-gray-500 border-l-2 border-red-500/40 pl-2 leading-relaxed line-clamp-2 hover:text-gray-300 transition-colors">
+                  {author && <span className="text-red-400/70 font-medium">{author}: </span>}&ldquo;{text}&rdquo;
+                </a>
+              );
+            })}
+          </div>
         </div>
       ) : null}
 
@@ -181,17 +208,58 @@ export default function PulsePage() {
     year: "numeric",
   });
 
+  const pulseRef = useRef<HTMLDivElement>(null);
+  const [sharing, setSharing] = useState(false);
+
+  const handleShare = async () => {
+    if (!pulseRef.current) return;
+    setSharing(true);
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(pulseRef.current, {
+        backgroundColor: "#0a0e17",
+        pixelRatio: 2,
+      });
+      // Try native share first, fall back to download
+      if (navigator.share) {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], "dividedview-pulse.png", { type: "image/png" });
+        await navigator.share({ files: [file], title: "Today's Pulse — DividedView" });
+      } else {
+        const link = document.createElement("a");
+        link.download = "dividedview-pulse.png";
+        link.href = dataUrl;
+        link.click();
+      }
+    } catch (e) {
+      console.error("Share failed:", e);
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 py-10 sm:py-16">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center justify-between mb-2">
           <Link href="/dashboard" className="text-gray-500 hover:text-gray-300 text-sm">
             &larr; Dashboard
           </Link>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-100">
-          Today&apos;s Pulse
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-100">
+            Today&apos;s Pulse
+          </h1>
+          {data && (
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              className="px-4 py-2 text-xs font-medium text-gray-400 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {sharing ? "Generating..." : "Share as image"}
+            </button>
+          )}
+        </div>
         <p className="text-sm text-gray-500 mt-1">{today}</p>
         <p className="text-base text-gray-400 mt-3 max-w-xl">
           What&apos;s happening on X right now — the top political conversations ranked by engagement, with real-time sentiment from both sides.
@@ -218,7 +286,34 @@ export default function PulsePage() {
       )}
 
       {data && (
-        <>
+        <div ref={pulseRef}>
+          {/* Daily takeaway */}
+          {(() => {
+            const allTopics = [...data.trending, ...data.curated];
+            if (allTopics.length === 0) return null;
+
+            // Find loudest and most contested
+            const loudest = allTopics.reduce((a, b) => a.total_engagement > b.total_engagement ? a : b);
+            const mostContested = allTopics.reduce((a, b) => {
+              const aDiff = Math.abs(a.anti_pct - a.pro_pct);
+              const bDiff = Math.abs(b.anti_pct - b.pro_pct);
+              return aDiff < bDiff ? a : b;
+            });
+
+            let takeaway = "";
+            if (loudest.slug === mostContested.slug) {
+              takeaway = `${loudest.name} is dominating X today — and it's the most contested debate, split ${mostContested.anti_pct}% to ${mostContested.pro_pct}%.`;
+            } else {
+              takeaway = `${loudest.name} is generating the most engagement on X today, while ${mostContested.name} is the most contested debate.`;
+            }
+
+            return (
+              <div className="bg-gray-900/50 border border-gray-800/50 rounded-xl p-4 mb-6">
+                <p className="text-base sm:text-lg text-gray-200 font-medium leading-relaxed">{takeaway}</p>
+              </div>
+            );
+          })()}
+
           {/* Trending topics */}
           {data.trending.length > 0 && (
             <section className="mb-10">
@@ -315,11 +410,25 @@ export default function PulsePage() {
                 })()}
               </div>
 
-              <div className="space-y-3">
-                {data.trending.map((topic, i) => (
-                  <TopicCardComponent key={topic.slug} topic={topic} isLoudest={i === 0} />
-                ))}
-              </div>
+              {(() => {
+                const allTopics = [...data.trending, ...data.curated];
+                const mostContestedSlug = allTopics.length > 0
+                  ? allTopics.reduce((a, b) => Math.abs(a.anti_pct - a.pro_pct) < Math.abs(b.anti_pct - b.pro_pct) ? a : b).slug
+                  : "";
+                return (
+                  <div className="space-y-3">
+                    {data.trending.map((topic, i) => (
+                      <TopicCardComponent
+                        key={topic.slug}
+                        topic={topic}
+                        isLoudest={i === 0}
+                        isMostControversial={topic.slug === mostContestedSlug}
+                        isNew={topic.is_new || false}
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
             </section>
           )}
 
@@ -327,11 +436,24 @@ export default function PulsePage() {
           {data.curated.length > 0 && (
             <section>
               <h2 className="text-lg font-semibold text-gray-300 mb-4">Ongoing conversations</h2>
-              <div className="space-y-3">
-                {data.curated.map((topic, i) => (
-                  <TopicCardComponent key={topic.slug} topic={topic} isLoudest={i === 0 && data.trending.length === 0} />
-                ))}
-              </div>
+              {(() => {
+                const allTopics = [...data.trending, ...data.curated];
+                const mostContestedSlug = allTopics.length > 0
+                  ? allTopics.reduce((a, b) => Math.abs(a.anti_pct - a.pro_pct) < Math.abs(b.anti_pct - b.pro_pct) ? a : b).slug
+                  : "";
+                return (
+                  <div className="space-y-3">
+                    {data.curated.map((topic, i) => (
+                      <TopicCardComponent
+                        key={topic.slug}
+                        topic={topic}
+                        isLoudest={i === 0 && data.trending.length === 0}
+                        isMostControversial={topic.slug === mostContestedSlug}
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
             </section>
           )}
 
@@ -340,7 +462,7 @@ export default function PulsePage() {
               No pulse data available yet. Check back after the next data refresh.
             </p>
           )}
-        </>
+        </div>
       )}
 
       {/* Footer CTA */}

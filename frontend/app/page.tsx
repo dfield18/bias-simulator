@@ -70,6 +70,64 @@ interface PulseResponse {
   keywords: { word: string; count: number }[];
 }
 
+function MiniDonut({ segments, colors }: { segments: { name: string; pct: number }[]; colors: string[] }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+  const size = 160, cx = size / 2, cy = size / 2, r = 60, inner = 35;
+  let cumAngle = -90;
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+      <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3 font-medium">Share of engagement</p>
+      <div className="flex items-center gap-4">
+        <div className="relative shrink-0" style={{ width: size, height: size }}>
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+            {segments.map((seg, i) => {
+              const angle = (seg.pct / 100) * 360;
+              const startAngle = cumAngle;
+              const endAngle = cumAngle + angle;
+              cumAngle = endAngle;
+              const startRad = (startAngle * Math.PI) / 180;
+              const endRad = (endAngle * Math.PI) / 180;
+              const largeArc = angle > 180 ? 1 : 0;
+              const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
+              const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
+              const ix1 = cx + inner * Math.cos(endRad), iy1 = cy + inner * Math.sin(endRad);
+              const ix2 = cx + inner * Math.cos(startRad), iy2 = cy + inner * Math.sin(startRad);
+              const d = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} L ${ix1} ${iy1} A ${inner} ${inner} 0 ${largeArc} 0 ${ix2} ${iy2} Z`;
+              return (
+                <path key={i} d={d} fill={colors[i % colors.length]}
+                  opacity={hovered === null || hovered === i ? 0.85 : 0.3}
+                  className="transition-opacity duration-150 cursor-pointer"
+                  onMouseEnter={() => setHovered(i)}
+                  onMouseLeave={() => setHovered(null)}
+                />
+              );
+            })}
+          </svg>
+          {hovered !== null && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-lg font-bold text-gray-100">{segments[hovered].pct}%</span>
+              <span className="text-[9px] text-gray-400 text-center max-w-[60px] leading-tight">{segments[hovered].name}</span>
+            </div>
+          )}
+        </div>
+        <div className="space-y-1">
+          {segments.map((seg, i) => (
+            <div key={i}
+              className={`flex items-center gap-1.5 transition-opacity duration-150 ${hovered !== null && hovered !== i ? "opacity-40" : ""}`}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}>
+              <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+              <span className="text-[10px] text-gray-400">{seg.name}</span>
+              <span className="text-[10px] text-gray-600">{seg.pct}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PulsePreview() {
   const [pulse, setPulse] = useState<PulseResponse | null>(null);
 
@@ -140,37 +198,7 @@ function PulsePreview() {
       {/* Donut + featured tweet side by side */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Mini donut */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3 font-medium">Share of engagement</p>
-          <div className="flex items-center gap-4">
-            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-              {segments.map((seg, i) => {
-                const angle = (seg.pct / 100) * 360;
-                const startAngle = cumAngle;
-                const endAngle = cumAngle + angle;
-                cumAngle = endAngle;
-                const startRad = (startAngle * Math.PI) / 180;
-                const endRad = (endAngle * Math.PI) / 180;
-                const largeArc = angle > 180 ? 1 : 0;
-                const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
-                const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
-                const ix1 = cx + inner * Math.cos(endRad), iy1 = cy + inner * Math.sin(endRad);
-                const ix2 = cx + inner * Math.cos(startRad), iy2 = cy + inner * Math.sin(startRad);
-                const d = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} L ${ix1} ${iy1} A ${inner} ${inner} 0 ${largeArc} 0 ${ix2} ${iy2} Z`;
-                return <path key={i} d={d} fill={donutColors[i % donutColors.length]} opacity={0.8} />;
-              })}
-            </svg>
-            <div className="space-y-1">
-              {segments.map((seg, i) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: donutColors[i % donutColors.length] }} />
-                  <span className="text-[10px] text-gray-400">{seg.name}</span>
-                  <span className="text-[10px] text-gray-600">{seg.pct}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <MiniDonut segments={segments} colors={donutColors} />
 
         {/* Featured tweet */}
         {pulse.featured_tweet && (

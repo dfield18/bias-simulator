@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const GA_ID = "G-EVZ0CK3P4G";
@@ -14,38 +14,37 @@ declare global {
 }
 
 export default function GoogleAnalytics() {
-  const [consented, setConsented] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isFirstLoad = useRef(true);
 
+  // Listen for cookie consent and upgrade GA tracking
   useEffect(() => {
-    if (localStorage.getItem("cookie-consent") === "accepted") {
-      setConsented(true);
-    }
-
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === "cookie-consent" && e.newValue === "accepted") {
-        setConsented(true);
+    const updateConsent = () => {
+      const accepted = localStorage.getItem("cookie-consent") === "accepted";
+      if (window.gtag) {
+        window.gtag("consent", "update", {
+          analytics_storage: accepted ? "granted" : "denied",
+          ad_storage: accepted ? "granted" : "denied",
+        });
       }
     };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
 
-  useEffect(() => {
-    const handler = () => {
-      if (localStorage.getItem("cookie-consent") === "accepted") {
-        setConsented(true);
-      }
-    };
+    // Check on mount
+    updateConsent();
+
+    // Listen for consent changes
+    const handler = () => updateConsent();
     window.addEventListener("cookie-consent-change", handler);
+    window.addEventListener("storage", (e) => {
+      if (e.key === "cookie-consent") updateConsent();
+    });
     return () => window.removeEventListener("cookie-consent-change", handler);
   }, []);
 
+  // Track client-side route changes
   useEffect(() => {
-    if (!consented || !window.gtag) return;
-    // Skip the first load — gtag('config') already sends a page_view
+    if (!window.gtag) return;
     if (isFirstLoad.current) {
       isFirstLoad.current = false;
       return;
@@ -58,16 +57,33 @@ export default function GoogleAnalytics() {
       page_location: `${window.location.origin}${url}`,
       page_title: document.title,
     });
-  }, [pathname, searchParams, consented]);
+  }, [pathname, searchParams]);
 
-  if (!consented) return null;
-
+  // Always render — GA loads in consent mode (denied by default),
+  // upgrades to full tracking when user accepts cookies
   return (
     <>
       <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
       <Script id="ga-init" strategy="afterInteractive">{`
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
+
+        // Default: denied. GA loads but doesn't set cookies.
+        // Page views and engagement time are still measured.
+        gtag('consent', 'default', {
+          analytics_storage: 'denied',
+          ad_storage: 'denied',
+          wait_for_update: 500,
+        });
+
+        // Check if already consented
+        if (localStorage.getItem('cookie-consent') === 'accepted') {
+          gtag('consent', 'update', {
+            analytics_storage: 'granted',
+            ad_storage: 'granted',
+          });
+        }
+
         gtag('js', new Date());
         gtag('config', '${GA_ID}');
         gtag('config', '${AW_ID}');

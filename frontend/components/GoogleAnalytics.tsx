@@ -24,7 +24,6 @@ export default function GoogleAnalytics() {
       const accepted = localStorage.getItem("cookie-consent") === "accepted";
       if (window.gtag) {
         window.gtag("consent", "update", {
-          analytics_storage: accepted ? "granted" : "denied",
           ad_storage: accepted ? "granted" : "denied",
         });
       }

@@ -64,13 +64,12 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('consent', 'default', {
-              analytics_storage: 'denied',
+              analytics_storage: 'granted',
               ad_storage: 'denied',
               wait_for_update: 500
             });
             if (typeof localStorage !== 'undefined' && localStorage.getItem('cookie-consent') === 'accepted') {
               gtag('consent', 'update', {
-                analytics_storage: 'granted',
                 ad_storage: 'granted'
               });
             }

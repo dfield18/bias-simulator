@@ -281,12 +281,12 @@ export default function LandingPage() {
         if (!hot) return;
         const slug = hot.url.replace("/analytics/", "");
         setLiveTopic({ slug, name: hot.name, pro_label: hot.pro_label, anti_label: hot.anti_label });
-        // Fetch its feed
-        return fetch(`${API}/api/feed/all?topic=${slug}&hours=48`);
+        // Fetch its feed — use wider window since trending events span days
+        return fetch(`${API}/api/feed/all?topic=${slug}&hours=168`);
       })
       .then(r => r?.ok ? r.json() : null)
       .then(items => {
-        if (items && items.length > 5) setLiveFeedItems(items);
+        if (items && items.length > 3) setLiveFeedItems(items);
       })
       .catch(() => {});
   }, []);

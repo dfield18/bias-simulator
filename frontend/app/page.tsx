@@ -458,7 +458,7 @@ export default function LandingPage() {
 
         {/* Interactive demo — live trending topic or Iran War fallback */}
         {(() => {
-          const useLive = liveFeedItems.length > 5 && liveTopic;
+          const useLive = liveFeedItems.length > 3 && liveTopic;
           const feedItems = useLive ? liveFeedItems : DEMO_ITEMS;
           const proLabel = useLive ? liveTopic!.pro_label : "Pro-War";
           const antiLabel = useLive ? liveTopic!.anti_label : "Anti-War";

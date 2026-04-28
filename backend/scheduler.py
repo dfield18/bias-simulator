@@ -73,17 +73,32 @@ def _post_slot(slot: int):
         print(f"[Scheduler] Daily post slot {slot} error: {e}")
 
 
+def _run_refresh_in_thread():
+    """Run trending refresh in a separate thread so it doesn't block posts."""
+    try:
+        from routers.pulse import refresh_trending_cache
+        refresh_trending_cache()
+        print("[Scheduler] Trending refresh complete")
+    except Exception as e:
+        print(f"[Scheduler] Trending refresh error: {e}")
+
+
 def _scheduler_loop():
-    """Background loop: refreshes data at 9am ET, posts 3x daily."""
+    """Background loop: refreshes trending at 8am ET, posts 3x daily."""
     time.sleep(60)
 
     print(f"[Scheduler] Started — refresh at {REFRESH_HOUR_UTC}:00 UTC, posts at {POST_HOURS_UTC} UTC")
 
     while True:
-        # Find the next event (refresh or post)
+        now = datetime.now(timezone.utc)
+        current_hour = now.hour
+
+        # Build list of ALL events for today/tomorrow
         events = []
+
         # Refresh event
         events.append(("refresh", REFRESH_HOUR_UTC, _seconds_until(REFRESH_HOUR_UTC)))
+
         # Post events
         if os.getenv("ENABLE_PROMO_TWEETS", "false").lower() == "true":
             for i, hour in enumerate(POST_HOURS_UTC):
@@ -93,32 +108,44 @@ def _scheduler_loop():
         events.sort(key=lambda e: e[2])
         next_event, next_hour, wait = events[0]
 
-        print(f"[Scheduler] Next event: {next_event} at {next_hour}:00 UTC in {wait / 3600:.1f}h")
-        time.sleep(wait)
+        # Cap wait to 1 hour max to prevent long sleeps from missing events
+        actual_wait = min(wait, 3600)
 
+        if actual_wait > 60:
+            print(f"[Scheduler] Next event: {next_event} at {next_hour}:00 UTC in {wait / 3600:.1f}h")
+
+        time.sleep(actual_wait)
+
+        # Re-check what time it is after sleeping
         now = datetime.now(timezone.utc)
 
-        if next_event == "refresh":
-            print(f"[Scheduler] Starting trending-only refresh at {now.isoformat()}")
+        # Check if we're within 5 minutes of any event
+        for event_name, event_hour, _ in events:
+            target = now.replace(hour=event_hour, minute=0, second=0, microsecond=0)
+            # Check if we're within a 10-minute window of this event
+            diff = abs((now - target).total_seconds())
+            if diff > 600:
+                # Also check yesterday's target (for events near midnight)
+                target2 = target - timedelta(days=1)
+                diff = abs((now - target2).total_seconds())
+            if diff > 600:
+                continue
 
-            # Only refresh trending topics (full pipeline for each)
-            # Curated topics retain their existing data — refresh manually when needed
-            try:
-                from routers.pulse import refresh_trending_cache
-                refresh_trending_cache()
-            except Exception as e:
-                print(f"[Scheduler] Trending refresh error: {e}")
+            if event_name == "refresh":
+                print(f"[Scheduler] Starting trending-only refresh at {now.isoformat()}")
+                # Run in separate thread so it doesn't block post events
+                t = threading.Thread(target=_run_refresh_in_thread, daemon=True)
+                t.start()
 
-            # Post slot 0 right after refresh (9am post)
-            if os.getenv("ENABLE_PROMO_TWEETS", "false").lower() == "true":
-                _post_slot(0)
+            elif event_name.startswith("post_"):
+                slot = int(event_name.split("_")[1])
+                if os.getenv("ENABLE_PROMO_TWEETS", "false").lower() == "true":
+                    _post_slot(slot)
 
-        elif next_event.startswith("post_"):
-            slot = int(next_event.split("_")[1])
-            if slot > 0:  # slot 0 is handled after refresh
-                _post_slot(slot)
+            # Only handle one event per loop iteration
+            break
 
-        # Small sleep to avoid re-triggering the same event
+        # Small sleep to avoid tight loop
         time.sleep(120)
 
 

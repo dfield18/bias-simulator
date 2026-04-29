@@ -1,11 +1,9 @@
 "use client";
 
-import Script from "next/script";
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const GA_ID = "G-EVZ0CK3P4G";
-const AW_ID = "AW-18069178143";
 
 declare global {
   interface Window {
@@ -18,7 +16,7 @@ export default function GoogleAnalytics() {
   const searchParams = useSearchParams();
   const isFirstLoad = useRef(true);
 
-  // Listen for cookie consent and upgrade GA tracking
+  // Listen for cookie consent and upgrade ad tracking
   useEffect(() => {
     const updateConsent = () => {
       const accepted = localStorage.getItem("cookie-consent") === "accepted";
@@ -41,9 +39,11 @@ export default function GoogleAnalytics() {
     };
   }, []);
 
-  // Track client-side route changes
+  // Track SPA route changes — use gtag('config') to properly update
+  // GA4's internal page state and reset the engagement timer
   useEffect(() => {
     if (!window.gtag) return;
+    // Skip initial mount — the inline script in <head> already sent the first page_view
     if (isFirstLoad.current) {
       isFirstLoad.current = false;
       return;
@@ -51,31 +51,22 @@ export default function GoogleAnalytics() {
     const url = searchParams.toString()
       ? `${pathname}?${searchParams.toString()}`
       : pathname;
-    window.gtag("event", "page_view", {
+
+    // gtag('config', ...) updates the tracker state AND sends a page_view,
+    // which properly closes the engagement timer for the previous page.
+    // gtag('event', 'page_view', ...) only sends a raw event without
+    // resetting the engagement timer — causing 0s engagement on SPA navigations.
+    window.gtag("config", GA_ID, {
       page_path: pathname,
       page_location: `${window.location.origin}${url}`,
       page_title: document.title,
     });
   }, [pathname, searchParams]);
 
-  // Skip Clerk internal pages (service worker iframes)
+  // Skip Clerk internal pages
   if (typeof window !== "undefined" && window.location.pathname.startsWith("/_/")) {
     return null;
   }
 
-  // Always render — GA loads in consent mode (denied by default),
-  // upgrades to full tracking when user accepts cookies
-  return (
-    <>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
-      <Script id="ga-init" strategy="afterInteractive">{`
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', '${GA_ID}');
-        gtag('config', '${AW_ID}');
-      `}</Script>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${AW_ID}`} strategy="afterInteractive" />
-    </>
-  );
+  return null;
 }

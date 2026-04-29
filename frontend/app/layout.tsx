@@ -59,7 +59,9 @@ export default function RootLayout({
     }}>
       <html lang="en">
         <head>
-          {/* Consent defaults MUST be set before GTM loads */}
+          {/* GA4 + Google Ads: load in <head> so engagement tracking starts immediately */}
+          {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+          <script async src="https://www.googletagmanager.com/gtag/js?id=G-EVZ0CK3P4G" />
           <script dangerouslySetInnerHTML={{ __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
@@ -69,25 +71,14 @@ export default function RootLayout({
               wait_for_update: 500
             });
             if (typeof localStorage !== 'undefined' && localStorage.getItem('cookie-consent') === 'accepted') {
-              gtag('consent', 'update', {
-                ad_storage: 'granted'
-              });
+              gtag('consent', 'update', { ad_storage: 'granted' });
             }
-          `}} />
-          {/* GTM loads after consent defaults are set — skip Clerk iframes */}
-          <script dangerouslySetInnerHTML={{ __html: `
-            if (!window.location.pathname.startsWith('/_/')) {
-              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-              })(window,document,'script','dataLayer','GTM-5WJ9564T');
-            }
+            gtag('js', new Date());
+            gtag('config', 'G-EVZ0CK3P4G');
+            gtag('config', 'AW-18069178143');
           `}} />
         </head>
         <body className="bg-gray-950 text-gray-100 min-h-screen">
-          {/* GTM noscript fallback */}
-          <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5WJ9564T" height="0" width="0" style={{ display: "none", visibility: "hidden" }} /></noscript>
           <AuthProvider>{children}</AuthProvider>
           <CookieBanner />
           <Suspense fallback={null}><GoogleAnalytics /></Suspense>

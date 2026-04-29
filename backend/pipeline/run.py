@@ -232,7 +232,7 @@ def log_fetch_run(conn, topic_slug: str, tweets_fetched: int, tweets_new: int,
 
 
 MODEL_MAP = {
-    "fast": "gemini-2.0-flash-lite",
+    "fast": "gemini-2.0-flash",
     "balanced": "gemini-2.0-flash",
     "accurate": "gemini-2.5-flash",
 }
@@ -388,7 +388,7 @@ def run_pipeline(topic_slug: str, hours: int = 48, max_pages: int = 25, classifi
                 batch_intensity = []
                 prompt = _build_classification_prompt(batch, class_prompt, topic.get("topic_type", "political"))
 
-                gemini_model = MODEL_MAP.get(classification_model, "gemini-2.0-flash-lite")
+                gemini_model = MODEL_MAP.get(classification_model, "gemini-2.0-flash")
                 try:
                     response_text, cost = _call_gemini(prompt, model=gemini_model)
                     batch_cost += cost

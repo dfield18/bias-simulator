@@ -26,7 +26,7 @@ def _call_gemini(prompt: str, max_retries: int = 3) -> tuple[str, float]:
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash",
                 contents=prompt,
                 config={"temperature": 0.4},
             )

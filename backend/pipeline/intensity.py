@@ -8,7 +8,7 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 COSTS = {
-    "gemini-2.0-flash": {"input": 0.075, "output": 0.30},
+    "gemini-2.5-flash": {"input": 0.075, "output": 0.30},
 }
 
 
@@ -18,7 +18,7 @@ def _call_gemini(prompt: str) -> tuple[str, float]:
 
     client = genai.Client(api_key=GEMINI_API_KEY)
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=prompt,
         config={
             "response_mime_type": "application/json",
@@ -31,7 +31,7 @@ def _call_gemini(prompt: str) -> tuple[str, float]:
     if response.usage_metadata:
         input_tokens = response.usage_metadata.prompt_token_count or 0
         output_tokens = response.usage_metadata.candidates_token_count or 0
-        rates = COSTS["gemini-2.0-flash"]
+        rates = COSTS["gemini-2.5-flash"]
         cost = (input_tokens * rates["input"] + output_tokens * rates["output"]) / 1_000_000
 
     return text, cost

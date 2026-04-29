@@ -1778,7 +1778,7 @@ Return a JSON array with one object per story:
 [{{"same_story": true/false, "story_title": "...", "headline_a": "...", "headline_b": "...", "takeaway": "..."}}]"""
 
             resp = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash",
                 contents=prompt,
                 config={"response_mime_type": "application/json", "temperature": 0.3},
             )
@@ -1937,7 +1937,7 @@ Return JSON:
 }}"""
 
         resp = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=prompt,
             config={"response_mime_type": "application/json", "temperature": 0.4},
         )

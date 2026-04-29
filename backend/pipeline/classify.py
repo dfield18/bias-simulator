@@ -9,13 +9,12 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # Cost per 1M tokens (approximate)
 COSTS = {
-    "gemini-2.0-flash": {"input": 0.10, "output": 0.40},
-    "gemini-2.0-flash-lite": {"input": 0.075, "output": 0.30},
     "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
+    "gemini-2.5-flash-lite": {"input": 0.075, "output": 0.30},
 }
 
 
-def _call_gemini(prompt: str, model: str = "gemini-2.0-flash", max_retries: int = 3) -> tuple[str, float]:
+def _call_gemini(prompt: str, model: str = "gemini-2.5-flash", max_retries: int = 3) -> tuple[str, float]:
     """Call Gemini API with retry on rate limits. Returns (response_text, cost_usd)."""
     from google import genai
 
@@ -37,7 +36,7 @@ def _call_gemini(prompt: str, model: str = "gemini-2.0-flash", max_retries: int 
             if response.usage_metadata:
                 input_tokens = response.usage_metadata.prompt_token_count or 0
                 output_tokens = response.usage_metadata.candidates_token_count or 0
-                rates = COSTS.get(model, COSTS["gemini-2.0-flash"])
+                rates = COSTS.get(model, COSTS["gemini-2.5-flash"])
                 total_cost += (input_tokens * rates["input"] + output_tokens * rates["output"]) / 1_000_000
 
             return text, total_cost
@@ -125,7 +124,7 @@ def classify_tweets(tweets: list[dict], topic_classification_prompt: str) -> tup
         prompt = _build_classification_prompt(batch, topic_classification_prompt)
 
         try:
-            response_text, cost = _call_gemini(prompt, model="gemini-2.0-flash")
+            response_text, cost = _call_gemini(prompt, model="gemini-2.5-flash")
             batch_cost += cost
             parsed = _parse_classifications(response_text)
         except Exception:
@@ -163,7 +162,7 @@ def classify_tweets(tweets: list[dict], topic_classification_prompt: str) -> tup
                     pass
 
             classification["id_str"] = tid
-            classification.setdefault("classification_method", "gemini-2.0-flash")
+            classification.setdefault("classification_method", "gemini-2.5-flash")
             batch_results.append(classification)
 
         return batch_results, batch_cost
@@ -205,7 +204,7 @@ def _escalate_classification(tweet: dict, topic_prompt: str) -> tuple[dict | Non
     total_cost = 0.0
 
     try:
-        resp, cost = _call_gemini(prompt, model="gemini-2.0-flash")
+        resp, cost = _call_gemini(prompt, model="gemini-2.5-flash")
         total_cost += cost
         parsed = _parse_classifications(resp)
         if parsed:

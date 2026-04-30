@@ -467,28 +467,35 @@ export default function LandingPage() {
           const proBent = proLabel.toLowerCase().replace(/\s+/g, "-");
           const antiBent = antiLabel.toLowerCase().replace(/\s+/g, "-");
 
-          // Sort tweets for the feed cards (only show DEMO_TWEETS for Iran fallback, or top live tweets)
+          // Score and sort all tweets based on bias — same logic as analytics feed
+          const scoreTweet = (item: typeof liveFeedItems[0]) => {
+            const bent = item.classification.effective_political_bent || "";
+            const intensity = Math.abs(item.classification.effective_intensity_score || 0);
+            const eng = item.tweet.engagement || 0;
+            const views = item.tweet.views || 1;
+            const base = Math.log10(Math.max(eng, 1)) * 10 + Math.log10(Math.max(views, 1)) * 5;
+
+            if (demoBias === 0) return base;
+
+            const sameSide = (demoBias < 0 && bent === antiBent) || (demoBias > 0 && bent === proBent);
+            const absBias = Math.abs(demoBias);
+
+            if (sameSide) {
+              // Boost same-side tweets, more at higher intensity
+              return base * (1 + absBias * 0.3 * (0.5 + (intensity / 10) * 0.5));
+            } else if (bent === antiBent || bent === proBent) {
+              // Suppress opposite-side tweets
+              return base * Math.max(0.03, 1 - absBias * 0.15);
+            }
+            return base * 0.5; // neutral/unclear
+          };
+
           const feedTweets = useLive
             ? liveFeedItems
                 .filter(item => item.classification.about_subject)
-                .sort((a, b) => {
-                  const engA = a.tweet.engagement || 0;
-                  const engB = b.tweet.engagement || 0;
-                  const biasBoostA = (() => {
-                    const bent = a.classification.effective_political_bent || "";
-                    if (demoBias < 0 && bent === antiBent) return Math.abs(demoBias) * 5;
-                    if (demoBias > 0 && bent === proBent) return demoBias * 5;
-                    return 0;
-                  })();
-                  const biasBoostB = (() => {
-                    const bent = b.classification.effective_political_bent || "";
-                    if (demoBias < 0 && bent === antiBent) return Math.abs(demoBias) * 5;
-                    if (demoBias > 0 && bent === proBent) return demoBias * 5;
-                    return 0;
-                  })();
-                  return (engB + biasBoostB) - (engA + biasBoostA);
-                })
-                .slice(0, 8)
+                .map(item => ({ ...item, _score: scoreTweet(item) }))
+                .sort((a, b) => b._score - a._score)
+                .slice(0, 20)
             : [...DEMO_TWEETS].sort((a, b) => {
                 const scoreA = (() => {
                   const bent = a.classification.effective_political_bent || "";
@@ -516,7 +523,7 @@ export default function LandingPage() {
               <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs sm:text-sm text-gray-300 font-semibold">Simulated X Feed — {topicName}</div>
+                    <div className="text-sm sm:text-lg text-gray-300 font-semibold">Simulated X Feed — {topicName}</div>
                     <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">This reconstruction shows how the same posts get prioritized differently based on political leaning</p>
                   </div>
                   {useLive && (
@@ -539,7 +546,7 @@ export default function LandingPage() {
               </div>
 
               <div className="px-4 sm:px-5 pb-4 sm:pb-5">
-                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
+                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 scrollbar-thin">
                   {feedTweets.map((item) => (
                     <TweetCard
                       key={item.tweet.id_str}

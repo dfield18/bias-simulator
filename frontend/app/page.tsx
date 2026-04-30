@@ -608,17 +608,19 @@ export default function LandingPage() {
                   <span className="text-[9px] text-blue-400">{aL}</span>
                   <span className="text-[9px] text-red-400">{pL}</span>
                 </div>
-                <div className="flex-1 flex flex-col justify-center space-y-3">
+                <div className="flex-1 flex flex-col justify-center space-y-2.5">
                   {(frames || []).map((f) => (
-                    <div key={f.key} className="flex items-center gap-1">
-                      <div className="w-[33%] flex justify-end">
-                        <div className="h-4 bg-blue-500/40 rounded-l-sm" style={{ width: `${f.anti_pct}%` }} />
+                    <div key={f.key}>
+                      <div className="text-center mb-0.5">
+                        <span className="text-[10px] text-gray-500">{f.label}</span>
                       </div>
-                      <div className="w-[34%] text-center">
-                        <span className="text-[10px] text-gray-500 whitespace-nowrap">{f.label}</span>
-                      </div>
-                      <div className="w-[33%] flex justify-start">
-                        <div className="h-4 bg-red-500/40 rounded-r-sm" style={{ width: `${f.pro_pct}%` }} />
+                      <div className="flex items-center gap-0.5">
+                        <div className="w-1/2 flex justify-end">
+                          <div className="h-3.5 bg-blue-500/40 rounded-l-sm" style={{ width: `${f.anti_pct}%` }} />
+                        </div>
+                        <div className="w-1/2 flex justify-start">
+                          <div className="h-3.5 bg-red-500/40 rounded-r-sm" style={{ width: `${f.pro_pct}%` }} />
+                        </div>
                       </div>
                     </div>
                   ))}

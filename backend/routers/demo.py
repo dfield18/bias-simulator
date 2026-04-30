@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone, timedelta
 from collections import Counter
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from cache import get_cached, set_cache
@@ -15,17 +15,17 @@ router = APIRouter()
 
 @router.get("/demo/landing")
 async def get_landing_data(
+    topic: str = Query(default="iran-conflict"),
     db: AsyncSession = Depends(get_db),
 ):
     """Return live analytics for the landing page demo. No auth required. Cached for 10 min."""
-    cache_key = "demo:landing"
+    slug = topic
+    cache_key = f"demo:landing:{slug}"
     cached = get_cached(cache_key, ttl=600)
     if cached is not None:
         return cached
 
-    # Use iran-conflict as the demo topic
-    slug = "iran-conflict"
-    result = await db.execute(select(Topic).where(Topic.slug == slug, Topic.featured == True))
+    result = await db.execute(select(Topic).where(Topic.slug == slug, Topic.is_active == True))
     topic_obj = result.scalar_one_or_none()
     if not topic_obj or not topic_obj.anti_label or not topic_obj.pro_label:
         return {"echo_chamber": None, "frames": None}
@@ -33,7 +33,7 @@ async def get_landing_data(
     anti_bent = topic_obj.anti_label.lower().replace(" ", "-")
     pro_bent = topic_obj.pro_label.lower().replace(" ", "-")
 
-    since = datetime.now(timezone.utc) - timedelta(hours=48)
+    since = datetime.now(timezone.utc) - timedelta(hours=168)
 
     stmt = (
         select(Tweet, Classification)

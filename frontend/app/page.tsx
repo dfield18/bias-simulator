@@ -259,34 +259,33 @@ export default function LandingPage() {
 
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    fetch(`${API}/api/demo/landing`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then(data => {
-        if (data && (data.echo_chamber || data.frames)) {
-          setLandingData(data);
-        }
-      })
-      .catch(e => console.error("[Landing] Demo data fetch failed:", e));
 
-    // Fetch hottest trending topic's feed for the live demo
+    // Fetch hottest trending topic, then its feed + landing data in parallel
     fetch(`${API}/api/pulse`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : null)
       .then(pulse => {
-        if (!pulse?.trending?.length) return;
+        if (!pulse?.trending?.length) {
+          // No trending topics — fall back to iran-conflict for landing panels
+          fetch(`${API}/api/demo/landing`)
+            .then(r => r.ok ? r.json() : null)
+            .then(data => { if (data?.echo_chamber || data?.frames) setLandingData(data); })
+            .catch(() => {});
+          return;
+        }
         // Pick the hottest trending topic that has a real page
         const hot = pulse.trending.find((t: { has_page: boolean; url?: string }) => t.has_page && t.url);
         if (!hot) return;
         const slug = hot.url.replace("/analytics/", "");
         setLiveTopic({ slug, name: hot.name, pro_label: hot.pro_label, anti_label: hot.anti_label });
-        // Fetch its feed — use wider window since trending events span days
-        return fetch(`${API}/api/feed/all?topic=${slug}&hours=168`);
-      })
-      .then(r => r?.ok ? r.json() : null)
-      .then(items => {
-        if (items && items.length > 3) setLiveFeedItems(items);
+
+        // Fetch feed and landing data for this topic in parallel
+        Promise.all([
+          fetch(`${API}/api/feed/all?topic=${slug}&hours=168`).then(r => r.ok ? r.json() : null),
+          fetch(`${API}/api/demo/landing?topic=${slug}`).then(r => r.ok ? r.json() : null),
+        ]).then(([items, landing]) => {
+          if (items && items.length > 3) setLiveFeedItems(items);
+          if (landing?.echo_chamber || landing?.frames) setLandingData(landing);
+        });
       })
       .catch(() => {});
   }, []);
@@ -566,15 +565,15 @@ export default function LandingPage() {
         {(() => {
           const ec = landingData?.echo_chamber;
           const frames = landingData?.frames;
-          const aL = landingData?.anti_label || "Anti-War";
-          const pL = landingData?.pro_label || "Pro-War";
+          const aL = landingData?.anti_label || liveTopic?.anti_label || "Side A";
+          const pL = landingData?.pro_label || liveTopic?.pro_label || "Side B";
 
           return (
             <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
               {/* Echo Chamber Score */}
               <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 flex flex-col">
                 <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber Score</div>
-                <div className="text-xs text-gray-400 mb-5">{landingData?.topic_name || "Iran War"}</div>
+                <div className="text-xs text-gray-400 mb-5">{landingData?.topic_name || liveTopic?.name || "Iran War"}</div>
                 <div className="flex-1 flex flex-col items-center justify-center">
                   <div className="text-5xl font-bold text-orange-400 mb-1">{ec ? `${ec.score}%` : "..."}</div>
                   <div className="text-xs text-gray-500 mb-4">overlap between sides</div>
@@ -629,7 +628,7 @@ export default function LandingPage() {
             </div>
           );
         })()}
-        <p className="text-[10px] text-gray-600 text-center mt-3">Live data from Iran War analysis</p>
+        <p className="text-[10px] text-gray-600 text-center mt-3">Live data from {landingData?.topic_name || liveTopic?.name || "topic"} analysis</p>
       </section>
 
       {/* Pulse Preview */}

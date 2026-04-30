@@ -62,186 +62,23 @@ interface PulseTopic {
   pro_pct: number;
   anti_pct: number;
   total_engagement: number;
+  total_posts?: number;
+  total_views?: number;
+  is_new?: boolean;
+  has_page?: boolean;
+  url?: string;
+  description?: string;
+  sample_pro?: { text: string; author?: string }[];
+  sample_anti?: { text: string; author?: string }[];
 }
 
 interface PulseResponse {
+  curated?: PulseTopic[];
   trending: PulseTopic[];
   featured_tweet: { text: string; author: string | null; author_name: string; url: string | null } | null;
   keywords: { word: string; count: number }[];
 }
 
-function MiniDonut({ segments, colors }: { segments: { name: string; pct: number }[]; colors: string[] }) {
-  const [hovered, setHovered] = useState<number | null>(null);
-  const size = 160, cx = size / 2, cy = size / 2, r = 60, inner = 35;
-  let cumAngle = -90;
-
-  return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-      <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3 font-medium">Share of engagement</p>
-      <div className="flex items-center gap-4">
-        <div className="relative shrink-0" style={{ width: size, height: size }}>
-          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-            {segments.map((seg, i) => {
-              const angle = (seg.pct / 100) * 360;
-              const startAngle = cumAngle;
-              const endAngle = cumAngle + angle;
-              cumAngle = endAngle;
-              const startRad = (startAngle * Math.PI) / 180;
-              const endRad = (endAngle * Math.PI) / 180;
-              const largeArc = angle > 180 ? 1 : 0;
-              const x1 = cx + r * Math.cos(startRad), y1 = cy + r * Math.sin(startRad);
-              const x2 = cx + r * Math.cos(endRad), y2 = cy + r * Math.sin(endRad);
-              const ix1 = cx + inner * Math.cos(endRad), iy1 = cy + inner * Math.sin(endRad);
-              const ix2 = cx + inner * Math.cos(startRad), iy2 = cy + inner * Math.sin(startRad);
-              const d = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} L ${ix1} ${iy1} A ${inner} ${inner} 0 ${largeArc} 0 ${ix2} ${iy2} Z`;
-              return (
-                <path key={i} d={d} fill={colors[i % colors.length]}
-                  opacity={hovered === null || hovered === i ? 0.85 : 0.3}
-                  className="transition-opacity duration-150 cursor-pointer"
-                  onMouseEnter={() => setHovered(i)}
-                  onMouseLeave={() => setHovered(null)}
-                />
-              );
-            })}
-          </svg>
-          {hovered !== null && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-lg font-bold text-gray-100">{segments[hovered].pct}%</span>
-              <span className="text-[9px] text-gray-400 text-center max-w-[60px] leading-tight">{segments[hovered].name}</span>
-            </div>
-          )}
-        </div>
-        <div className="space-y-1">
-          {segments.map((seg, i) => (
-            <div key={i}
-              className={`flex items-center gap-1.5 transition-opacity duration-150 ${hovered !== null && hovered !== i ? "opacity-40" : ""}`}
-              onMouseEnter={() => setHovered(i)}
-              onMouseLeave={() => setHovered(null)}>
-              <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-              <span className="text-[10px] text-gray-400">{seg.name}</span>
-              <span className="text-[10px] text-gray-600">{seg.pct}%</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PulsePreview() {
-  const [pulse, setPulse] = useState<PulseResponse | null>(null);
-
-  useEffect(() => {
-    fetch(`${API}/api/pulse`, { cache: "no-store" })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => d && setPulse(d))
-      .catch(() => {});
-  }, []);
-
-  if (!pulse || pulse.trending.length === 0) {
-    return (
-      <section className="max-w-5xl mx-auto px-5 sm:px-8 py-8">
-        <Link href="/pulse" className="block bg-gray-900 border border-gray-800 rounded-xl p-5 sm:p-6 hover:border-gray-600 transition-colors">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-gray-100">Today&apos;s Pulse</h2>
-              <p className="text-sm text-gray-400 mt-1">See what X is debating right now — trending topics, real-time sentiment, and the top posts from both sides</p>
-            </div>
-            <span className="text-gray-500 text-xl shrink-0 ml-4">&rarr;</span>
-          </div>
-        </Link>
-      </section>
-    );
-  }
-
-  const colors = ["bg-blue-500/20 text-blue-300", "bg-red-500/20 text-red-300", "bg-green-500/20 text-green-300", "bg-yellow-500/20 text-yellow-300", "bg-purple-500/20 text-purple-300"];
-  const donutColors = ["#3b82f6", "#ef4444", "#22c55e", "#eab308", "#a855f7", "#f97316", "#06b6d4"];
-  const totalEng = pulse.trending.reduce((s, t) => s + t.total_engagement, 0) || 1;
-  const segments = pulse.trending.slice(0, 7).map(t => ({
-    name: t.name, pct: Math.round(t.total_engagement / totalEng * 100),
-  }));
-
-  // Donut SVG
-  const size = 160;
-  const cx = size / 2, cy = size / 2, r = 60, inner = 35;
-  let cumAngle = -90;
-
-  // Takeaway
-  const loudest = pulse.trending.reduce((a, b) => a.total_engagement > b.total_engagement ? a : b);
-  const mostContested = pulse.trending.reduce((a, b) => Math.abs(a.anti_pct - a.pro_pct) < Math.abs(b.anti_pct - b.pro_pct) ? a : b);
-  const takeaway = loudest.slug === mostContested.slug
-    ? `${loudest.name} is dominating X today — and it's the most contested debate.`
-    : `${loudest.name} is generating the most engagement on X today, while ${mostContested.name} is the most contested debate.`;
-
-  return (
-    <section className="max-w-5xl mx-auto px-5 sm:px-8 py-10">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-100">What X is debating right now</h2>
-        <Link href="/pulse" className="text-sm text-blue-400 hover:text-blue-300 transition-colors shrink-0">
-          Full Pulse &rarr;
-        </Link>
-      </div>
-
-      {/* Topic pills */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {pulse.trending.slice(0, 7).map((t, i) => (
-          <Link key={t.slug} href="/pulse"
-            className={`px-3 py-1.5 rounded-full text-xs font-medium ${colors[i % colors.length]}`}>
-            {t.name}
-          </Link>
-        ))}
-      </div>
-
-      {/* Takeaway */}
-      <p className="text-sm sm:text-base text-gray-300 mb-5">{takeaway}</p>
-
-      {/* Donut + featured tweet side by side */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Mini donut */}
-        <MiniDonut segments={segments} colors={donutColors} />
-
-        {/* Featured tweet */}
-        {pulse.featured_tweet && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-3 font-medium">Most engaged X post today</p>
-            <a href={pulse.featured_tweet.url || "#"} target="_blank" rel="noopener noreferrer"
-              className="block hover:bg-gray-800/30 rounded -mx-1 px-1 py-0.5 transition-colors">
-              <blockquote className="text-sm text-gray-300 leading-relaxed line-clamp-4 mb-2">
-                &ldquo;{pulse.featured_tweet.text}&rdquo;
-              </blockquote>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-gray-400">{pulse.featured_tweet.author_name}</span>
-                {pulse.featured_tweet.author && <span className="text-xs text-gray-600">{pulse.featured_tweet.author}</span>}
-              </div>
-            </a>
-          </div>
-        )}
-      </div>
-
-      {/* Word cloud preview */}
-      {pulse.keywords && pulse.keywords.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-x-2.5 gap-y-1 justify-center">
-          {pulse.keywords.slice(0, 15).map((k, i) => {
-            const maxC = pulse.keywords[0].count || 1;
-            const fontSize = Math.round(10 + (k.count / maxC) * 12);
-            const wordColors = ["text-blue-400", "text-red-400", "text-green-400", "text-yellow-400", "text-purple-400"];
-            return (
-              <span key={i} className={`${wordColors[i % wordColors.length]} font-medium opacity-70`} style={{ fontSize }}>
-                {k.word}
-              </span>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="text-center mt-5">
-        <Link href="/pulse" className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
-          See the full Pulse with detailed analysis &rarr;
-        </Link>
-      </div>
-    </section>
-  );
-}
 
 export default function LandingPage() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -256,6 +93,7 @@ export default function LandingPage() {
   // Dynamic trending topic feed
   const [liveFeedItems, setLiveFeedItems] = useState<RawFeedItem[]>([]);
   const [liveTopic, setLiveTopic] = useState<{ slug: string; name: string; pro_label: string; anti_label: string } | null>(null);
+  const [pulse, setPulse] = useState<PulseResponse | null>(null);
 
   useEffect(() => {
     const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -263,8 +101,9 @@ export default function LandingPage() {
     // Fetch hottest trending topic, then its feed + landing data in parallel
     fetch(`${API}/api/pulse`, { cache: "no-store" })
       .then(r => r.ok ? r.json() : null)
-      .then(pulse => {
-        if (!pulse?.trending?.length) {
+      .then(pulseData => {
+        if (pulseData) setPulse(pulseData);
+        if (!pulseData?.trending?.length) {
           // No trending topics — fall back to iran-conflict for landing panels
           fetch(`${API}/api/demo/landing`)
             .then(r => r.ok ? r.json() : null)
@@ -273,7 +112,7 @@ export default function LandingPage() {
           return;
         }
         // Pick the hottest trending topic that has a real page
-        const hot = pulse.trending.find((t: { has_page: boolean; url?: string }) => t.has_page && t.url);
+        const hot = pulseData.trending.find((t: { has_page: boolean; url?: string }) => t.has_page && t.url);
         if (!hot) return;
         const slug = hot.url.replace("/analytics/", "");
         setLiveTopic({ slug, name: hot.name, pro_label: hot.pro_label, anti_label: hot.anti_label });
@@ -451,8 +290,106 @@ export default function LandingPage() {
           </div>
           <p className="text-xs text-gray-500 mt-2">No sign-up required to try it out</p>
         </div>
+      </section>
 
-        <p className="text-xs sm:text-sm text-gray-500 mt-6 sm:mt-14 mb-2 sm:mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
+      {/* Live Stats Bar */}
+      {pulse && pulse.trending.length > 0 && (
+        <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-400 bg-gray-900/50 border border-gray-800/40 rounded-lg px-5 py-3">
+            <span>Tracking <strong className="text-gray-200">{(pulse.curated?.length || 0) + pulse.trending.length}</strong> topics on X</span>
+            <span className="hidden sm:inline text-gray-700">|</span>
+            <span><strong className="text-gray-200">{pulse.trending.reduce((s, t) => s + (t.total_posts || 0), 0).toLocaleString()}</strong> posts analyzed</span>
+            <span className="hidden sm:inline text-gray-700">|</span>
+            <span><strong className="text-gray-200">{pulse.trending.length}</strong> trending today</span>
+          </div>
+        </section>
+      )}
+
+      {/* Trending Topics Grid */}
+      {pulse && pulse.trending.length > 0 && (() => {
+        const trending = pulse.trending;
+        const loudest = trending.reduce((a, b) => a.total_engagement > b.total_engagement ? a : b);
+        const mostContested = trending.reduce((a, b) => Math.abs(a.anti_pct - a.pro_pct) < Math.abs(b.anti_pct - b.pro_pct) ? a : b);
+
+        return (
+          <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-100">What X is debating right now</h2>
+              <Link href="/pulse" className="text-sm text-blue-400 hover:text-blue-300 transition-colors shrink-0">
+                Full Pulse &rarr;
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {trending.slice(0, 6).map((t) => {
+                const badge = t.slug === loudest.slug ? "Loudest" : t.slug === mostContested.slug ? "Most contested" : t.is_new ? "New today" : null;
+                const badgeColor = badge === "Loudest" ? "bg-orange-500/20 text-orange-300" : badge === "Most contested" ? "bg-purple-500/20 text-purple-300" : "bg-green-500/20 text-green-300";
+                const topicUrl = t.has_page && t.url ? t.url : "/pulse";
+
+                return (
+                  <Link key={t.slug} href={topicUrl}
+                    className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 hover:border-gray-600 transition-colors group">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-sm font-semibold text-gray-200 group-hover:text-white transition-colors leading-tight">{t.name}</h3>
+                      {badge && <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-2 ${badgeColor}`}>{badge}</span>}
+                    </div>
+                    {/* Sentiment bar */}
+                    <div className="flex h-2 rounded-full overflow-hidden mb-2">
+                      <div className="bg-blue-500/60" style={{ width: `${t.anti_pct}%` }} />
+                      <div className="bg-red-500/60" style={{ width: `${t.pro_pct}%` }} />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-blue-400">{t.anti_label} {t.anti_pct}%</span>
+                      <span className="text-red-400">{t.pro_pct}% {t.pro_label}</span>
+                    </div>
+                    <div className="text-[10px] text-gray-500 mt-1.5">{(t.total_posts || 0).toLocaleString()} posts analyzed</div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
+
+      {/* Most Divided Spotlight */}
+      {pulse && pulse.trending.length > 1 && (() => {
+        const mostContested = pulse.trending.reduce((a, b) => Math.abs(a.anti_pct - a.pro_pct) < Math.abs(b.anti_pct - b.pro_pct) ? a : b);
+        const antiQuote = mostContested.sample_anti?.[0];
+        const proQuote = mostContested.sample_pro?.[0];
+        if (!antiQuote && !proQuote) return null;
+
+        const antiText = typeof antiQuote === "string" ? antiQuote : antiQuote?.text || "";
+        const proText = typeof proQuote === "string" ? proQuote : proQuote?.text || "";
+        const antiAuthor = typeof antiQuote === "object" ? antiQuote?.author : "";
+        const proAuthor = typeof proQuote === "object" ? proQuote?.author : "";
+
+        return (
+          <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-10">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-100 mb-1">Most divided right now: {mostContested.name}</h2>
+            <p className="text-xs text-gray-500 mb-4">Split {mostContested.anti_pct}% / {mostContested.pro_pct}% — here&apos;s what each side is saying</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {antiText && (
+                <div className="bg-blue-950/30 border border-blue-500/20 rounded-xl p-4">
+                  <div className="text-[10px] font-medium text-blue-400 uppercase tracking-wider mb-2">{mostContested.anti_label}</div>
+                  <blockquote className="text-sm text-gray-300 leading-relaxed line-clamp-4 italic">&ldquo;{antiText}&rdquo;</blockquote>
+                  {antiAuthor && <div className="text-[10px] text-gray-500 mt-2">{antiAuthor}</div>}
+                </div>
+              )}
+              {proText && (
+                <div className="bg-red-950/30 border border-red-500/20 rounded-xl p-4">
+                  <div className="text-[10px] font-medium text-red-400 uppercase tracking-wider mb-2">{mostContested.pro_label}</div>
+                  <blockquote className="text-sm text-gray-300 leading-relaxed line-clamp-4 italic">&ldquo;{proText}&rdquo;</blockquote>
+                  {proAuthor && <div className="text-[10px] text-gray-500 mt-2">{proAuthor}</div>}
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      })()}
+
+      {/* Simulated Feed Deep Dive */}
+      <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-8 sm:pb-16">
+        <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3">Enter any topic &rarr; AI classifies thousands of real posts &rarr; Explore the results</p>
         <p className="text-base sm:text-xl text-gray-300 mb-4 sm:mb-6 font-medium">Slide to see how a user&apos;s political bias shapes their simulated feed.</p>
 
         {/* Interactive demo — live trending topic or Iran War fallback */}
@@ -632,9 +569,6 @@ export default function LandingPage() {
         })()}
         <p className="text-[10px] text-gray-600 text-center mt-3">Live data from {landingData?.topic_name || liveTopic?.name || "topic"} analysis</p>
       </section>
-
-      {/* Pulse Preview */}
-      <PulsePreview />
 
       {/* FAQ Section */}
       <section className="max-w-3xl mx-auto px-5 sm:px-8 py-16">

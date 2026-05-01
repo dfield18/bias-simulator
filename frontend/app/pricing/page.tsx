@@ -53,7 +53,7 @@ export default function PricingPage() {
           <p className="text-sm text-gray-500 mb-6">Forever free</p>
           <ul className="space-y-2 text-sm text-gray-400 mb-8">
             <li className="flex items-center gap-2">
-              <span className="text-green-400">&#10003;</span> 5 preloaded topics
+              <span className="text-green-400">&#10003;</span> 10 preloaded topics
             </li>
             <li className="flex items-center gap-2">
               <span className="text-green-400">&#10003;</span> 1 custom topic

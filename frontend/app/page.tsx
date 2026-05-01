@@ -181,7 +181,7 @@ export default function LandingPage() {
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "USD",
-          "description": "Free plan with 5 preloaded topics, 1 custom topic, and 3 data refreshes per month",
+          "description": "Free plan with 10 preloaded topics, 1 custom topic, and 3 data refreshes per month",
         },
         {
           "@type": "Offer",
@@ -216,7 +216,7 @@ export default function LandingPage() {
           "name": "Is DividedView free to use?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. DividedView offers a free plan with access to 5 preloaded topics, 1 custom topic, and 3 data refreshes per month. A Pro plan is available at $10/month for 100 custom topics, 100 runs, and priority support.",
+            "text": "Yes. DividedView offers a free plan with access to 10 preloaded topics, 1 custom topic, and 3 data refreshes per month. A Pro plan is available at $10/month for 100 custom topics, 100 runs, and priority support.",
           },
         },
         {
@@ -580,7 +580,7 @@ export default function LandingPage() {
             { q: "How does DividedView detect echo chambers?", a: "DividedView calculates an Echo Chamber Score by measuring the overlap in sources, arguments, and narrative frames between opposing perspectives. A low score indicates a strong echo chamber where each side sees completely different content." },
             { q: "Can I analyze companies and brands?", a: "Yes. DividedView supports both political topics and brand sentiment analysis. For companies, it classifies posts as positive or negative consumer sentiment, with frames like product quality, customer service, and pricing." },
             { q: "What does DividedView show for each topic?", a: "For every political topic, DividedView surfaces the main arguments each side is making, the top accounts amplifying them, narrative overlap (echo chamber score), and how engagement differs between perspectives." },
-            { q: "Is DividedView free?", a: "Yes. The free plan includes 5 preloaded topics, 1 custom topic, and 3 data refreshes per month. A Pro plan is available at $10/month for 100 custom topics and 100 runs." },
+            { q: "Is DividedView free?", a: "Yes. The free plan includes 10 preloaded topics, 1 custom topic, and 3 data refreshes per month. A Pro plan is available at $10/month for 100 custom topics and 100 runs." },
           ].map(({ q, a }) => (
             <details key={q} className="bg-gray-900 border border-gray-800 rounded-xl group">
               <summary className="px-5 py-4 cursor-pointer select-none text-sm font-medium text-gray-200 hover:text-white transition-colors flex items-center justify-between">

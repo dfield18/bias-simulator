@@ -296,7 +296,7 @@ export default function LandingPage() {
       {pulse && pulse.trending.length > 0 && (
         <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-6">
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-400 bg-gray-900/50 border border-gray-800/40 rounded-lg px-5 py-3">
-            <span>Tracking <strong className="text-gray-200">{(pulse.curated?.length || 7) + pulse.trending.length}</strong> topics on X</span>
+            <span>Tracking the <strong className="text-gray-200">top 10</strong> stories on X</span>
             <span className="hidden sm:inline text-gray-700">|</span>
             <span><strong className="text-gray-200">{pulse.trending.reduce((s, t) => s + (t.total_posts || 0), 0).toLocaleString()}</strong> posts analyzed</span>
             <span className="hidden sm:inline text-gray-700">|</span>

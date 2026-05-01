@@ -74,17 +74,17 @@ def fetch_top_political_posts(max_per_query: int = 20) -> list[dict]:
     # Sort by engagement, take top posts
     all_posts.sort(key=lambda x: x["engagement"], reverse=True)
     print(f"[Trending] Collected {len(all_posts)} high-engagement political posts")
-    return all_posts[:50]
+    return all_posts[:60]
 
 
-def identify_topics_from_posts(posts: list[dict], max_topics: int = 5) -> list[dict]:
+def identify_topics_from_posts(posts: list[dict], max_topics: int = 10) -> list[dict]:
     """Use Gemini to cluster posts into analyzable political topics."""
     if not GEMINI_API_KEY or not posts:
         return []
 
     posts_text = "\n".join(
         f"- [{p['engagement']} eng] @{p['author']}: {p['text']}"
-        for p in posts[:40]
+        for p in posts[:60]
     )
 
     prompt = f"""You are analyzing the most-engaged political posts on X (Twitter) right now to identify the top trending political debates.
@@ -143,7 +143,7 @@ IMPORTANT: Return ONLY valid JSON, no markdown code fences."""
         return []
 
 
-def discover_trending_topics(max_topics: int = 5) -> list[dict]:
+def discover_trending_topics(max_topics: int = 10) -> list[dict]:
     """Full discovery pipeline: fetch posts → cluster into topics."""
     print("[Trending] Searching X for political posts...")
     posts = fetch_top_political_posts()
@@ -158,7 +158,7 @@ def discover_trending_topics(max_topics: int = 5) -> list[dict]:
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Discover trending political topics")
-    parser.add_argument("--max", type=int, default=5, help="Max topics to discover")
+    parser.add_argument("--max", type=int, default=10, help="Max topics to discover")
     args = parser.parse_args()
 
     topics = discover_trending_topics(max_topics=args.max)

@@ -324,7 +324,7 @@ function DonutChart({ topics }: { topics: TopicCard[] }) {
           })}
         </svg>
         {/* Center label on hover */}
-        {hovered !== null && (
+        {hovered !== null && hovered < segments.length && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-xl font-bold text-gray-100">{segments[hovered].pct}%</span>
             <span className="text-[10px] text-gray-400 text-center max-w-[70px] leading-tight">{segments[hovered].name}</span>
@@ -386,7 +386,7 @@ export default function PulsePage() {
         return res.json();
       })
       .then(setData)
-      .catch((e) => setError(e.message))
+      .catch((e) => setError(e?.message || "Failed to load pulse data"))
       .finally(() => setLoading(false));
   }, []);
 

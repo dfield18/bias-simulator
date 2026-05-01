@@ -301,7 +301,7 @@ export default function AnalyticsPage() {
     const abs = Math.abs(value);
     if (abs <= 1) return "all perspectives";
     const intensity = abs <= 3 ? "slightly" : abs <= 5 ? "moderately" : abs <= 7.5 ? "strongly" : "extremely";
-    const side = value < 0 ? topic.anti_label.toLowerCase() : topic.pro_label.toLowerCase();
+    const side = value < 0 ? (topic.anti_label || "left").toLowerCase() : (topic.pro_label || "right").toLowerCase();
     return `${intensity} ${side}`;
   }
 
@@ -1966,7 +1966,8 @@ export default function AnalyticsPage() {
         )}
 
         {(activeTab === "geography" || activeTab === "report") && geography && (() => {
-          const { locations, summary } = geography;
+          const locations = geography.locations || [];
+          const summary = geography.summary || { coverage_pct: 0, unique_locations: 0, anti_total: 0, pro_total: 0 };
           const aL = geography.anti_label;
           const pL = geography.pro_label;
           const fmt = (n: number) => n >= 1000000 ? `${(n / 1000000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);

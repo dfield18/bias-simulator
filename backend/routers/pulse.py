@@ -110,35 +110,37 @@ def refresh_trending_cache():
     conn = get_sync_connection()
     current_slugs = set()
 
-    # Create topics in DB and run full pipeline
-    analyzed = []
-    for topic in topics:
-        slug = f"trending-{topic['slug']}"
-        current_slugs.add(slug)
+    try:
+        # Create topics in DB and run full pipeline
+        analyzed = []
+        for topic in topics:
+            slug = f"trending-{topic['slug']}"
+            current_slugs.add(slug)
 
-        # Create/update topic in DB
-        if _create_trending_topic_in_db(conn, topic):
-            # Run full pipeline
+            # Create/update topic in DB
+            if _create_trending_topic_in_db(conn, topic):
+                # Run full pipeline
+                try:
+                    print(f"[Pulse] Running full pipeline for {slug}...")
+                    run_pipeline(slug, hours=48, max_pages=10, classification_model="fast")
+                    print(f"[Pulse] Pipeline complete for {slug}")
+                except Exception as e:
+                    print(f"[Pulse] Pipeline error for {slug}: {e}")
+
+            # Quick classify for pulse card stats (faster, used for the pulse page summary)
             try:
-                print(f"[Pulse] Running full pipeline for {slug}...")
-                run_pipeline(slug, hours=48, max_pages=10, classification_model="fast")
-                print(f"[Pulse] Pipeline complete for {slug}")
+                result = quick_analyze_topic(topic)
+                if result["stats"]["total"] > 0:
+                    # Add the real slug so the pulse page can link to the analytics page
+                    result["real_slug"] = slug
+                    analyzed.append(result)
             except Exception as e:
-                print(f"[Pulse] Pipeline error for {slug}: {e}")
+                print(f"[Pulse] Quick analyze error for {topic.get('name', '?')}: {e}")
 
-        # Quick classify for pulse card stats (faster, used for the pulse page summary)
-        try:
-            result = quick_analyze_topic(topic)
-            if result["stats"]["total"] > 0:
-                # Add the real slug so the pulse page can link to the analytics page
-                result["real_slug"] = slug
-                analyzed.append(result)
-        except Exception as e:
-            print(f"[Pulse] Quick analyze error for {topic.get('name', '?')}: {e}")
-
-    # Deactivate topics no longer trending
-    _deactivate_old_trending_topics(conn, current_slugs)
-    conn.close()
+        # Deactivate topics no longer trending
+        _deactivate_old_trending_topics(conn, current_slugs)
+    finally:
+        conn.close()
 
     if not analyzed:
         print("[Pulse] No topics with data")
@@ -317,8 +319,8 @@ async def get_pulse(
                 "description": t.get("description", ""),
                 "heat": t.get("heat", 5),
                 "total_posts": total,
-                "pro_pct": round(s["pro_count"] / total * 100),
-                "anti_pct": round(s["anti_count"] / total * 100),
+                "pro_pct": round(s.get("pro_count", 0) / total * 100),
+                "anti_pct": round(s.get("anti_count", 0) / total * 100),
                 "pro_engagement": s.get("pro_engagement", 0),
                 "anti_engagement": s.get("anti_engagement", 0),
                 "total_engagement": s.get("pro_engagement", 0) + s.get("anti_engagement", 0),

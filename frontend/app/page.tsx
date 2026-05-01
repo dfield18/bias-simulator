@@ -295,7 +295,7 @@ export default function LandingPage() {
       {/* Live Stats Bar */}
       {pulse && pulse.trending.length > 0 && (
         <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-6">
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-400 bg-gray-900/50 border border-gray-800/40 rounded-lg px-5 py-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-xs sm:text-sm text-gray-400 bg-gray-900/50 border border-gray-800/40 rounded-lg px-4 sm:px-5 py-2.5 sm:py-3">
             <span>Tracking the <strong className="text-gray-200">top 10</strong> stories on X</span>
             <span className="hidden sm:inline text-gray-700">|</span>
             <span><strong className="text-gray-200">{pulse.trending.reduce((s, t) => s + (t.total_posts || 0), 0).toLocaleString()}</strong> posts analyzed</span>
@@ -320,7 +320,7 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
               {trending.map((t) => {
                 const badge = t.slug === loudest.slug ? "Loudest" : t.slug === mostContested.slug ? "Most contested" : t.is_new ? "New today" : null;
                 const badgeColor = badge === "Loudest" ? "bg-orange-500/20 text-orange-300" : badge === "Most contested" ? "bg-purple-500/20 text-purple-300" : "bg-green-500/20 text-green-300";
@@ -328,21 +328,21 @@ export default function LandingPage() {
 
                 return (
                   <Link key={t.slug} href={topicUrl}
-                    className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 hover:border-gray-600 transition-colors group">
+                    className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-3.5 sm:p-4 hover:border-gray-600 transition-colors group">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="text-sm font-semibold text-gray-200 group-hover:text-white transition-colors leading-tight">{t.name}</h3>
-                      {badge && <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-2 ${badgeColor}`}>{badge}</span>}
+                      {badge && <span className={`text-[10px] sm:text-[9px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-2 ${badgeColor}`}>{badge}</span>}
                     </div>
                     {/* Sentiment bar */}
                     <div className="flex h-2 rounded-full overflow-hidden mb-2">
                       <div className="bg-blue-500/60" style={{ width: `${t.anti_pct}%` }} />
                       <div className="bg-red-500/60" style={{ width: `${t.pro_pct}%` }} />
                     </div>
-                    <div className="flex items-center justify-between text-[10px]">
+                    <div className="flex items-center justify-between text-[11px] sm:text-[10px]">
                       <span className="text-blue-400">{t.anti_label} {t.anti_pct}%</span>
                       <span className="text-red-400">{t.pro_pct}% {t.pro_label}</span>
                     </div>
-                    <div className="text-[10px] text-gray-500 mt-1.5">{(t.total_posts || 0).toLocaleString()} posts analyzed</div>
+                    <div className="text-[11px] sm:text-[10px] text-gray-500 mt-1.5">{(t.total_posts || 0).toLocaleString()} posts analyzed</div>
                   </Link>
                 );
               })}
@@ -369,17 +369,17 @@ export default function LandingPage() {
             <p className="text-xs text-gray-500 mb-4">Split {mostContested.anti_pct}% / {mostContested.pro_pct}% — here&apos;s what each side is saying</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {antiText && (
-                <div className="bg-blue-950/30 border border-blue-500/20 rounded-xl p-4">
-                  <div className="text-[10px] font-medium text-blue-400 uppercase tracking-wider mb-2">{mostContested.anti_label}</div>
-                  <blockquote className="text-sm text-gray-300 leading-relaxed line-clamp-4 italic">&ldquo;{antiText}&rdquo;</blockquote>
-                  {antiAuthor && <div className="text-[10px] text-gray-500 mt-2">{antiAuthor}</div>}
+                <div className="bg-blue-950/30 border border-blue-500/20 rounded-xl p-3.5 sm:p-4">
+                  <div className="text-xs sm:text-[10px] font-medium text-blue-400 uppercase tracking-wider mb-2">{mostContested.anti_label}</div>
+                  <blockquote className="text-sm text-gray-300 leading-relaxed line-clamp-5 sm:line-clamp-4 italic">&ldquo;{antiText}&rdquo;</blockquote>
+                  {antiAuthor && <div className="text-xs sm:text-[10px] text-gray-500 mt-2">{antiAuthor}</div>}
                 </div>
               )}
               {proText && (
-                <div className="bg-red-950/30 border border-red-500/20 rounded-xl p-4">
-                  <div className="text-[10px] font-medium text-red-400 uppercase tracking-wider mb-2">{mostContested.pro_label}</div>
-                  <blockquote className="text-sm text-gray-300 leading-relaxed line-clamp-4 italic">&ldquo;{proText}&rdquo;</blockquote>
-                  {proAuthor && <div className="text-[10px] text-gray-500 mt-2">{proAuthor}</div>}
+                <div className="bg-red-950/30 border border-red-500/20 rounded-xl p-3.5 sm:p-4">
+                  <div className="text-xs sm:text-[10px] font-medium text-red-400 uppercase tracking-wider mb-2">{mostContested.pro_label}</div>
+                  <blockquote className="text-sm text-gray-300 leading-relaxed line-clamp-5 sm:line-clamp-4 italic">&ldquo;{proText}&rdquo;</blockquote>
+                  {proAuthor && <div className="text-xs sm:text-[10px] text-gray-500 mt-2">{proAuthor}</div>}
                 </div>
               )}
             </div>
@@ -463,7 +463,7 @@ export default function LandingPage() {
                     <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">This reconstruction shows how the same posts get prioritized differently based on political leaning</p>
                   </div>
                   {useLive && (
-                    <Link href={`/analytics/${topicSlug}`} className="text-[10px] text-blue-400 hover:text-blue-300 shrink-0 ml-2">
+                    <Link href={`/analytics/${topicSlug}`} className="text-xs text-blue-400 hover:text-blue-300 shrink-0 ml-2 py-1">
                       Full analysis →
                     </Link>
                   )}
@@ -482,7 +482,7 @@ export default function LandingPage() {
               </div>
 
               <div className="px-4 sm:px-5 pb-4 sm:pb-5">
-                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1 scrollbar-thin">
+                <div className="space-y-3 max-h-96 sm:max-h-[600px] overflow-y-auto pr-1 scrollbar-thin">
                   {feedTweets.map((item) => (
                     <TweetCard
                       key={item.tweet.id_str}
@@ -508,16 +508,16 @@ export default function LandingPage() {
           return (
             <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
               {/* Echo Chamber Score */}
-              <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 flex flex-col">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber Score</div>
+              <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-3.5 sm:p-4 flex flex-col">
+                <div className="text-xs sm:text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">Echo Chamber Score</div>
                 <div className="text-xs text-gray-400 mb-5">{landingData?.topic_name || liveTopic?.name || "Iran War"}</div>
                 <div className="flex-1 flex flex-col items-center justify-center">
-                  <div className="text-5xl font-bold text-orange-400 mb-1">{ec ? `${ec.score}%` : "..."}</div>
+                  <div className="text-4xl sm:text-5xl font-bold text-orange-400 mb-1">{ec ? `${ec.score}%` : "..."}</div>
                   <div className="text-xs text-gray-500 mb-4">overlap between sides</div>
-                  <div className="w-full max-w-[200px] h-2 rounded-full bg-gray-800 mb-1.5">
+                  <div className="w-full max-w-[240px] sm:max-w-[200px] h-2 rounded-full bg-gray-800 mb-1.5">
                     <div className="h-full rounded-full bg-gradient-to-r from-red-500 via-orange-400 to-green-500" style={{ width: `${ec?.score || 0}%` }} />
                   </div>
-                  <div className="flex justify-between w-full max-w-[200px] text-[9px] text-gray-600 mb-6">
+                  <div className="flex justify-between w-full max-w-[240px] sm:max-w-[200px] text-[10px] sm:text-[9px] text-gray-600 mb-6">
                     <span>Echo chamber</span>
                     <span>Shared conversation</span>
                   </div>
@@ -527,10 +527,10 @@ export default function LandingPage() {
                       { label: "Shared arguments", value: ec?.shared_frames || "...", sub: "narrative frames" },
                     ].map((m) => (
                       <div key={m.label} className="flex items-center justify-between">
-                        <span className="text-[11px] text-gray-400">{m.label}</span>
+                        <span className="text-xs sm:text-[11px] text-gray-400">{m.label}</span>
                         <div className="text-right">
-                          <span className="text-[11px] text-gray-200 font-medium">{m.value}</span>
-                          <span className="text-[9px] text-gray-600 ml-1">{m.sub}</span>
+                          <span className="text-xs sm:text-[11px] text-gray-200 font-medium">{m.value}</span>
+                          <span className="text-[10px] sm:text-[9px] text-gray-600 ml-1">{m.sub}</span>
                         </div>
                       </div>
                     ))}
@@ -539,17 +539,17 @@ export default function LandingPage() {
               </div>
 
               {/* What Each Side Argues */}
-              <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-4 flex flex-col">
-                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">What Each Side Argues</div>
+              <div className="bg-gray-900/80 border border-gray-800/60 rounded-xl p-3.5 sm:p-4 flex flex-col">
+                <div className="text-xs sm:text-[10px] text-gray-500 uppercase tracking-wider mb-1 font-medium">What Each Side Argues</div>
                 <div className="flex items-center justify-between mb-2 mt-1">
-                  <span className="text-[9px] text-blue-400">{aL}</span>
-                  <span className="text-[9px] text-red-400">{pL}</span>
+                  <span className="text-[10px] sm:text-[9px] text-blue-400">{aL}</span>
+                  <span className="text-[10px] sm:text-[9px] text-red-400">{pL}</span>
                 </div>
                 <div className="flex-1 flex flex-col justify-center space-y-2.5">
                   {(frames || []).map((f) => (
                     <div key={f.key}>
                       <div className="text-center mb-0.5">
-                        <span className="text-[10px] text-gray-500">{f.label}</span>
+                        <span className="text-[11px] sm:text-[10px] text-gray-500">{f.label}</span>
                       </div>
                       <div className="flex items-center gap-0.5">
                         <div className="w-1/2 flex justify-end">

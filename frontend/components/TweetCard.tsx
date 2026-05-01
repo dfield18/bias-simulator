@@ -154,7 +154,7 @@ export default function TweetCard({
               {m.type === "video" ? (
                 <a href={tweet.url || ""} target="_blank" rel="noopener noreferrer" className="block relative group">
                   {m.thumbnail ? (
-                    <img src={m.thumbnail} alt="" className="w-full object-contain max-h-96" />
+                    <img src={m.thumbnail} alt="" className="w-full object-contain max-h-64 sm:max-h-96" />
                   ) : (
                     <div className="w-full h-40 bg-gray-700 flex items-center justify-center">
                       <span className="text-gray-500 text-xs">Video</span>
@@ -171,7 +171,7 @@ export default function TweetCard({
                   src={m.url}
                   alt=""
                   loading="lazy"
-                  className={`w-full ${tweet.media.length === 1 ? "object-contain max-h-96" : "h-full object-cover"}`}
+                  className={`w-full ${tweet.media.length === 1 ? "object-contain max-h-64 sm:max-h-96" : "h-full object-cover"}`}
                 />
               )}
             </div>
